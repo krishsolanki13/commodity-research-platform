@@ -1,0 +1,53 @@
+gold:
+  ticker_continuous: "GC=F"
+  exchange: "COMEX"
+  currency: "USD"
+  unit: "troy_oz"
+  contract_multiplier: 100
+  tick_size: 0.10
+  tick_value: 10.00
+
+silver:
+  ticker_continuous: "SI=F"
+  exchange: "COMEX"
+  currency: "USD"
+  unit: "troy_oz"
+  contract_multiplier: 5000
+  tick_size: 0.005
+  tick_value: 25.00
+
+copper:
+  ticker_continuous: "HG=F"
+  exchange: "COMEX"
+  currency: "USD"
+  unit: "lb"
+  contract_multiplier: 25000
+  tick_size: 0.0005
+  tick_value: 12.50
+
+wti:
+  ticker_continuous: "CL=F"
+  exchange: "NYMEX"
+  currency: "USD"
+  unit: "barrel"
+  contract_multiplier: 1000
+  tick_size: 0.01
+  tick_value: 10.00
+
+brent:
+  ticker_continuous: "BZ=F"
+  exchange: "ICE"
+  currency: "USD"
+  unit: "barrel"
+  contract_multiplier: 1000
+  tick_size: 0.01
+  tick_value: 10.00
+
+natural_gas:
+  ticker_continuous: "NG=F"
+  exchange: "NYMEX"
+  currency: "USD"
+  unit: "MMBtu"
+  contract_multiplier: 10000
+  tick_size: 0.001
+  tick_value: 10.00

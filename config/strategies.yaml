@@ -1,0 +1,17 @@
+ema_crossover:
+  fast_period: 50
+  slow_period: 200
+  signal_threshold: 0.0
+
+momentum:
+  lookback_period: 20
+  z_score_window: 63
+  signal_threshold: 0.5
+
+donchian_breakout:
+  channel_period: 20
+
+rsi_reversion:
+  period: 14
+  oversold_threshold: 30
+  overbought_threshold: 70
