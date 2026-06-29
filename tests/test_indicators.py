@@ -8,9 +8,12 @@ See ADR-006 for column naming convention.
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
+from src.research.momentum import Momentum
 from src.research.moving_averages import EMA, SMA
+from src.research.oscillators import RSI, RVGI
 
 # ---------------------------------------------------------------------------
 # SMA tests
@@ -83,3 +86,76 @@ def test_ema_values_are_positive(gold_ohlcv: pd.DataFrame) -> None:
     result = EMA(period=50).compute(gold_ohlcv)
     valid = result.dropna()
     assert (valid > 0).all(), "EMA values must be positive for positive price series"
+
+
+# ---------------------------------------------------------------------------
+# RSI tests
+# ---------------------------------------------------------------------------
+
+
+def test_rsi_column_name() -> None:
+    """RSI column name follows rsi_{period} convention."""
+    assert RSI(period=14).column_name == "rsi_14"
+    assert RSI(period=7).column_name == "rsi_7"
+
+
+def test_rsi_values_in_range(gold_ohlcv: pd.DataFrame) -> None:
+    """RSI(14) non-NaN values are bounded in [0, 100]."""
+    result = RSI(period=14).compute(gold_ohlcv)
+    valid = result.dropna()
+    assert len(valid) > 0, "RSI must produce non-NaN values on 252-bar fixture"
+    assert (valid >= 0.0).all(), f"RSI minimum {valid.min():.4f} is below 0"
+    assert (valid <= 100.0).all(), f"RSI maximum {valid.max():.4f} is above 100"
+
+
+def test_rsi_warmup_produces_nan(gold_ohlcv: pd.DataFrame) -> None:
+    """RSI(14) has NaN values in the warmup period."""
+    result = RSI(period=14).compute(gold_ohlcv)
+    assert result.isna().sum() > 0, "RSI warmup must contain NaN values"
+
+
+# ---------------------------------------------------------------------------
+# RVGI tests
+# ---------------------------------------------------------------------------
+
+
+def test_rvgi_column_name() -> None:
+    """RVGI column name follows rvgi_{period} convention."""
+    assert RVGI(period=10).column_name == "rvgi_10"
+
+
+def test_rvgi_produces_finite_values(gold_ohlcv: pd.DataFrame) -> None:
+    """RVGI(10) on 252-bar fixture produces non-NaN finite values."""
+    result = RVGI(period=10).compute(gold_ohlcv)
+    valid = result.dropna()
+    assert len(valid) > 0, "RVGI must produce non-NaN values on 252-bar fixture"
+    assert np.isfinite(valid.values).all(), "All RVGI values must be finite"
+
+
+# ---------------------------------------------------------------------------
+# Momentum tests
+# ---------------------------------------------------------------------------
+
+
+def test_momentum_column_name() -> None:
+    """Momentum column name follows momentum_{lookback} convention."""
+    assert Momentum(lookback=20).column_name == "momentum_20"
+    assert Momentum(lookback=5).column_name == "momentum_5"
+
+
+def test_momentum_formula(gold_ohlcv: pd.DataFrame) -> None:
+    """Momentum(20)[20] == close[20] / close[0] - 1 exactly."""
+    result = Momentum(lookback=20).compute(gold_ohlcv)
+    close = gold_ohlcv["close"]
+    expected = close.iloc[20] / close.iloc[0] - 1.0
+    assert abs(result.iloc[20] - expected) < 1e-10, (
+        f"Momentum formula mismatch: expected {expected:.10f}, "
+        f"got {result.iloc[20]:.10f}"
+    )
+
+
+def test_momentum_warmup_nan(gold_ohlcv: pd.DataFrame) -> None:
+    """Momentum(20): first 20 bars NaN, bar 20 is first valid value."""
+    result = Momentum(lookback=20).compute(gold_ohlcv)
+    assert result.iloc[:20].isna().all(), "First 20 bars must be NaN"
+    assert not pd.isna(result.iloc[20]), "Bar 20 must be the first valid value"
