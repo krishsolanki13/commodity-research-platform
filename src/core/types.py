@@ -40,9 +40,12 @@ NormalizedOHLCV = pd.DataFrame
 # FeatureFrame — forward reference (Module 3)
 # ---------------------------------------------------------------------------
 
-# FeatureFrame is defined in src/research/feature_frame.py (Module 3).
-# It is a Python class wrapping a pandas DataFrame, per ADR-006.
-# After Module 3 is complete, add this import here:
+# FeatureFrame: defined in src/research/feature_frame.py (implemented in Module 3).
+# Per ADR-006: FeatureFrame is a Python class with .data, .feature_specs, .asset properties.
+# IMPORTANT: do NOT import FeatureFrame here. Circular import exists:
+#   feature_frame.py imports FeatureSpec from this module (types.py).
+#   Importing FeatureFrame here would create a circular dependency.
+# Upper layers import FeatureFrame directly:
 #   from src.research.feature_frame import FeatureFrame
 
 
