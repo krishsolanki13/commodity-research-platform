@@ -1,0 +1,13 @@
+# .cursorignore
+#
+# Files excluded from Cursor's codebase index.
+# All necessary architectural context is extracted and provided explicitly
+# in each increment prompt. Cursor should not read these files directly.
+
+ARCHITECTURE.md
+ADRs.md
+IMPLEMENTATION_ROADMAP.md
+docs/
+notebooks/
+logs/
+data/
