@@ -64,6 +64,16 @@ class Indicator(ABC):
         Example: EMA(period=50) returns "ema_50". See ADR-006.
         """
 
+    @property
+    def parameters(self) -> dict[str, Any]:
+        """Return indicator parameters for FeatureSpec serialization.
+
+        Concrete indicators override this to return their constructor parameters.
+        Default returns empty dict for backward compatibility.
+        Example: EMA(period=50) returns {"period": 50}.
+        """
+        return {}
+
     @abstractmethod
     def compute(self, df: pd.DataFrame) -> pd.Series:
         """Compute the indicator from the input OHLCV DataFrame.
