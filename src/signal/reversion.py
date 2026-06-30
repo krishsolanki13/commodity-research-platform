@@ -26,25 +26,22 @@ class RSIReversionSignal(SignalGenerator):
 
     Requires FeatureFrame column: rsi_{period}
     Build FeatureFrame with FeaturePipeline([RSI(period)]) before calling generate().
-    See ADR-007.
+
+    Note: oversold_threshold/overbought_threshold values in strategies.yaml
+    (30/70) are PositionSignal-construction concerns, not RawSignal concerns,
+    per ADR-007 (RawSignal must remain continuous and unthresholded). They
+    are applied downstream by PositionSignalConstructor.build(raw_signal,
+    threshold=...), not here. This class intentionally does not accept
+    threshold parameters.
     """
 
-    def __init__(
-        self,
-        period: int = 14,
-        oversold_threshold: int = 30,
-        overbought_threshold: int = 70,
-    ) -> None:
+    def __init__(self, period: int = 14) -> None:
         """Initialise RSIReversionSignal.
 
         Args:
             period: RSI period. Default 14 per strategies.yaml.
-            oversold_threshold: RSI level considered oversold. Default 30.
-            overbought_threshold: RSI level considered overbought. Default 70.
         """
         self._period = period
-        self._oversold_threshold = oversold_threshold
-        self._overbought_threshold = overbought_threshold
         self._rsi_col = RSI(period=period).column_name
         self._logger = logging.getLogger(__name__)
 
@@ -57,7 +54,7 @@ class RSIReversionSignal(SignalGenerator):
         """Generate RSI reversion RawSignal from FeatureFrame.
 
         RawSignal[t] = -(RSI[t] - 50) / 50
-        Bounded approximately in [-1, +1]. Strongly negative correlates with RSI.
+        Bounded approximately in [-1, +1].
 
         Args:
             feature_frame: FeatureFrame instance with RSI column.
