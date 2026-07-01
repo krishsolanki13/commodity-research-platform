@@ -21,7 +21,7 @@ from typing import Any
 import pandas as pd
 
 from src.core.config import Config
-from src.core.types import BacktestResult, TradeRecord
+from src.core.types import BacktestResult, PerformanceReport, TradeRecord
 
 
 def generate_run_id(strategy_name: str, asset: str) -> str:
@@ -152,3 +152,46 @@ class RunManager:
         if run_dir.exists():
             shutil.rmtree(run_dir)
             self._logger.info("RunManager: deleted run %s", run_id)
+
+    def save_metrics(self, run_id: str, report: PerformanceReport) -> None:
+        """Write metrics.json to an existing run directory.
+
+        Called after PerformanceEngine.compute(). RunManager.save() does
+        not write metrics.json — that separation is intentional per
+        Architecture Section 9.1 and ADR-009.
+
+        metrics.json contains scalar_metrics, signal_metrics, and
+        trade_statistics. rolling_metrics (pd.Series) are not serialized
+        to JSON — they are recomputable from persisted Parquet files.
+
+        Args:
+            run_id: Existing run identifier. Run directory must exist.
+            report: PerformanceReport from PerformanceEngine.compute().
+
+        Raises:
+            FileNotFoundError: If the run directory does not exist.
+                Call RunManager.save(backtest_result) before save_metrics().
+        """
+        run_dir = Path(self._config.paths["runs"]) / run_id
+        if not run_dir.exists():
+            raise FileNotFoundError(
+                f"No run directory found at {run_dir}. "
+                f"Call RunManager.save(backtest_result) before save_metrics()."
+            )
+
+        metrics_dict = {
+            "run_id": report.run_id,
+            "initial_capital_usd": report.initial_capital_usd,
+            "scalar_metrics": report.scalar_metrics,
+            "signal_metrics": report.signal_metrics,
+            "trade_statistics": report.trade_statistics,
+        }
+
+        with open(run_dir / "metrics.json", "w") as f:
+            json.dump(metrics_dict, f, indent=2, default=str)
+
+        self._logger.info(
+            "RunManager: saved metrics.json for run %s (Sharpe=%.4f)",
+            run_id,
+            report.scalar_metrics.get("sharpe", float("nan")),
+        )
