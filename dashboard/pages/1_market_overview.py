@@ -1,9 +1,9 @@
 """Page 1: Market Overview — commodity universe snapshot.
 
-Displays latest prices, returns, and price charts for all 6 Phase 1
-commodity assets. Handles missing data files gracefully.
+Displays latest prices, returns, and price charts for all 6 Phase 1 assets.
+Handles missing data files gracefully with setup instructions.
 
-Consumes: Layer 0 (DataLoader) via src/ functions only.
+Consumes: Layer 0 (DataLoader) via src/ functions only. No computation.
 See Architecture Section 13 (Dashboard Architecture, Page Map).
 """
 
@@ -12,6 +12,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from dashboard.components.metrics_table import style_return_series
 from dashboard.components.price_chart import render_price_chart
 from src.core.config import Config
 from src.data.loader import DataLoader
@@ -35,25 +36,19 @@ def _get_config() -> Config:
 
 @st.cache_data(ttl=3600)
 def _load_asset(asset: str) -> pd.DataFrame | None:
-    """Load asset data with graceful handling of missing CSV files."""
     try:
         return DataLoader(_get_config()).load(asset)
     except Exception:  # noqa: BLE001
         return None
 
 
-# -----------------------------------------------------------------------
-# Header
-# -----------------------------------------------------------------------
-st.title("📊 Market Overview")
+st.title("Market Overview")
 st.caption(
-    "Prices and returns derived from continuous futures series (Yahoo Finance). "
-    "Not back-adjusted — see ADR-001."
+    "Continuous futures series sourced from Yahoo Finance. "
+    "Not back-adjusted — roll gaps appear at contract transitions. See ADR-001."
 )
 
-# -----------------------------------------------------------------------
-# Universe summary table
-# -----------------------------------------------------------------------
+# ── Universe summary table ────────────────────────────────────────────────────
 st.subheader("Commodity Universe")
 
 rows: list[dict] = []
@@ -61,13 +56,13 @@ for key, display in ASSET_DISPLAY.items():
     df = _load_asset(key)
     if df is not None and len(df) >= 2:
         last_close = float(df["close"].iloc[-1])
-        ret_1d = (df["close"].iloc[-1] / df["close"].iloc[-2] - 1.0) * 100.0
-        ret_1w = (
+        r1d = (df["close"].iloc[-1] / df["close"].iloc[-2] - 1.0) * 100.0
+        r1w = (
             (df["close"].iloc[-1] / df["close"].iloc[-6] - 1.0) * 100.0
             if len(df) >= 6
             else None
         )
-        ret_1m = (
+        r1m = (
             (df["close"].iloc[-1] / df["close"].iloc[-22] - 1.0) * 100.0
             if len(df) >= 22
             else None
@@ -75,54 +70,55 @@ for key, display in ASSET_DISPLAY.items():
         rows.append(
             {
                 "Asset": display,
-                "Last Close": f"{last_close:.2f}",
-                "1D Ret (%)": f"{ret_1d:+.2f}",
-                "1W Ret (%)": f"{ret_1w:+.2f}" if ret_1w is not None else "—",
-                "1M Ret (%)": f"{ret_1m:+.2f}" if ret_1m is not None else "—",
+                "Last Close": f"{last_close:,.3f}",
+                "1D Ret (%)": f"{r1d:+.2f}",
+                "1W Ret (%)": f"{r1w:+.2f}" if r1w is not None else "—",
+                "1M Ret (%)": f"{r1m:+.2f}" if r1m is not None else "—",
                 "Last Date": str(df.index[-1].date()),
-                "Bars": len(df),
+                "Bars": f"{len(df):,}",
             }
         )
     else:
         rows.append(
             {
                 "Asset": display,
-                "Last Close": "no data",
+                "Last Close": "—",
                 "1D Ret (%)": "—",
                 "1W Ret (%)": "—",
                 "1M Ret (%)": "—",
                 "Last Date": "—",
-                "Bars": 0,
+                "Bars": "0",
             }
         )
 
 summary_df = pd.DataFrame(rows)
-st.dataframe(summary_df, use_container_width=True, hide_index=True)
+styled = style_return_series(summary_df, ["1D Ret (%)", "1W Ret (%)", "1M Ret (%)"])
+st.dataframe(styled, use_container_width=True, hide_index=True)
 
 available_assets = [k for k in ASSET_DISPLAY if _load_asset(k) is not None]
 
 if not available_assets:
     st.warning(
-        "No data files found in `data/raw/continuous/`. "
-        "To get started quickly: `cp tests/fixtures/gold_sample.csv data/raw/continuous/gold.csv`"
+        "No commodity data found in `data/raw/continuous/`. "
+        "Acquire data with: `python scripts/acquire_data.py`. "
+        "Or copy the test fixture for Gold: "
+        "`cp tests/fixtures/gold_sample.csv data/raw/continuous/gold.csv`"
     )
     st.stop()
 
-# -----------------------------------------------------------------------
-# Price chart for selected asset
-# -----------------------------------------------------------------------
+# ── Price chart ───────────────────────────────────────────────────────────────
 st.subheader("Price Chart")
 
-col_sel, col_bar = st.columns([2, 1])
-with col_sel:
+sel_col, bar_col = st.columns([2, 1])
+with sel_col:
     selected = st.selectbox(
         "Asset",
         options=available_assets,
         format_func=lambda k: ASSET_DISPLAY[k],
     )
-with col_bar:
+with bar_col:
     lookback = st.slider(
-        "Lookback (bars)", min_value=20, max_value=252, value=120, step=10
+        "Lookback (bars)", min_value=20, max_value=504, value=252, step=20
     )
 
 df_sel = _load_asset(selected)
