@@ -180,7 +180,7 @@ def render_rolling_metrics_chart(
                 name=label,
                 line=dict(color=color, width=1.5),
                 connectgaps=False,
-                showlegend=segment.notna().any(),
+                showlegend=bool(segment.notna().any()),
             ),
             row=1,
             col=1,

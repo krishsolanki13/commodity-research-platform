@@ -143,7 +143,13 @@ def render_ic_decay_chart(
     horizons = sorted(ic_decay.keys())
     values = [ic_decay[h] for h in horizons]
     colors = [
-        POSITIVE if abs(v) >= 0.05 else (CAUTION if abs(v) >= 0.02 else NEGATIVE)
+        POSITIVE
+        if v >= 0.05
+        else (
+            CAUTION
+            if v >= 0.02
+            else (NEGATIVE if v > -0.02 else (CAUTION if v > -0.05 else NEGATIVE))
+        )
         for v in values
     ]
 
