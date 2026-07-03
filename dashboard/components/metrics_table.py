@@ -62,7 +62,7 @@ def build_metrics_dataframe(
 
     Returns:
         pd.DataFrame with columns ["Metric", "Value"].
-        Use with: st.dataframe(df, use_container_width=True, hide_index=True)
+        Use with: st.dataframe(df, hide_index=True)
     """
     rows: list[dict[str, str]] = []
 

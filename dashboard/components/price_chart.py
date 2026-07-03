@@ -41,7 +41,7 @@ def render_price_chart(
         height: Total chart height in pixels.
 
     Returns:
-        Plotly Figure. Render with: st.plotly_chart(fig, use_container_width=True)
+        Plotly Figure. Render with: st.plotly_chart(fig)
     """
     indicator_columns = indicator_columns or []
     has_volume = "volume" in ohlcv.columns

@@ -138,7 +138,7 @@ def render_ic_decay_chart(
         height: Chart height in pixels.
 
     Returns:
-        Plotly Figure. Render with: st.plotly_chart(fig, use_container_width=True)
+        Plotly Figure. Render with: st.plotly_chart(fig)
     """
     horizons = sorted(ic_decay.keys())
     values = [ic_decay[h] for h in horizons]
