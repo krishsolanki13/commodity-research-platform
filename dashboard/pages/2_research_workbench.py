@@ -1,10 +1,11 @@
 """Page 2: Research Workbench — indicator and signal quality analysis.
 
-Provides: price chart with indicator overlays, signal generation,
-IC evaluation display. Follows Architecture Section 10 (steps 1-4).
+Follows Architecture Section 10 (Signal Research Workflow) Steps 1-4.
+IC analysis (Step 4) is computed before any backtest and displayed here.
+See ADR-007: IC evaluation is a precondition for backtesting.
 
-Consumes: Layers 0, 1, 2 via src/ functions only.
-See Architecture Section 13 (Dashboard Architecture, Page Map).
+Consumes: Layers 0, 1, 2 via src/ functions only. No computation in this file.
+See Architecture Section 13.
 """
 
 from __future__ import annotations
@@ -12,8 +13,9 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from dashboard.components._theme import inject_global_css, section_header
 from dashboard.components.price_chart import render_price_chart
-from dashboard.components.signal_chart import render_signal_chart
+from dashboard.components.signal_chart import render_ic_decay_chart, render_signal_chart
 from src.core.config import Config
 from src.data.loader import DataLoader
 from src.research.momentum import Momentum
@@ -27,6 +29,7 @@ from src.signal.reversion import RSIReversionSignal
 from src.signal.trend import EMACrossoverSignal, MomentumSignal
 
 st.set_page_config(page_title="Research Workbench", layout="wide")
+inject_global_css()
 
 ASSET_DISPLAY: dict[str, str] = {
     "gold": "Gold (GC=F)",
@@ -59,47 +62,45 @@ def _load_asset(asset: str) -> pd.DataFrame | None:
         return None
 
 
-st.title("🔬 Research Workbench")
+st.title("Research Workbench")
 st.caption(
-    "Indicator and signal quality analysis. IC analysis precedes backtesting per ADR-007."
+    "Signal quality analysis (IC/ICIR) per ADR-007. "
+    "IC evaluation precedes backtesting — a positive IC is a precondition, not a post-hoc diagnostic."
 )
 
-# -----------------------------------------------------------------------
-# Sidebar controls
-# -----------------------------------------------------------------------
+# ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.header("Controls")
-
     available = [k for k in ASSET_DISPLAY if _load_asset(k) is not None]
     if not available:
-        st.error("No data available. See Market Overview for setup instructions.")
+        st.error("No data available. Run: python scripts/acquire_data.py")
         st.stop()
 
     asset = st.selectbox(
         "Asset", options=available, format_func=lambda k: ASSET_DISPLAY[k]
     )
-    lookback = st.slider("Lookback (bars)", 30, 252, 120, 10)
+    lookback = st.slider("Display lookback (bars)", 30, 504, 252, 20)
     selected_indicators = st.multiselect(
-        "Indicator overlays", options=INDICATOR_OPTIONS, default=["EMA(50)", "EMA(200)"]
+        "Price chart overlays",
+        options=INDICATOR_OPTIONS,
+        default=["EMA(50)", "EMA(200)"],
     )
     selected_signal = st.selectbox("Signal", options=SIGNAL_OPTIONS)
     signal_threshold = st.number_input(
-        "Signal threshold (flat zone)",
+        "Discretization threshold",
         min_value=0.0,
         max_value=2.0,
         value=0.0,
         step=0.05,
+        help="Values within [-threshold, +threshold] produce flat (0) position.",
     )
 
-# -----------------------------------------------------------------------
-# Load data and compute features
-# -----------------------------------------------------------------------
+# ── Data and feature computation ──────────────────────────────────────────────
 ohlcv = _load_asset(asset)
 if ohlcv is None:
     st.error(f"Could not load data for {ASSET_DISPLAY[asset]}.")
     st.stop()
 
-# Build indicator list from selections
 indicator_map = {
     "EMA(50)": EMA(period=50),
     "EMA(200)": EMA(period=200),
@@ -107,35 +108,39 @@ indicator_map = {
     "SMA(50)": SMA(period=50),
     "SMA(200)": SMA(period=200),
 }
-indicators = [indicator_map[s] for s in selected_indicators if s in indicator_map]
+display_indicators = [
+    indicator_map[s] for s in selected_indicators if s in indicator_map
+]
 
-# Build signal generator from selection
+# Signal generators and their required pipeline indicators
 signal_gen_map = {
-    "EMA Crossover (50/200)": EMACrossoverSignal(fast_period=50, slow_period=200),
-    "Momentum (20)": MomentumSignal(lookback=20, z_score_window=63),
-    "RSI Reversion (14)": RSIReversionSignal(period=14),
-    "Donchian Breakout (20)": DonchianBreakoutSignal(channel_period=20),
+    "EMA Crossover (50/200)": (
+        EMACrossoverSignal(fast_period=50, slow_period=200),
+        [EMA(50), EMA(200)],
+    ),
+    "Momentum (20)": (
+        MomentumSignal(lookback=20, z_score_window=63),
+        [Momentum(20)],
+    ),
+    "RSI Reversion (14)": (
+        RSIReversionSignal(period=14),
+        [RSI(14)],
+    ),
+    "Donchian Breakout (20)": (
+        DonchianBreakoutSignal(channel_period=20),
+        [],  # Reads OHLCV directly
+    ),
 }
+signal_gen, required_indicators = signal_gen_map[selected_signal]
 
-# Ensure EMA Crossover has required indicator columns
-extra_indicators: list = []
-if selected_signal == "EMA Crossover (50/200)":
-    if EMA(50).column_name not in [i.column_name for i in indicators]:
-        extra_indicators.append(EMA(50))
-    if EMA(200).column_name not in [i.column_name for i in indicators]:
-        extra_indicators.append(EMA(200))
-elif selected_signal == "Momentum (20)":
-    if Momentum(20).column_name not in [i.column_name for i in indicators]:
-        extra_indicators.append(Momentum(20))
-elif selected_signal == "RSI Reversion (14)":
-    if RSI(14).column_name not in [i.column_name for i in indicators]:
-        extra_indicators.append(RSI(14))
+# Merge display and required indicators without duplicates
+all_columns = {i.column_name for i in display_indicators}
+extra = [i for i in required_indicators if i.column_name not in all_columns]
+all_indicators = display_indicators + extra
 
-all_indicators = indicators + extra_indicators
 ff = FeaturePipeline(all_indicators).compute(ohlcv, asset=asset)
-indicator_cols = [i.column_name for i in indicators]
+display_cols = [i.column_name for i in display_indicators]
 
-signal_gen = signal_gen_map[selected_signal]
 try:
     raw_signal = signal_gen.generate(ff)
 except KeyError as e:
@@ -146,92 +151,76 @@ position_signal = PositionSignalConstructor().build(
     raw_signal, threshold=signal_threshold
 )
 
-# Slice to lookback
-df_plot = ff.data.iloc[-lookback:]
-raw_plot = raw_signal.iloc[-lookback:]
-pos_plot = position_signal.iloc[-lookback:]
-
-# -----------------------------------------------------------------------
-# IC evaluation (Architecture Section 10, Step 4)
-# -----------------------------------------------------------------------
+# ── IC evaluation (ADR-007 Step 4) ───────────────────────────────────────────
 with st.spinner("Computing IC..."):
     try:
-        evaluator = SignalEvaluator(asset)
-        evaluation = evaluator.evaluate(raw_signal, ohlcv)
+        evaluation = SignalEvaluator(asset).evaluate(raw_signal, ohlcv)
         ic_available = True
     except ValueError:
-        ic_available = False
         evaluation = None
+        ic_available = False
 
-# -----------------------------------------------------------------------
-# IC metrics display
-# -----------------------------------------------------------------------
-st.subheader("Signal Quality (IC Analysis)")
+# ── Signal quality display ────────────────────────────────────────────────────
+section_header("Signal Quality — IC Analysis")
+st.caption(
+    "IC interpretation: |IC| < 0.02 = noise · 0.02–0.05 = weak · ≥ 0.05 = meaningful. "
+    "Direction matters: positive IC = signal aligned · negative IC = signal inverted. "
+    "ICIR ≥ 0.5 indicates consistency across time."
+)
+
 ic_col1, ic_col2, ic_col3, ic_col4 = st.columns(4)
-
 if ic_available and evaluation is not None:
     ic = evaluation.ic
     icir = evaluation.icir
 
-    def ic_color(v: float) -> str:
-        if abs(v) >= 0.05:
-            return "normal"
-        if abs(v) >= 0.02:
-            return "off"
-        return "inverse"
+    ic_col1.metric("IC (1-bar forward)", f"{ic:.6f}")
+    ic_col2.metric("ICIR", f"{icir:.6f}")
+    ic_col3.metric("Turnover (signal)", f"{evaluation.turnover:.6f}")
 
-    ic_col1.metric(
-        "IC (1-bar forward)",
-        f"{ic:.4f}",
-        help="|IC| ≥ 0.05: meaningful. 0.02–0.05: weak. < 0.02: likely noise.",
+    if ic >= 0.05:
+        ic_col4.success("PASS — positive signal")
+    elif ic <= -0.05:
+        ic_col4.warning("PASS (inverse) — signal predicts opposite direction")
+    elif 0.02 <= ic < 0.05:
+        ic_col4.warning("WEAK — weak positive")
+    elif -0.05 < ic <= -0.02:
+        ic_col4.warning("WEAK (inverse) — weak inverse")
+    else:
+        ic_col4.error("NOISE — |IC| below 0.02")
+
+    # IC decay chart (Plotly, not st.bar_chart)
+    st.caption(
+        "IC decay shows how predictive power diminishes at longer forecast horizons. "
+        "A well-structured signal retains IC at short horizons and decays at long ones."
     )
-    ic_col2.metric("ICIR", f"{icir:.4f}", help="ICIR ≥ 0.5: consistent signal.")
-    ic_col3.metric(
-        "Turnover",
-        f"{evaluation.turnover:.4f}",
-        help="Mean absolute daily position change from signal.",
-    )
-    ic_col4.metric(
-        "IC Gate",
-        "✅ PASS" if abs(ic) >= 0.05 else ("⚠️ WEAK" if abs(ic) >= 0.02 else "❌ NOISE"),
-    )
+    decay_fig = render_ic_decay_chart(evaluation.ic_decay)
+    st.plotly_chart(decay_fig)
 else:
-    st.warning("IC could not be computed — insufficient valid observations.")
-
-# -----------------------------------------------------------------------
-# IC decay bar chart
-# -----------------------------------------------------------------------
-if ic_available and evaluation is not None:
-    decay_data = pd.DataFrame(
-        {
-            "Horizon (bars)": list(evaluation.ic_decay.keys()),
-            "IC": list(evaluation.ic_decay.values()),
-        }
+    for col in (ic_col1, ic_col2, ic_col3, ic_col4):
+        col.metric("—", "—")
+    st.warning(
+        "IC could not be computed. Possible causes: fewer than 10 aligned observations, "
+        "all-NaN signal, or data too short for the selected indicator."
     )
-    st.caption("IC Decay — signal predictive power at increasing forecast horizons")
-    st.bar_chart(decay_data.set_index("Horizon (bars)"), height=180)
 
 st.divider()
 
-# -----------------------------------------------------------------------
-# Price chart with indicators
-# -----------------------------------------------------------------------
-st.subheader("Price & Indicators")
+# ── Price chart with indicators ───────────────────────────────────────────────
+section_header("Price Chart")
+df_plot = ff.data.iloc[-lookback:]
 price_fig = render_price_chart(
     df_plot,
-    title=f"{ASSET_DISPLAY[asset]} — Last {lookback} bars",
-    indicator_columns=indicator_cols,
+    title=f"{ASSET_DISPLAY[asset]}",
+    indicator_columns=display_cols,
 )
-st.plotly_chart(price_fig, use_container_width=True)
+st.plotly_chart(price_fig)
 
-# -----------------------------------------------------------------------
-# Signal chart
-# -----------------------------------------------------------------------
-st.subheader("Signal")
+# ── Signal chart ──────────────────────────────────────────────────────────────
+section_header("Signal")
 sig_fig = render_signal_chart(
     close_prices=df_plot["close"],
-    raw_signal=raw_plot,
-    position_signal=pos_plot,
-    title=f"{selected_signal} — Last {lookback} bars",
+    raw_signal=raw_signal.iloc[-lookback:],
+    position_signal=position_signal.iloc[-lookback:],
+    title=f"{selected_signal} — {ASSET_DISPLAY[asset]}",
 )
-st.plotly_chart(sig_fig, use_container_width=True)
+st.plotly_chart(sig_fig)

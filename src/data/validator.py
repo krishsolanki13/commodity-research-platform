@@ -53,6 +53,22 @@ class ValidationResult:
 class OHLCVValidator:
     """Validates raw OHLCV DataFrames before normalization.
 
+     Parameters:
+        asset: Asset identifier for error and log messages.
+        strict_ohlc: If True (default), OHLC consistency violations raise
+            DataValidationError. If False, violations are logged as WARNING
+            and data proceeds through the pipeline.
+
+            Set strict_ohlc=False for Yahoo Finance continuous series which
+            exhibit settlement price mixing artifacts per ADR-001: exchange
+            settlement prices are volume-weighted averages of the closing range
+            and can legally fall outside the intraday High/Low. Also handles
+            the 2020-04-20 WTI negative price event (-$37.63) which is genuine
+            historically significant market data, not a data error.
+
+            Set strict_ohlc=True for Phase 2 contract-level data from premium
+            vendors where OHLC consistency is guaranteed by the data provider.
+
     Raises DataValidationError if structural consistency violations are found.
     Logs WARNING for gaps and anomalies that do not block processing.
     Column names are normalised to lowercase internally — both 'Close' and
@@ -62,13 +78,16 @@ class OHLCVValidator:
     REQUIRED_COLUMNS: list[str] = ["open", "high", "low", "close"]
     EXTREME_RETURN_THRESHOLD: float = 0.50
 
-    def __init__(self, asset: str) -> None:
-        """Initialise validator for a specific asset.
+    def __init__(self, asset: str, strict_ohlc: bool = True) -> None:
+        """Initialise OHLCVValidator.
 
         Args:
-            asset: Asset identifier used in log and error messages (e.g., "gold").
+            asset: Asset identifier used in log and error messages.
+            strict_ohlc: If True, OHLC violations raise DataValidationError.
+                If False, violations are warnings only. Default True.
         """
         self._asset = asset
+        self._strict_ohlc = strict_ohlc
         self._logger = logging.getLogger(__name__)
 
     def validate(self, df: pd.DataFrame) -> ValidationResult:
@@ -94,8 +113,30 @@ class OHLCVValidator:
         errors: list[str] = []
         warnings: list[str] = []
 
-        errors.extend(self._check_ohlc_consistency(normalised))
-        errors.extend(self._check_duplicates(normalised))
+        ohlc_issues = self._check_ohlc_consistency(normalised)
+        dup_issues = self._check_duplicates(normalised)
+
+        if self._strict_ohlc:
+            # Strict mode: OHLC violations are hard errors.
+            # Use for Phase 2 contract-level data from premium vendors.
+            errors.extend(ohlc_issues)
+        else:
+            # Lenient mode: OHLC violations are warnings only.
+            # Appropriate for Yahoo Finance continuous series which exhibit
+            # settlement price mixing artifacts. See ADR-001.
+            if ohlc_issues:
+                self._logger.warning(
+                    "OHLCVValidator [%s]: %d OHLC consistency violations detected "
+                    "(strict_ohlc=False — treating as warnings per ADR-001). "
+                    "Likely causes: settlement price mixing artifact or known market events "
+                    "(e.g. WTI negative price 2020-04-20). First 3 violations: %s",
+                    self._asset,
+                    len(ohlc_issues),
+                    ohlc_issues[:3],
+                )
+            warnings.extend(ohlc_issues)
+
+        errors.extend(dup_issues)
         warnings.extend(self._check_gaps(normalised))
         warnings.extend(self._check_anomalies(normalised))
 

@@ -114,7 +114,7 @@ class DataLoader:
         raw_df = self._source.fetch(asset, start, end)
 
         # Step 2: Validate
-        validator = OHLCVValidator(asset)
+        validator = OHLCVValidator(asset, strict_ohlc=False)
         validation_result = validator.validate(raw_df)
         if validation_result.warnings:
             self._logger.warning(

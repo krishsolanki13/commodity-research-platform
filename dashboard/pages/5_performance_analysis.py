@@ -1,20 +1,26 @@
-"""Page 5: Performance Analysis — risk-adjusted metrics and rolling analytics.
+"""Page 5: Performance Analysis — risk-adjusted metrics and rolling attribution.
 
-Reads BacktestResult and PerformanceReport from session_state.
-Requires Strategy Builder (page 3) to have been run first.
-
-Consumes: Layers 3 and 4 output via session_state. No src/ computation.
-See Architecture Section 13 (Dashboard Architecture, Page Map).
+Three-tier metric hierarchy:
+    Tier 1: Sharpe, Max Drawdown, Total Return (read first by practitioners)
+    Tier 2: CAGR, Sortino, Calmar, Win Rate
+    Tier 3: Full grouped metrics table
 
 Note on initial_capital display: use report.initial_capital_usd as the
-authoritative source (per Module 6 deviation 1). Do not use
-report.scalar_metrics["initial_capital"] for display.
+authoritative source. Not scalar_metrics["initial_capital"]. See Module 6 notes.
+
+Consumes: Layers 3, 4 output via session_state. No src/ computation.
+See Architecture Section 13.
 """
 
 from __future__ import annotations
 
 import streamlit as st
 
+from dashboard.components._theme import (
+    inject_global_css,
+    render_kpi_row,
+    section_header,
+)
 from dashboard.components.equity_curve_chart import render_rolling_metrics_chart
 from dashboard.components.metrics_table import (
     build_metrics_dataframe,
@@ -23,15 +29,13 @@ from dashboard.components.metrics_table import (
 from src.core.types import BacktestResult, PerformanceReport
 
 st.set_page_config(page_title="Performance Analysis", layout="wide")
-st.title("📐 Performance Analysis")
+inject_global_css()
+st.title("Performance Analysis")
 
-# -----------------------------------------------------------------------
-# Session state guard
-# -----------------------------------------------------------------------
 if "performance_report" not in st.session_state:
     st.warning(
         "No backtest has been run yet. "
-        "Use **Strategy Builder** to run a backtest first."
+        "Use **Strategy Builder** (page 3) to run a backtest first."
     )
     st.stop()
 
@@ -44,142 +48,139 @@ st.caption(
     f"Strategy: **{st.session_state.get('last_run_strategy', result.metadata.strategy_name)}**"
 )
 
-# -----------------------------------------------------------------------
-# Top-level performance metrics
-# -----------------------------------------------------------------------
-st.subheader("Risk-Adjusted Metrics")
-
-top_col1, top_col2, top_col3, top_col4, top_col5, top_col6 = st.columns(6)
-
 sm = report.scalar_metrics
 
-top_col1.metric(
-    "Total Return",
-    f"{sm['total_return']:+.2%}",
-    help="(final_equity - initial_capital) / initial_capital",
+# ── Tier 1 — Primary metrics ──────────────────────────────────────────────────
+section_header("Risk-Adjusted Performance")
+render_kpi_row(
+    [
+        (
+            "Sharpe Ratio",
+            f"{sm['sharpe']:.4f}",
+            f"{sm['sharpe'] - 0.5:+.4f} vs 0.5 threshold",
+        ),
+        (
+            "Max Drawdown",
+            f"{sm['max_drawdown']:.2%}",
+            "Peak-to-trough / peak equity",
+        ),
+        (
+            "Total Return",
+            f"{sm['total_return']:+.2%}",
+            f"Initial: ${report.initial_capital_usd:,.0f}",
+        ),
+    ]
 )
-top_col2.metric(
-    "CAGR",
-    f"{sm['cagr']:+.2%}",
-    help="Annualized return assuming 252 trading days per year.",
-)
-top_col3.metric(
-    "Sharpe Ratio",
-    f"{sm['sharpe']:.3f}",
-    help="Annualized Sharpe. > 1.0 strong, > 0.5 acceptable.",
-)
-top_col4.metric(
-    "Sortino Ratio",
-    f"{sm['sortino']:.3f}",
-    help="Like Sharpe but penalizes only downside volatility.",
-)
-top_col5.metric(
-    "Calmar Ratio",
-    f"{sm['calmar']:.3f}",
-    help="CAGR / |Max Drawdown|. Higher is better.",
-)
-top_col6.metric(
-    "Max Drawdown",
-    f"{sm['max_drawdown']:.2%}",
-    help="Peak-to-trough decline as fraction of peak equity.",
+
+# ── Tier 2 — Secondary metrics ────────────────────────────────────────────────
+st.divider()
+render_kpi_row(
+    [
+        ("CAGR", f"{sm['cagr']:+.2%}", "Annualized · 252 days/yr"),
+        ("Sortino", f"{sm['sortino']:.4f}", "Downside deviation only"),
+        ("Calmar", f"{sm['calmar']:.4f}", "CAGR / |Max Drawdown|"),
+        (
+            "Win Rate",
+            f"{sm['win_rate']:.1%}",
+            f"{report.trade_statistics.get('n_winning', 0)}/{report.trade_statistics.get('n_trades', 0)} trades",
+        ),
+    ]
 )
 
 st.divider()
 
-# -----------------------------------------------------------------------
-# Rolling metrics chart
-# -----------------------------------------------------------------------
-st.subheader("Rolling Metrics")
-
+# ── Rolling metrics ───────────────────────────────────────────────────────────
+section_header("Rolling Performance — 63-bar window")
 roll = report.rolling_metrics
 if "rolling_sharpe_63" in roll and "rolling_drawdown" in roll:
     fig_rolling = render_rolling_metrics_chart(
         rolling_sharpe=roll["rolling_sharpe_63"],
         rolling_drawdown=roll["rolling_drawdown"],
-        title="Rolling Performance (63-bar window)",
+        title="Rolling Sharpe and Drawdown",
     )
-    st.plotly_chart(fig_rolling, use_container_width=True)
+    st.plotly_chart(fig_rolling)
     st.caption(
-        "Dashed line at Sharpe = 0.5. NaN values during 63-bar warmup period "
-        "are not plotted."
+        "Rolling Sharpe color encoding: green >= 1.0 · amber 0.5–1.0 · red < 0.5. "
+        "Shaded band marks the 0–0.5 inadequate zone. NaN during 63-bar warmup period."
     )
 else:
     st.info("Rolling metrics unavailable for this run.")
 
 st.divider()
 
-# -----------------------------------------------------------------------
-# Full metrics table
-# -----------------------------------------------------------------------
+# ── Full metrics table and signal metrics ─────────────────────────────────────
 col_metrics, col_signal = st.columns([1, 1])
 
 with col_metrics:
-    st.subheader("All Scalar Metrics")
-    # Use report.initial_capital_usd — authoritative source per Module 6 deviation 1
+    st.subheader("All Metrics")
+    # Uses report.initial_capital_usd — the authoritative source per Module 6 notes
     metrics_df = build_metrics_dataframe(
         scalar_metrics=sm,
         initial_capital_usd=report.initial_capital_usd,
     )
-    st.dataframe(metrics_df, use_container_width=True, hide_index=True)
+    st.dataframe(metrics_df, hide_index=True)
 
 with col_signal:
-    st.subheader("Signal Quality Metrics")
+    st.subheader("Signal Quality (IC Attribution)")
     signal_df = build_signal_metrics_dataframe(report.signal_metrics)
-
     if signal_df is not None:
-        st.dataframe(signal_df, use_container_width=True, hide_index=True)
-
-        # IC interpretation
-        ic_val = report.signal_metrics.get("ic", None)
+        st.dataframe(signal_df, hide_index=True)
+        ic_val = report.signal_metrics.get("ic")
         if ic_val is not None:
-            if abs(ic_val) >= 0.05:
+            abs_ic = abs(ic_val)
+            if abs_ic >= 0.05 and ic_val > 0:
                 st.success(
-                    f"IC = {ic_val:.4f} — meaningful predictive content (|IC| ≥ 0.05)."
+                    f"IC = {ic_val:.6f} — Strong positive signal (|IC| ≥ 0.05). "
+                    f"Signal predicts forward returns in the expected direction."
                 )
-            elif abs(ic_val) >= 0.02:
+            elif abs_ic >= 0.05 and ic_val < 0:
                 st.warning(
-                    f"IC = {ic_val:.4f} — weak signal (0.02 ≤ |IC| < 0.05). Investigate further."
+                    f"IC = {ic_val:.6f} — Strong inverse signal (|IC| ≥ 0.05, negative direction). "
+                    f"Signal is predictive but in the opposite direction from the hypothesis. "
+                    f"Consider inverting the signal or reviewing the entry/exit logic."
+                )
+            elif 0.02 <= abs_ic < 0.05 and ic_val > 0:
+                st.warning(
+                    f"IC = {ic_val:.6f} — Weak positive signal (0.02 ≤ |IC| < 0.05). "
+                    f"Some predictive content but regime-dependent."
+                )
+            elif 0.02 <= abs_ic < 0.05 and ic_val < 0:
+                st.warning(
+                    f"IC = {ic_val:.6f} — Weak inverse signal. "
+                    f"Some predictive content in the opposite direction."
                 )
             else:
                 st.error(
-                    f"IC = {ic_val:.4f} — likely noise (|IC| < 0.02). Backtest results may not be reliable."
+                    f"IC = {ic_val:.6f} — Noise (|IC| < 0.02). "
+                    f"No meaningful predictive content detected. "
+                    f"Backtest results may reflect chance rather than genuine edge."
                 )
     else:
         st.info(
-            "Signal quality metrics not available for this run. "
-            "Signal evaluation was not attached before computing PerformanceReport. "
-            "This occurs when the Strategy Builder pipeline runs the backtest without "
-            "IC evaluation — check data availability."
+            "Signal quality metrics not attached to this run. "
+            "Run via Strategy Builder to attach IC evaluation. "
+            "See ADR-007 for the IC-before-backtest architectural requirement."
         )
 
-st.divider()
-
-# -----------------------------------------------------------------------
-# Metadata
-# -----------------------------------------------------------------------
+# ── Metadata ──────────────────────────────────────────────────────────────────
 with st.expander("Run Metadata"):
     meta = result.metadata
-    meta_col1, meta_col2 = st.columns(2)
-    with meta_col1:
+    mc1, mc2 = st.columns(2)
+    with mc1:
         st.write(f"**Run ID:** `{meta.run_id}`")
         st.write(f"**Asset:** {meta.asset}")
         st.write(f"**Strategy:** {meta.strategy_name}")
         st.write(f"**Signal:** {meta.signal_name}")
         st.write(f"**Data source:** {meta.data_source}")
-    with meta_col2:
-        st.write(f"**Data start:** {meta.data_start}")
-        st.write(f"**Data end:** {meta.data_end}")
-        # Use report.initial_capital_usd — not scalar_metrics["initial_capital"]
+    with mc2:
+        st.write(f"**Data range:** {meta.data_start} to {meta.data_end}")
+        # report.initial_capital_usd — not scalar_metrics["initial_capital"]
         st.write(f"**Initial capital:** ${report.initial_capital_usd:,.0f}")
+        st.write(f"**Executed at:** {meta.executed_at.strftime('%Y-%m-%d %H:%M UTC')}")
         st.write(
             f"**Git commit:** `{meta.git_commit_hash[:8] if meta.git_commit_hash != 'unknown' else 'unknown'}`"
-        )
-        st.write(
-            f"**Executed at:** {meta.executed_at.strftime('%Y-%m-%d %H:%M:%S UTC')}"
         )
     st.write("**Parameters:**")
     st.json(meta.parameters)
     st.write("**Cost model:**")
     st.json(meta.cost_model_params)
-    st.write("**Sizing model:**")
-    st.json(meta.sizing_model_params)
