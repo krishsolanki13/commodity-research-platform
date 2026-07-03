@@ -15,6 +15,7 @@ from typing import Any
 
 import streamlit as st
 
+from dashboard.components._theme import inject_global_css, render_kpi_row
 from src.backtesting.engine import VectorizedBacktester
 from src.backtesting.run_manager import RunManager
 from src.core.config import Config
@@ -32,6 +33,8 @@ from src.signal.reversion import RSIReversionSignal
 from src.signal.trend import EMACrossoverSignal, MomentumSignal
 
 st.set_page_config(page_title="Strategy Builder", layout="wide")
+
+inject_global_css()
 
 ASSET_DISPLAY: dict[str, str] = {
     "gold": "Gold (GC=F)",
@@ -200,7 +203,7 @@ with st.sidebar:
         )
 
     st.divider()
-    run_button = st.button("Run Backtest", type="primary", use_container_width=True)
+    run_button = st.button("Run Backtest", type="primary")
 
 # ── Main panel ────────────────────────────────────────────────────────────────
 desc_col, status_col = st.columns([1, 1])
@@ -262,19 +265,30 @@ if run_button:
 
     st.success(f"Run complete — ID: `{result.run_id}`")
 
-    m1, m2, m3, m4, m5 = st.columns(5)
     ic_val = (
         result.signal_evaluation.ic if result.signal_evaluation is not None else None
     )
-    m1.metric(
-        "IC",
-        f"{ic_val:.6f}" if ic_val is not None else "n/a",
-        help="IC evaluation per ADR-007. |IC| >= 0.05: meaningful.",
+    ic_display = f"{ic_val:.6f}" if ic_val is not None else "n/a"
+    ic_context: str | None = None
+    if ic_val is not None:
+        if ic_val >= 0.05:
+            ic_context = "Meaningful positive"
+        elif ic_val <= -0.05:
+            ic_context = "Meaningful inverse"
+        elif abs(ic_val) >= 0.02:
+            ic_context = "Weak signal"
+        else:
+            ic_context = "Noise"
+
+    render_kpi_row(
+        [
+            ("IC", ic_display, ic_context),
+            ("Sharpe", f"{report.scalar_metrics['sharpe']:.4f}", None),
+            ("Max Drawdown", f"{report.scalar_metrics['max_drawdown']:.2%}", None),
+            ("Win Rate", f"{report.scalar_metrics['win_rate']:.1%}", None),
+            ("Trades", str(len(result.trades)), None),
+        ]
     )
-    m2.metric("Sharpe", f"{report.scalar_metrics['sharpe']:.4f}")
-    m3.metric("Max Drawdown", f"{report.scalar_metrics['max_drawdown']:.2%}")
-    m4.metric("Win Rate", f"{report.scalar_metrics['win_rate']:.1%}")
-    m5.metric("Trades", len(result.trades))
 
     st.caption(
         "Navigate to **Backtest Results** (page 4) or **Performance Analysis** (page 5) for full output."

@@ -12,10 +12,16 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from dashboard.components._theme import (
+    inject_global_css,
+    render_kpi_row,
+    section_header,
+)
 from dashboard.components.equity_curve_chart import render_equity_curve_chart
 from src.core.types import BacktestResult, PerformanceReport
 
 st.set_page_config(page_title="Backtest Results", layout="wide")
+inject_global_css()
 st.title("Backtest Results")
 
 if "backtest_result" not in st.session_state:
@@ -36,34 +42,41 @@ st.caption(
 )
 
 # ── Top metrics ───────────────────────────────────────────────────────────────
-m1, m2, m3, m4, m5 = st.columns(5)
 sm = report.scalar_metrics
-m1.metric("Total Return", f"{sm['total_return']:+.2%}")
-m2.metric("Sharpe Ratio", f"{sm['sharpe']:.4f}")
-m3.metric("Max Drawdown", f"{sm['max_drawdown']:.2%}")
-m4.metric("Win Rate", f"{sm['win_rate']:.1%}")
-m5.metric("Trades", len(result.trades))
+render_kpi_row(
+    [
+        ("Total Return", f"{sm['total_return']:+.2%}", None),
+        ("Sharpe Ratio", f"{sm['sharpe']:.4f}", None),
+        ("Max Drawdown", f"{sm['max_drawdown']:.2%}", None),
+        ("Win Rate", f"{sm['win_rate']:.1%}", None),
+        (
+            "Trades",
+            str(len(result.trades)),
+            f"Avg {sm.get('avg_trade_duration_bars', 0):.1f} bars",
+        ),
+    ]
+)
 
 st.divider()
 
 # ── Equity curve ──────────────────────────────────────────────────────────────
-st.subheader("Equity Curve")
+section_header("Equity Curve")
 fig_equity = render_equity_curve_chart(
     equity_curve=result.equity_curve,
     initial_capital=report.initial_capital_usd,
     title="Equity and Drawdown",
 )
-st.plotly_chart(fig_equity, use_container_width=True)
+st.plotly_chart(fig_equity)
 
 # ── Daily PnL ─────────────────────────────────────────────────────────────────
-st.subheader("Daily Net PnL")
+section_header("Daily Net PnL")
 pnl_df = result.pnl_series.rename("Daily PnL (USD)").to_frame()
 st.bar_chart(pnl_df, height=180)
 
 st.divider()
 
 # ── Trade log ─────────────────────────────────────────────────────────────────
-st.subheader("Trade Log")
+section_header("Trade Log")
 
 if not result.trades:
     st.info(
@@ -99,7 +112,7 @@ else:
     styled_trades = trade_df.style.map(
         _color_pnl, subset=["Net PnL (USD)", "Return (%)"]
     )
-    st.dataframe(styled_trades, use_container_width=True, hide_index=True)
+    st.dataframe(styled_trades, hide_index=True)
 
     # Full detail in expander
     with st.expander("Full trade detail (all fields)"):
@@ -120,7 +133,7 @@ else:
             }
             for t in result.trades
         ]
-        st.dataframe(pd.DataFrame(full_data), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(full_data), hide_index=True)
 
     with st.expander("Trade statistics"):
         ts = report.trade_statistics

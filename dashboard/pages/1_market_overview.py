@@ -12,12 +12,14 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from dashboard.components._theme import inject_global_css, section_header
 from dashboard.components.metrics_table import style_return_series
 from dashboard.components.price_chart import render_price_chart
 from src.core.config import Config
 from src.data.loader import DataLoader
 
 st.set_page_config(page_title="Market Overview", layout="wide")
+inject_global_css()
 
 ASSET_DISPLAY: dict[str, str] = {
     "gold": "Gold (GC=F · COMEX)",
@@ -49,7 +51,7 @@ st.caption(
 )
 
 # ── Universe summary table ────────────────────────────────────────────────────
-st.subheader("Commodity Universe")
+section_header("Commodity Universe")
 
 rows: list[dict] = []
 for key, display in ASSET_DISPLAY.items():
@@ -93,7 +95,7 @@ for key, display in ASSET_DISPLAY.items():
 
 summary_df = pd.DataFrame(rows)
 styled = style_return_series(summary_df, ["1D Ret (%)", "1W Ret (%)", "1M Ret (%)"])
-st.dataframe(styled, use_container_width=True, hide_index=True)
+st.dataframe(styled, hide_index=True)
 
 available_assets = [k for k in ASSET_DISPLAY if _load_asset(k) is not None]
 
@@ -107,7 +109,7 @@ if not available_assets:
     st.stop()
 
 # ── Price chart ───────────────────────────────────────────────────────────────
-st.subheader("Price Chart")
+section_header("Price Chart")
 
 sel_col, bar_col = st.columns([2, 1])
 with sel_col:
@@ -125,4 +127,4 @@ df_sel = _load_asset(selected)
 if df_sel is not None and len(df_sel) > 0:
     df_plot = df_sel.iloc[-lookback:]
     fig = render_price_chart(df_plot, title=ASSET_DISPLAY[selected])
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig)
