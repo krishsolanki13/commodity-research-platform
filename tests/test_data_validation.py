@@ -37,7 +37,7 @@ def test_ohlc_high_below_low_raises_data_validation_error() -> None:
     df.loc[1, "high"] = 1860.0  # high (1860) < low (1880)
 
     with pytest.raises(DataValidationError) as exc_info:
-        OHLCVValidator("gold").validate(df)
+        OHLCVValidator("gold", strict_ohlc=True).validate(df)
 
     # Error message must mention the violation
     assert "high" in str(exc_info.value).lower() or "low" in str(exc_info.value).lower()
@@ -49,7 +49,7 @@ def test_ohlc_close_above_high_raises_data_validation_error() -> None:
     df.loc[0, "close"] = 1950.0  # close (1950) > high (1920)
 
     with pytest.raises(DataValidationError):
-        OHLCVValidator("gold").validate(df)
+        OHLCVValidator("gold", strict_ohlc=True).validate(df)
 
 
 def test_ohlc_close_below_low_raises_data_validation_error() -> None:
@@ -58,7 +58,7 @@ def test_ohlc_close_below_low_raises_data_validation_error() -> None:
     df.loc[2, "close"] = 1800.0  # close (1800) < low (1880)
 
     with pytest.raises(DataValidationError):
-        OHLCVValidator("gold").validate(df)
+        OHLCVValidator("gold", strict_ohlc=True).validate(df)
 
 
 def test_ohlc_zero_or_negative_close_raises_data_validation_error() -> None:
@@ -71,7 +71,7 @@ def test_ohlc_zero_or_negative_close_raises_data_validation_error() -> None:
     df_zero.loc[0, "open"] = 0.005
 
     with pytest.raises(DataValidationError):
-        OHLCVValidator("gold").validate(df_zero)
+        OHLCVValidator("gold", strict_ohlc=True).validate(df_zero)
 
     # Case 2: close < 0
     df_neg = _make_valid_ohlcv(3)
@@ -81,7 +81,7 @@ def test_ohlc_zero_or_negative_close_raises_data_validation_error() -> None:
     df_neg.loc[1, "open"] = -0.5
 
     with pytest.raises(DataValidationError):
-        OHLCVValidator("gold").validate(df_neg)
+        OHLCVValidator("gold", strict_ohlc=True).validate(df_neg)
 
 
 def test_valid_data_passes_validation(gold_ohlcv: pd.DataFrame) -> None:
@@ -89,7 +89,7 @@ def test_valid_data_passes_validation(gold_ohlcv: pd.DataFrame) -> None:
     # gold_ohlcv has a DatetimeIndex — reset it to expose the date as a column
     df = gold_ohlcv.reset_index()
 
-    result = OHLCVValidator("gold").validate(df)
+    result = OHLCVValidator("gold", strict_ohlc=True).validate(df)
 
     assert isinstance(result, ValidationResult)
     assert result.is_valid is True
@@ -114,7 +114,7 @@ def test_gap_detection_returns_warnings_not_error() -> None:
     )
 
     # Must NOT raise
-    result = OHLCVValidator("gold").validate(df)
+    result = OHLCVValidator("gold", strict_ohlc=True).validate(df)
 
     assert result.is_valid is True
     assert len(result.warnings) >= 1
@@ -127,7 +127,7 @@ def test_zero_volume_returns_warning_not_error() -> None:
     df.loc[2, "volume"] = 0  # zero volume on one row
 
     # Must NOT raise
-    result = OHLCVValidator("gold").validate(df)
+    result = OHLCVValidator("gold", strict_ohlc=True).validate(df)
 
     assert result.is_valid is True
     assert any("volume" in w.lower() for w in result.warnings)
