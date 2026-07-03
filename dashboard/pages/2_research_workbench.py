@@ -13,6 +13,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from dashboard.components._theme import inject_global_css, section_header
 from dashboard.components.price_chart import render_price_chart
 from dashboard.components.signal_chart import render_ic_decay_chart, render_signal_chart
 from src.core.config import Config
@@ -28,6 +29,7 @@ from src.signal.reversion import RSIReversionSignal
 from src.signal.trend import EMACrossoverSignal, MomentumSignal
 
 st.set_page_config(page_title="Research Workbench", layout="wide")
+inject_global_css()
 
 ASSET_DISPLAY: dict[str, str] = {
     "gold": "Gold (GC=F)",
@@ -159,9 +161,10 @@ with st.spinner("Computing IC..."):
         ic_available = False
 
 # ── Signal quality display ────────────────────────────────────────────────────
-st.subheader("Signal Quality (IC Analysis)")
+section_header("Signal Quality — IC Analysis")
 st.caption(
-    "IC interpretation: |IC| < 0.02 = noise · 0.02–0.05 = weak · ≥ 0.05 = meaningful signal. "
+    "IC interpretation: |IC| < 0.02 = noise · 0.02–0.05 = weak · ≥ 0.05 = meaningful. "
+    "Direction matters: positive IC = signal aligned · negative IC = signal inverted. "
     "ICIR ≥ 0.5 indicates consistency across time."
 )
 
@@ -174,10 +177,14 @@ if ic_available and evaluation is not None:
     ic_col2.metric("ICIR", f"{icir:.6f}")
     ic_col3.metric("Turnover (signal)", f"{evaluation.turnover:.6f}")
 
-    if abs(ic) >= 0.05:
-        ic_col4.success("PASS — meaningful signal")
-    elif abs(ic) >= 0.02:
-        ic_col4.warning("WEAK — investigate further")
+    if ic >= 0.05:
+        ic_col4.success("PASS — positive signal")
+    elif ic <= -0.05:
+        ic_col4.warning("PASS (inverse) — signal predicts opposite direction")
+    elif 0.02 <= ic < 0.05:
+        ic_col4.warning("WEAK — weak positive")
+    elif -0.05 < ic <= -0.02:
+        ic_col4.warning("WEAK (inverse) — weak inverse")
     else:
         ic_col4.error("NOISE — |IC| below 0.02")
 
@@ -187,7 +194,7 @@ if ic_available and evaluation is not None:
         "A well-structured signal retains IC at short horizons and decays at long ones."
     )
     decay_fig = render_ic_decay_chart(evaluation.ic_decay)
-    st.plotly_chart(decay_fig, use_container_width=True)
+    st.plotly_chart(decay_fig)
 else:
     for col in (ic_col1, ic_col2, ic_col3, ic_col4):
         col.metric("—", "—")
@@ -199,21 +206,21 @@ else:
 st.divider()
 
 # ── Price chart with indicators ───────────────────────────────────────────────
-st.subheader("Price Chart")
+section_header("Price Chart")
 df_plot = ff.data.iloc[-lookback:]
 price_fig = render_price_chart(
     df_plot,
     title=f"{ASSET_DISPLAY[asset]}",
     indicator_columns=display_cols,
 )
-st.plotly_chart(price_fig, use_container_width=True)
+st.plotly_chart(price_fig)
 
 # ── Signal chart ──────────────────────────────────────────────────────────────
-st.subheader("Signal")
+section_header("Signal")
 sig_fig = render_signal_chart(
     close_prices=df_plot["close"],
     raw_signal=raw_signal.iloc[-lookback:],
     position_signal=position_signal.iloc[-lookback:],
     title=f"{selected_signal} — {ASSET_DISPLAY[asset]}",
 )
-st.plotly_chart(sig_fig, use_container_width=True)
+st.plotly_chart(sig_fig)

@@ -16,6 +16,11 @@ from __future__ import annotations
 
 import streamlit as st
 
+from dashboard.components._theme import (
+    inject_global_css,
+    render_kpi_row,
+    section_header,
+)
 from dashboard.components.equity_curve_chart import render_rolling_metrics_chart
 from dashboard.components.metrics_table import (
     build_metrics_dataframe,
@@ -24,6 +29,7 @@ from dashboard.components.metrics_table import (
 from src.core.types import BacktestResult, PerformanceReport
 
 st.set_page_config(page_title="Performance Analysis", layout="wide")
+inject_global_css()
 st.title("Performance Analysis")
 
 if "performance_report" not in st.session_state:
@@ -45,49 +51,46 @@ st.caption(
 sm = report.scalar_metrics
 
 # ── Tier 1 — Primary metrics ──────────────────────────────────────────────────
-st.subheader("Risk-Adjusted Performance")
-t1c1, t1c2, t1c3 = st.columns(3)
-t1c1.metric(
-    "Sharpe Ratio",
-    f"{sm['sharpe']:.4f}",
-    delta=f"{sm['sharpe'] - 0.5:+.4f} vs 0.5 threshold",
-    help="Annualized: mean(daily_return) / std(daily_return) * sqrt(252). > 1.0: strong. > 0.5: adequate.",
-)
-t1c2.metric(
-    "Max Drawdown",
-    f"{sm['max_drawdown']:.2%}",
-    help="Peak-to-trough decline as a fraction of peak equity.",
-)
-t1c3.metric(
-    "Total Return",
-    f"{sm['total_return']:+.2%}",
-    help="(final_equity - initial_capital) / initial_capital.",
+section_header("Risk-Adjusted Performance")
+render_kpi_row(
+    [
+        (
+            "Sharpe Ratio",
+            f"{sm['sharpe']:.4f}",
+            f"{sm['sharpe'] - 0.5:+.4f} vs 0.5 threshold",
+        ),
+        (
+            "Max Drawdown",
+            f"{sm['max_drawdown']:.2%}",
+            "Peak-to-trough / peak equity",
+        ),
+        (
+            "Total Return",
+            f"{sm['total_return']:+.2%}",
+            f"Initial: ${report.initial_capital_usd:,.0f}",
+        ),
+    ]
 )
 
 # ── Tier 2 — Secondary metrics ────────────────────────────────────────────────
 st.divider()
-t2c1, t2c2, t2c3, t2c4 = st.columns(4)
-t2c1.metric(
-    "CAGR",
-    f"{sm['cagr']:+.2%}",
-    help="Annualized return assuming 252 trading days/year.",
-)
-t2c2.metric(
-    "Sortino Ratio",
-    f"{sm['sortino']:.4f}",
-    help="Like Sharpe but penalizes only downside volatility.",
-)
-t2c3.metric("Calmar Ratio", f"{sm['calmar']:.4f}", help="CAGR / |Max Drawdown|.")
-t2c4.metric(
-    "Win Rate",
-    f"{sm['win_rate']:.1%}",
-    help="Fraction of trades with positive net PnL.",
+render_kpi_row(
+    [
+        ("CAGR", f"{sm['cagr']:+.2%}", "Annualized · 252 days/yr"),
+        ("Sortino", f"{sm['sortino']:.4f}", "Downside deviation only"),
+        ("Calmar", f"{sm['calmar']:.4f}", "CAGR / |Max Drawdown|"),
+        (
+            "Win Rate",
+            f"{sm['win_rate']:.1%}",
+            f"{report.trade_statistics.get('n_winning', 0)}/{report.trade_statistics.get('n_trades', 0)} trades",
+        ),
+    ]
 )
 
 st.divider()
 
 # ── Rolling metrics ───────────────────────────────────────────────────────────
-st.subheader("Rolling Performance (63-bar window)")
+section_header("Rolling Performance — 63-bar window")
 roll = report.rolling_metrics
 if "rolling_sharpe_63" in roll and "rolling_drawdown" in roll:
     fig_rolling = render_rolling_metrics_chart(
@@ -95,7 +98,7 @@ if "rolling_sharpe_63" in roll and "rolling_drawdown" in roll:
         rolling_drawdown=roll["rolling_drawdown"],
         title="Rolling Sharpe and Drawdown",
     )
-    st.plotly_chart(fig_rolling, use_container_width=True)
+    st.plotly_chart(fig_rolling)
     st.caption(
         "Rolling Sharpe color encoding: green >= 1.0 · amber 0.5–1.0 · red < 0.5. "
         "Shaded band marks the 0–0.5 inadequate zone. NaN during 63-bar warmup period."
@@ -115,27 +118,42 @@ with col_metrics:
         scalar_metrics=sm,
         initial_capital_usd=report.initial_capital_usd,
     )
-    st.dataframe(metrics_df, use_container_width=True, hide_index=True)
+    st.dataframe(metrics_df, hide_index=True)
 
 with col_signal:
     st.subheader("Signal Quality (IC Attribution)")
     signal_df = build_signal_metrics_dataframe(report.signal_metrics)
     if signal_df is not None:
-        st.dataframe(signal_df, use_container_width=True, hide_index=True)
+        st.dataframe(signal_df, hide_index=True)
         ic_val = report.signal_metrics.get("ic")
         if ic_val is not None:
-            if abs(ic_val) >= 0.05:
+            abs_ic = abs(ic_val)
+            if abs_ic >= 0.05 and ic_val > 0:
                 st.success(
-                    f"IC = {ic_val:.6f} — meaningful predictive content (|IC| >= 0.05)."
+                    f"IC = {ic_val:.6f} — Strong positive signal (|IC| ≥ 0.05). "
+                    f"Signal predicts forward returns in the expected direction."
                 )
-            elif abs(ic_val) >= 0.02:
+            elif abs_ic >= 0.05 and ic_val < 0:
                 st.warning(
-                    f"IC = {ic_val:.6f} — weak signal. Results may be regime-dependent."
+                    f"IC = {ic_val:.6f} — Strong inverse signal (|IC| ≥ 0.05, negative direction). "
+                    f"Signal is predictive but in the opposite direction from the hypothesis. "
+                    f"Consider inverting the signal or reviewing the entry/exit logic."
+                )
+            elif 0.02 <= abs_ic < 0.05 and ic_val > 0:
+                st.warning(
+                    f"IC = {ic_val:.6f} — Weak positive signal (0.02 ≤ |IC| < 0.05). "
+                    f"Some predictive content but regime-dependent."
+                )
+            elif 0.02 <= abs_ic < 0.05 and ic_val < 0:
+                st.warning(
+                    f"IC = {ic_val:.6f} — Weak inverse signal. "
+                    f"Some predictive content in the opposite direction."
                 )
             else:
                 st.error(
-                    f"IC = {ic_val:.6f} — noise level (|IC| < 0.02). "
-                    "Backtest results may reflect chance rather than edge."
+                    f"IC = {ic_val:.6f} — Noise (|IC| < 0.02). "
+                    f"No meaningful predictive content detected. "
+                    f"Backtest results may reflect chance rather than genuine edge."
                 )
     else:
         st.info(
