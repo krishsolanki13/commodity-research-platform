@@ -530,4 +530,7 @@ def render_kpi_row(
     overflow: hidden;
 "><tr>{cells}</tr></table>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    if hasattr(st, "html"):
+        st.html(html)
+    else:
+        st.markdown(html, unsafe_allow_html=True)
