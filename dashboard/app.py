@@ -20,6 +20,10 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+from dashboard.components._theme import inject_global_css  # noqa: E402
+
+inject_global_css()
+
 st.title("Commodity Systematic Research Platform")
 st.markdown(
     "Institutional-style quantitative research infrastructure for commodity futures markets. "
