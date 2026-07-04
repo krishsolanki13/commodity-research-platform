@@ -179,3 +179,14 @@ class FuturesContractSource(DataSource):
         if not asset_dir.exists():
             return []
         return sorted(p.stem for p in asset_dir.glob("*.csv"))
+
+    def available_assets(self) -> list[str]:
+        """Return asset identifiers for which contract CSV directories exist.
+
+        Returns:
+            Sorted list of asset names (e.g. ['gold', 'wti']).
+            Empty list if no contract data has been downloaded.
+        """
+        if not self._raw_dir.exists():
+            return []
+        return sorted(d.name for d in self._raw_dir.iterdir() if d.is_dir())
