@@ -100,6 +100,7 @@ class ContractParquetStore(ContractStore):
         parquet_path = self._parquet_path(asset, ticker)
         parquet_path.parent.mkdir(parents=True, exist_ok=True)
 
+        df.attrs = {}
         df.to_parquet(parquet_path, engine="pyarrow")
 
         # Write sidecar metadata JSON
