@@ -275,3 +275,106 @@ class ContractMetadata:
 
     def __str__(self) -> str:
         return f"{self.ticker} ({self.asset} {self.contract_year}-{self.contract_month:02d})"
+
+
+@dataclass
+class CurvePoint:
+    """A single point on the futures term structure.
+
+    Represents one delivery contract's price contribution to the forward
+    curve at a specific observation date.
+
+    Produced by FuturesCurveBuilder._build_curve_point().
+    Consumed as part of FuturesCurve by Module 10 (TermStructureAnalytics).
+    """
+
+    metadata: ContractMetadata
+    """Contract identification — ticker, asset, delivery month/year."""
+
+    close: float
+    """Settlement price at or nearest to the observation_date."""
+
+    volume: float
+    """Trading volume at the data_date. May be NaN if not available."""
+
+    observation_date: date
+    """The anchor date for which this curve was constructed."""
+
+    data_date: date
+    """Actual date of the price used. May be before observation_date if
+    no data exists on exactly the observation_date (e.g. market holiday)."""
+
+    days_to_delivery: int
+    """Approximate days from observation_date to start of delivery month.
+    Computed as (date(year, month, 1) - observation_date).days.
+    Negative values indicate an expired contract still in the dataset."""
+
+
+@dataclass
+class FuturesCurve:
+    """A term structure snapshot — the full forward price curve at one date.
+
+    Produced by FuturesCurveBuilder.build(). Points are sorted by
+    delivery date, nearest first. Consumed by Module 10 (TermStructureAnalytics).
+    """
+
+    asset: str
+    observation_date: date
+    points: list[CurvePoint]
+
+    @property
+    def n_points(self) -> int:
+        return len(self.points)
+
+    @property
+    def is_empty(self) -> bool:
+        return len(self.points) == 0
+
+    @property
+    def front_price(self) -> float:
+        return self.points[0].close if self.points else float("nan")
+
+    @property
+    def back_price(self) -> float:
+        return self.points[-1].close if self.points else float("nan")
+
+    @property
+    def prices(self) -> list[float]:
+        return [p.close for p in self.points]
+
+    @property
+    def tickers(self) -> list[str]:
+        return [p.metadata.ticker for p in self.points]
+
+    @property
+    def is_contango(self) -> bool:
+        """True if back_price > front_price. False for < 2 points."""
+        if len(self.points) < 2:
+            return False
+        return self.points[-1].close > self.points[0].close
+
+    @property
+    def is_backwardation(self) -> bool:
+        """True if front_price > back_price. False for < 2 points."""
+        if len(self.points) < 2:
+            return False
+        return self.points[-1].close < self.points[0].close
+
+    @property
+    def slope(self) -> float:
+        """Price per day slope. Positive = contango. NaN if < 2 points."""
+        if len(self.points) < 2:
+            return float("nan")
+        front = self.points[0]
+        back = self.points[-1]
+        day_spread = back.days_to_delivery - front.days_to_delivery
+        if day_spread == 0:
+            return float("nan")
+        return (back.close - front.close) / day_spread
+
+    def spread(self, front_idx: int = 0, back_idx: int = -1) -> float:
+        """Price spread: points[back_idx].close - points[front_idx].close."""
+        try:
+            return self.points[back_idx].close - self.points[front_idx].close
+        except IndexError:
+            return float("nan")
