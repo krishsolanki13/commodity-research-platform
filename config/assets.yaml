@@ -1,5 +1,7 @@
 gold:
   ticker_continuous: "GC=F"
+  contract_root: "GC"
+  exchange_suffix: "CMX"
   exchange: "COMEX"
   currency: "USD"
   unit: "troy_oz"
@@ -9,6 +11,8 @@ gold:
 
 silver:
   ticker_continuous: "SI=F"
+  contract_root: "SI"
+  exchange_suffix: "CMX"
   exchange: "COMEX"
   currency: "USD"
   unit: "troy_oz"
@@ -18,6 +22,8 @@ silver:
 
 copper:
   ticker_continuous: "HG=F"
+  contract_root: "HG"
+  exchange_suffix: "CMX"
   exchange: "COMEX"
   currency: "USD"
   unit: "lb"
@@ -27,6 +33,8 @@ copper:
 
 wti:
   ticker_continuous: "CL=F"
+  contract_root: "CL"
+  exchange_suffix: "NYM"
   exchange: "NYMEX"
   currency: "USD"
   unit: "barrel"
@@ -36,6 +44,8 @@ wti:
 
 brent:
   ticker_continuous: "BZ=F"
+  contract_root: "BZ"
+  exchange_suffix: "NYM"
   exchange: "ICE"
   currency: "USD"
   unit: "barrel"
@@ -45,6 +55,8 @@ brent:
 
 natural_gas:
   ticker_continuous: "NG=F"
+  contract_root: "NG"
+  exchange_suffix: "NYM"
   exchange: "NYMEX"
   currency: "USD"
   unit: "MMBtu"
