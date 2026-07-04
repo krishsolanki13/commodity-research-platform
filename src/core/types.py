@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import datetime
 from dataclasses import dataclass
+from datetime import date
 from typing import Any
 
 import pandas as pd
@@ -218,3 +219,59 @@ class PerformanceReport:
     rolling_metrics: dict[str, pd.Series]
     trade_statistics: dict[str, Any]
     signal_metrics: dict[str, float]
+
+
+@dataclass
+class ContractMetadata:
+    """Identifies a single futures delivery contract.
+
+    Produced by FuturesContractSource and ContractDataLoader.
+    Consumed by Module 9 FuturesCurveLayer and Module 10 TermStructureAnalytics.
+    """
+
+    ticker: str
+    """Full canonical ticker string. e.g. 'GCZ24' for Gold December 2024.
+    This is the storage identifier — no exchange suffix."""
+
+    asset: str
+    """Platform asset identifier. e.g. 'gold'."""
+
+    contract_root: str
+    """CME root symbol. e.g. 'GC' for Gold."""
+
+    contract_month: int
+    """Delivery month as integer 1-12."""
+
+    contract_year: int
+    """Delivery year as 4-digit integer."""
+
+    expiry_date: date | None = None
+    """Last trading date for this contract. None if not yet known."""
+
+    first_notice_date: date | None = None
+    """First notice date (physical delivery assets). None for cash-settled."""
+
+    n_bars: int = 0
+    """Number of trading bars downloaded for this contract. 0 if not yet downloaded."""
+
+    @property
+    def month_code(self) -> str:
+        """CME month code for this contract's delivery month."""
+        _MONTH_CODES = {  # noqa: N806
+            1: "F",
+            2: "G",
+            3: "H",
+            4: "J",
+            5: "K",
+            6: "M",
+            7: "N",
+            8: "Q",
+            9: "U",
+            10: "V",
+            11: "X",
+            12: "Z",
+        }
+        return _MONTH_CODES[self.contract_month]
+
+    def __str__(self) -> str:
+        return f"{self.ticker} ({self.asset} {self.contract_year}-{self.contract_month:02d})"

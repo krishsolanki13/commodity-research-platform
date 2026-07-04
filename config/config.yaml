@@ -3,6 +3,8 @@ paths:
   processed_data: "data/processed/"
   runs: "data/runs/"
   logs: "logs/"
+  contracts_raw: "data/raw/contracts/"
+  contracts_processed: "data/processed/contracts/"
 
 logging:
   level: "INFO"
