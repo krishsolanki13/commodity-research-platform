@@ -46,6 +46,7 @@ class Config:
         data: dict[str, Any],
         assets: dict[str, dict],
         strategies: dict[str, dict],
+        _config: dict[str, Any],
     ) -> None:
         self.paths = paths
         self.logging = logging
@@ -54,6 +55,7 @@ class Config:
         self.data = data
         self.assets = assets
         self.strategies = strategies
+        self._config = _config
 
     @classmethod
     def load(cls, config_dir: str = "config/") -> Config:
@@ -158,4 +160,19 @@ class Config:
             data=raw_config["data"],
             assets=raw_assets,
             strategies=raw_strategies,
+            _config=raw_config,
         )
+
+    @property
+    def mlflow_tracking_uri(self) -> str:
+        """MLflow tracking server URI. Default: local filesystem."""
+        uri = self._config.get("mlflow", {}).get("tracking_uri", "file:./data/mlruns")
+        return str(uri)
+
+    @property
+    def mlflow_experiment_prefix(self) -> str:
+        """MLflow experiment name prefix. Experiments: {prefix}_{asset}."""
+        prefix = self._config.get("mlflow", {}).get(
+            "experiment_prefix", "commodity_research"
+        )
+        return str(prefix)
