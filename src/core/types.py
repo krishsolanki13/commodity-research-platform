@@ -404,6 +404,9 @@ class TermStructureRegime(str, Enum):  # noqa: UP042
     BACKWARDATION = "backwardation"
     FLAT = "flat"
 
+    def __str__(self) -> str:
+        return self.value
+
 
 @dataclass
 class TermStructureSnapshot:
