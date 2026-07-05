@@ -13,6 +13,7 @@ from __future__ import annotations
 import datetime
 import json
 import logging
+import math
 import shutil
 from dataclasses import asdict, fields
 from pathlib import Path
@@ -195,3 +196,111 @@ class RunManager:
             run_id,
             report.scalar_metrics.get("sharpe", float("nan")),
         )
+
+        # Log to MLflow alongside file-based artifacts (best-effort, ADR-009 Phase 2)
+        self._try_log_to_mlflow(run_id, report)
+
+    def _try_log_to_mlflow(
+        self,
+        run_id: str,
+        report: PerformanceReport,
+    ) -> None:
+        """Attempt to log run parameters and metrics to MLflow.
+
+        Non-fatal — any exception caught and logged as WARNING.
+        File-based artifacts are never affected by MLflow failures.
+        Reads parameters from params.json (already written by save()).
+        """
+        try:
+            import mlflow  # noqa: PLC0415
+        except ImportError:
+            self._logger.debug(
+                "RunManager: mlflow not installed — skipping MLflow logging for run %s",
+                run_id,
+            )
+            return
+
+        try:
+            run_dir = Path(self._config.paths["runs"]) / run_id
+            params_path = run_dir / "params.json"
+
+            if not params_path.exists():
+                self._logger.warning(
+                    "RunManager: params.json not found for run %s — cannot log to MLflow",
+                    run_id,
+                )
+                return
+
+            with open(params_path, encoding="utf-8") as f:
+                stored_params = json.load(f)
+
+            asset = stored_params.get("asset", "unknown")
+            experiment_name = f"{self._config.mlflow_experiment_prefix}_{asset}"
+
+            mlflow.set_tracking_uri(self._config.mlflow_tracking_uri)
+            mlflow.set_experiment(experiment_name)
+
+            with mlflow.start_run(run_name=run_id):
+                mlflow_params: dict[str, str] = {
+                    "asset": str(stored_params.get("asset", "")),
+                    "strategy_name": str(stored_params.get("strategy_name", "")),
+                    "signal_name": str(stored_params.get("signal_name", "")),
+                    "initial_capital": str(
+                        stored_params.get("initial_capital_usd", "")
+                    ),
+                    "data_source": str(stored_params.get("data_source", "")),
+                    "data_start": str(stored_params.get("data_start", "")),
+                    "data_end": str(stored_params.get("data_end", "")),
+                }
+                for k, v in stored_params.get("parameters", {}).items():
+                    safe_key = _sanitize_mlflow_key(f"param_{k}")
+                    mlflow_params[safe_key] = str(v)[:500]
+
+                mlflow.log_params(mlflow_params)
+
+                mlflow_metrics: dict[str, float] = {
+                    k: float(v)
+                    for k, v in report.scalar_metrics.items()
+                    if isinstance(v, int | float) and not math.isnan(float(v))
+                }
+                if report.signal_metrics:
+                    mlflow_metrics.update(
+                        {
+                            k: float(v)
+                            for k, v in report.signal_metrics.items()
+                            if isinstance(v, int | float) and not math.isnan(float(v))
+                        }
+                    )
+                if mlflow_metrics:
+                    mlflow.log_metrics(mlflow_metrics)
+
+                mlflow.set_tag("file_run_id", run_id)
+                mlflow.set_tag("artifacts_path", str(run_dir))
+
+            self._logger.info(
+                "RunManager: MLflow logged run %s to experiment '%s'",
+                run_id,
+                experiment_name,
+            )
+
+        except Exception as exc:  # noqa: BLE001
+            self._logger.warning(
+                "RunManager: MLflow logging failed for run %s — %s: %s. "
+                "File-based artifacts are unaffected.",
+                run_id,
+                type(exc).__name__,
+                exc,
+            )
+
+
+def _sanitize_mlflow_key(key: str) -> str:
+    """Sanitize a string for use as an MLflow parameter key.
+
+    MLflow keys cannot contain spaces or most special characters.
+    Replaces non-alphanumeric characters (except _.-/) with underscores.
+    Truncates to 250 characters (MLflow key limit).
+    """
+    import re
+
+    sanitized = re.sub(r"[^a-zA-Z0-9_.\-/]", "_", key)
+    return sanitized[:250]
