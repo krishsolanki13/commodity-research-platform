@@ -19,7 +19,7 @@ from src.backtesting.run_manager import generate_run_id
 from src.backtesting.sizing import FixedNotionalSizer
 from src.backtesting.trade_log import TradeLog
 from src.core.config import Config
-from src.core.registry import BacktestEngine
+from src.core.registry import BacktestEngine, PositionSizer
 from src.core.types import BacktestMetadata, BacktestResult, TradeRecord
 
 
@@ -40,6 +40,7 @@ class VectorizedBacktester(BacktestEngine):
         config: Config,
         parameters: dict[str, Any] | None = None,
         initial_capital_usd: float = 1_000_000.0,
+        sizer: PositionSizer | None = None,
     ) -> None:
         """Initialise VectorizedBacktester.
 
@@ -71,9 +72,12 @@ class VectorizedBacktester(BacktestEngine):
             commission_per_trade=config.costs["default_commission_usd"],
             slippage_ticks=config.costs["default_slippage_ticks"],
         )
-        self._position_sizer = FixedNotionalSizer(
-            notional_usd=config.sizing["fixed_notional_usd"]
-        )
+        if sizer is not None:
+            self._sizer = sizer
+        else:
+            self._sizer = FixedNotionalSizer(
+                notional_usd=config.sizing["fixed_notional_usd"]
+            )
         self._logger = logging.getLogger(__name__)
 
     def run(self, position_signal: pd.Series, ohlcv: pd.DataFrame) -> BacktestResult:
@@ -94,11 +98,14 @@ class VectorizedBacktester(BacktestEngine):
             run_id=run_id,
             asset=self._asset,
             cost_model=self._cost_model,
-            position_sizer=self._position_sizer,
+            position_sizer=self._sizer,
             contract_multiplier=self._contract_multiplier,
             tick_value=self._tick_value,
             initial_capital_usd=self._initial_capital_usd,
         )
+        self._sizer.configure(
+            ohlcv
+        )  # no-op for FixedNotionalSizer; pre-computes vol for VolatilityScaledSizer
         trades = trade_log.build(position_signal, ohlcv)
 
         pnl_series = self._build_pnl_series(trades, ohlcv)
