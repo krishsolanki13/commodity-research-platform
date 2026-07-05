@@ -147,4 +147,5 @@ class OHLCVNormalizer:
         result.attrs["data_start"] = result.index.min().date()
         result.attrs["data_end"] = result.index.max().date()
 
+        result.attrs = {}
         return result
