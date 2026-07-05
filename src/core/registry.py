@@ -149,6 +149,23 @@ class PositionSizer(ABC):
     Both implement this interface. See ADR-005.
     """
 
+    def configure(self, ohlcv: pd.DataFrame) -> None:  # noqa: B027
+        """Optional data-driven pre-computation hook.
+
+        Called by VectorizedBacktester.run() with the full OHLCV DataFrame
+        before the simulation loop begins. Static sizers that do not require
+        data-driven initialization inherit this no-op implementation.
+
+        VolatilityScaledSizer overrides this to pre-compute realized
+        volatility before size() is called.
+
+        Args:
+            ohlcv: NormalizedOHLCV DataFrame from DataLoader.load().
+        """
+        # No-op by default. FixedNotionalSizer and other static sizers
+        # do not need data-driven initialization.
+        pass
+
     @abstractmethod
     def compute_size(
         self,
