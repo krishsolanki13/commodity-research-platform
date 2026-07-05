@@ -11,6 +11,7 @@ from __future__ import annotations
 import datetime
 from dataclasses import dataclass
 from datetime import date
+from enum import Enum
 from typing import Any
 
 import pandas as pd
@@ -378,3 +379,97 @@ class FuturesCurve:
             return self.points[back_idx].close - self.points[front_idx].close
         except IndexError:
             return float("nan")
+
+
+class TermStructureRegime(str, Enum):  # noqa: UP042
+    """Classification of the futures term structure at a point in time.
+
+    Produced by TermStructureAnalyzer.classify_regime().
+    Stored in TermStructureSnapshot.regime.
+
+    Inherits from str for JSON serialization compatibility — values can be
+    written to metrics.json and compared with plain string literals.
+
+    CONTANGO:      Annualized slope > +threshold. Deferred delivery priced
+                   higher than near-term. Typical in commodity markets with
+                   high storage costs relative to convenience yield.
+    BACKWARDATION: Annualized slope < -threshold. Near-term delivery priced
+                   higher than deferred. Occurs during supply squeezes or
+                   periods of elevated physical demand.
+    FLAT:          |Annualized slope| <= threshold. Negligible term structure
+                   slope, or fewer than 2 contracts available.
+    """
+
+    CONTANGO = "contango"
+    BACKWARDATION = "backwardation"
+    FLAT = "flat"
+
+    def __str__(self) -> str:
+        return self.value
+
+
+@dataclass
+class TermStructureSnapshot:
+    """Analytics computed for a single FuturesCurve at one observation date.
+
+    Produced by TermStructureAnalyzer.analyze(). Contains all computed
+    term structure metrics alongside the source FuturesCurve.
+
+    Consumed by Module 13 (Dashboard Page 6) for visualization.
+    In Phase 3, regime may be used as a conditioning variable for
+    signal research and cross-asset analytics.
+
+    Basis note: basis and basis_pct use the continuous front-month price
+    (DataLoader output) as a proxy for spot. This is a pseudo-basis since
+    the continuous series embeds roll artifacts per ADR-001. Documented as
+    an accepted Phase 2 limitation.
+    """
+
+    asset: str
+    """Platform asset identifier. e.g. 'gold'."""
+
+    observation_date: date
+    """Date at which this snapshot was computed."""
+
+    regime: TermStructureRegime
+    """Discrete regime classification: CONTANGO, BACKWARDATION, or FLAT."""
+
+    front_price: float
+    """Nearest delivery contract price. NaN if curve is empty."""
+
+    back_price: float
+    """Farthest delivery contract price in the snapshot. NaN if curve empty."""
+
+    n_contracts: int
+    """Number of contracts in the source curve."""
+
+    raw_slope: float
+    """Raw slope from FuturesCurve.slope — USD per day. Positive = contango.
+    NaN if fewer than 2 contracts."""
+
+    annualized_slope_pct: float
+    """Annualized contango/backwardation rate as decimal fraction of front price.
+    e.g. 0.025 = +2.5%/year contango. Negative in backwardation.
+    Normalizes slope across assets with different price levels.
+    NaN if fewer than 2 contracts or front_price is zero."""
+
+    roll_yield_annualized: float
+    """Annualized roll return for a long futures position (front-to-second roll).
+    Positive in backwardation (tailwind for longs).
+    Negative in contango (headwind for longs).
+    Formula: (front - second) / second * (365 / days_between).
+    NaN if fewer than 2 contracts."""
+
+    basis: float
+    """continuous_close - front_contract_price.
+    Positive: continuous (spot proxy) above front futures.
+    Negative: continuous below front futures.
+    NaN if continuous_close was not provided or curve is empty."""
+
+    basis_pct: float
+    """basis / continuous_close. Expressed as decimal fraction.
+    NaN if continuous_close was not provided, is zero, or curve is empty."""
+
+    curve: FuturesCurve
+    """Source FuturesCurve from which this snapshot was computed.
+    Provides access to the underlying price data for consumers."""
