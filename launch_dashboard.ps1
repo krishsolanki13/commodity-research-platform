@@ -26,4 +26,5 @@ Write-Host "Python:    $ScriptDir\.venv\Scripts\python.exe" -ForegroundColor Dar
 Write-Host "Dashboard: http://localhost:8501" -ForegroundColor Green
 Write-Host ""
 
+$env:MLFLOW_ALLOW_FILE_STORE = "true"
 & $Streamlit run (Join-Path $ScriptDir "dashboard\app.py")

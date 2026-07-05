@@ -212,7 +212,13 @@ class RunManager:
         Reads parameters from params.json (already written by save()).
         """
         try:
+            import os
+
             import mlflow  # noqa: PLC0415
+
+            # MLflow 3.x places the filesystem tracking backend in maintenance mode.
+            # setdefault respects an explicitly-set value while ensuring the default works.
+            os.environ.setdefault("MLFLOW_ALLOW_FILE_STORE", "true")
         except ImportError:
             self._logger.debug(
                 "RunManager: mlflow not installed — skipping MLflow logging for run %s",

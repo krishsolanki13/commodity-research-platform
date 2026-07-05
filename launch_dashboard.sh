@@ -25,4 +25,5 @@ echo "Python:    $SCRIPT_DIR/.venv/bin/python"
 echo "Dashboard: http://localhost:8501"
 echo ""
 
+export MLFLOW_ALLOW_FILE_STORE="true"
 "$STREAMLIT" run "$SCRIPT_DIR/dashboard/app.py"
