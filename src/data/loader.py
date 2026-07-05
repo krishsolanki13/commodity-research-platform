@@ -85,6 +85,13 @@ class DataLoader:
             )
             df = self._run_pipeline(asset, resolved_start, resolved_end)
 
+        # Re-populate consumer-facing attrs after both fast and slow paths.
+        # Parquet does not preserve attrs — we reconstruct from known parameters.
+        # This matches the attrs set by OHLCVNormalizer.normalize() on the slow path.
+        df.attrs["asset"] = asset
+        df.attrs["source"] = "parquet"  # always — data canonical form is Parquet
+        df.attrs["continuous"] = True  # DataLoader handles continuous series only
+
         return self._filter_date_range(df, resolved_start, resolved_end)
 
     def _run_pipeline(
