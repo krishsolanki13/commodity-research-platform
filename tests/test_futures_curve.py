@@ -407,3 +407,34 @@ def test_futures_curve_empty_curve_properties() -> None:
     assert curve.prices == []
     assert curve.tickers == []
     assert math.isnan(curve.spread())
+
+
+def test_futures_curve_builder_list_contracts_returns_sorted_list(
+    tmp_config: Config,
+) -> None:
+    """FuturesCurveBuilder.list_contracts() delegates to loader and returns sorted list."""
+    store = ContractParquetStore(tmp_config)
+    for ticker, month in [("GCZ26", 12), ("GCF26", 1), ("GCQ26", 8)]:
+        df = _make_contract_df(20)
+        meta = _make_meta(ticker, "gold", "GC", month, 2026, 20)
+        store.write(df, "gold", ticker, meta)
+
+    builder = FuturesCurveBuilder(tmp_config)
+    contracts = builder.list_contracts("gold")
+
+    assert len(contracts) == 3
+    months = [m.contract_month for m in contracts]
+    assert months == sorted(
+        months
+    ), "list_contracts must return sorted by delivery date"
+
+
+def test_futures_curve_builder_list_contracts_empty_for_unknown_asset(
+    tmp_config: Config,
+) -> None:
+    """FuturesCurveBuilder.list_contracts() returns empty list when no data exists."""
+    builder = FuturesCurveBuilder(tmp_config)
+    result = builder.list_contracts("copper")
+    assert (
+        result == []
+    ), "Must return empty list, not raise, for asset with no contracts"

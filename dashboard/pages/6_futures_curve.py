@@ -343,7 +343,7 @@ else:
 # ── Section 5: Data Quality ───────────────────────────────────────────────────
 
 with st.expander("Contract Data Details"):
-    contracts = builder._loader.list_contracts(asset)
+    contracts = builder.list_contracts(asset)
     if contracts:
         data_rows = [
             {

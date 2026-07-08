@@ -187,6 +187,24 @@ class FuturesCurveBuilder:
             if d.is_dir() and any(d.glob("*.parquet"))
         )
 
+    def list_contracts(self, asset: str) -> list[ContractMetadata]:
+        """Return ContractMetadata for all available contracts for this asset.
+
+        Public delegation to ContractDataLoader.list_contracts(), provided to
+        avoid external callers accessing the private _loader attribute.
+
+        Pre-M14 housekeeping: replaces builder._loader.list_contracts(asset)
+        in dashboard/pages/6_futures_curve.py.
+
+        Args:
+            asset: Platform asset identifier (e.g. 'gold').
+
+        Returns:
+            List of ContractMetadata sorted by (contract_year, contract_month).
+            Empty list if no contracts are available for this asset.
+        """
+        return self._loader.list_contracts(asset)
+
     def _build_curve_point(
         self,
         meta: ContractMetadata,
