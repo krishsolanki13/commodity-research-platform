@@ -294,7 +294,9 @@ class PortfolioPerformanceEngine:
 
         contributions: dict[str, float] = {}
         for asset, bt_result in asset_results.items():
-            asset_total_pnl = float(bt_result.pnl_series.sum())
+            # Align to portfolio_pnl index (inner-join dates from aggregation)
+            aligned_pnl = bt_result.pnl_series.reindex(portfolio_pnl.index).fillna(0.0)
+            asset_total_pnl = float(aligned_pnl.sum())
             contributions[asset] = asset_total_pnl / total_pnl
 
         return contributions
