@@ -681,3 +681,122 @@ class RiskReport:
             return float("nan")
         sum_asset_var = sum(v for v in self.asset_var_99.values() if not math.isnan(v))
         return sum_asset_var / self.portfolio_var_99
+
+
+@dataclass
+class CorrelationReport:
+    """Cross-asset correlation and volatility analytics.
+
+    Produced by CorrelationEngine.compute(multi_result).
+    Consumed by Module 19 (Dashboard Page 7) for correlation heatmap,
+    rolling correlation charts, and per-asset realized volatility display.
+
+    All correlations are Pearson correlations of daily return series
+    (pnl_series / initial_capital_per_asset) over the specified window.
+
+    Rolling correlations use the inner-join date range from
+    MultiAssetBacktestResult (same as portfolio equity curve).
+
+    See Architecture Section 5 (Layer 7).
+    """
+
+    strategy_name: str
+    """Strategy identifier matching strategies.yaml."""
+
+    run_id: str
+    """Portfolio run ID from MultiAssetBacktestResult.run_id."""
+
+    assets: list[str]
+    """Assets included in this correlation report."""
+
+    computation_date: datetime.date
+    """Date this report was computed."""
+
+    # ── Static correlation matrix ─────────────────────────────────────────
+
+    correlation_matrix: dict[str, dict[str, float]]
+    """Full pairwise Pearson correlation matrix of daily returns.
+
+    Nested dict: correlation_matrix[asset_a][asset_b] → float.
+    Diagonal entries are always 1.0.
+    Symmetric: correlation_matrix[a][b] == correlation_matrix[b][a].
+    Computed over the full available return history (inner-join range).
+    NaN for any pair where one asset has insufficient data."""
+
+    # ── Rolling correlations ──────────────────────────────────────────────
+
+    rolling_correlations_63: dict[str, dict[str, pd.Series]]
+    """Rolling 63-day (≈3-month) Pearson correlations.
+
+    rolling_correlations_63[asset_a][asset_b] → pd.Series of daily
+    rolling correlation values. Same date index as portfolio equity curve.
+    NaN at start until 63 observations are available."""
+
+    rolling_correlations_126: dict[str, dict[str, pd.Series]]
+    """Rolling 126-day (≈6-month) Pearson correlations.
+
+    rolling_correlations_126[asset_a][asset_b] → pd.Series. NaN at
+    start until 126 observations are available."""
+
+    # ── Per-asset realized volatility ─────────────────────────────────────
+
+    realized_vol_by_asset: dict[str, float]
+    """Annualized realized volatility per asset.
+
+    Computed as std(daily_returns) * sqrt(252) over the full
+    inner-join date range. This is the realized vol over the
+    strategy's trading period, not a lookback-window estimate.
+    NaN if fewer than 20 return observations available."""
+
+    portfolio_realized_vol: float
+    """Annualized realized volatility of the portfolio daily returns
+    (from portfolio_pnl_series / initial_capital_total). Comparable to
+    PortfolioPerformanceReport.portfolio_metrics['portfolio_vol'] —
+    should match within floating-point tolerance."""
+
+    # ── Derived analytics ──────────────────────────────────────────────────
+
+    avg_pairwise_correlation: float
+    """Mean of all off-diagonal correlation matrix entries.
+
+    Positive: assets tend to move together (low diversification benefit).
+    Near zero: low average pairwise correlation (high diversification).
+    Negative: assets tend to move in opposite directions (rare for commodities).
+    NaN if fewer than 2 assets."""
+
+    most_correlated_pair: tuple[str, str, float]
+    """The asset pair with the highest absolute static correlation.
+    (asset_a, asset_b, correlation_value). asset_a < asset_b alphabetically."""
+
+    least_correlated_pair: tuple[str, str, float]
+    """The asset pair with the lowest absolute static correlation.
+    (asset_a, asset_b, correlation_value). asset_a < asset_b alphabetically."""
+
+    @property
+    def n_assets(self) -> int:
+        """Number of assets in the correlation matrix."""
+        return len(self.assets)
+
+    @property
+    def n_pairs(self) -> int:
+        """Number of unique off-diagonal pairs: n*(n-1)/2."""
+        n = len(self.assets)
+        return n * (n - 1) // 2
+
+    def get_correlation(self, asset_a: str, asset_b: str) -> float:
+        """Return the static correlation between two assets.
+
+        Args:
+            asset_a: First asset identifier.
+            asset_b: Second asset identifier.
+
+        Returns:
+            Pearson correlation. 1.0 if asset_a == asset_b.
+            NaN if either asset is not in the matrix.
+        """
+        if asset_a == asset_b:
+            return 1.0
+        try:
+            return self.correlation_matrix[asset_a][asset_b]
+        except KeyError:
+            return float("nan")
