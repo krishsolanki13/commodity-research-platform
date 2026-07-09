@@ -473,3 +473,48 @@ class TermStructureSnapshot:
     curve: FuturesCurve
     """Source FuturesCurve from which this snapshot was computed.
     Provides access to the underlying price data for consumers."""
+
+
+@dataclass
+class MultiAssetBacktestResult:
+    """Result of running VectorizedBacktester across multiple assets.
+
+    Each asset is run independently with the same strategy, parameters, and
+    position sizer. Results are aggregated into a portfolio equity curve and
+    portfolio PnL series.
+
+    Produced by MultiAssetRunner.run().
+    Consumed by Module 15 (PortfolioPerformanceEngine).
+
+    Capital model: each asset receives the same initial capital independently
+    (config default: $1,000,000). The portfolio equity curve is the sum of
+    per-asset equity curves. No active capital allocation is applied.
+
+    See ADR-010 (Multi-Asset Research Scope and Phasing).
+    """
+
+    strategy_name: str
+    signal_name: str
+    parameters: dict[str, Any]
+    assets: list[str]
+    skipped_assets: list[str]
+    run_id: str
+    executed_at: datetime.datetime
+    asset_results: dict[str, BacktestResult]
+    portfolio_equity_curve: pd.Series
+    portfolio_pnl_series: pd.Series
+
+    @property
+    def n_assets(self) -> int:
+        """Number of successfully backtested assets."""
+        return len(self.assets)
+
+    @property
+    def assets_with_trades(self) -> list[str]:
+        """Subset of assets that executed at least one trade."""
+        return [a for a, r in self.asset_results.items() if len(r.trades) > 0]
+
+    @property
+    def total_trades(self) -> int:
+        """Sum of all trades across all assets."""
+        return sum(len(r.trades) for r in self.asset_results.values())
