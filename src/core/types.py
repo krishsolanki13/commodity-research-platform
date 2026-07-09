@@ -9,6 +9,7 @@ See Architecture Section 7 (Layer Contracts) for the full specification.
 from __future__ import annotations
 
 import datetime
+import math
 from dataclasses import dataclass
 from datetime import date
 from enum import Enum
@@ -573,3 +574,110 @@ class PortfolioPerformanceReport:
     def portfolio_cagr(self) -> float:
         """Portfolio annualized compound return."""
         return self.portfolio_metrics.get("cagr", float("nan"))
+
+
+@dataclass
+class RiskReport:
+    """Portfolio risk analytics from MultiAssetBacktestResult.
+
+    Produced by RiskEngine.compute(multi_result).
+    Consumed by Module 19 (Dashboard Page 7).
+
+    All VaR and ES values are expressed as positive USD loss magnitudes.
+    A portfolio_var_99 of 5000.0 means: with 99% confidence, the daily
+    portfolio loss will not exceed $5,000.
+
+    Methodology: historical simulation over the lookback_days window.
+    No distributional assumption — correct for fat-tailed commodity returns.
+
+    VaR and ES are computed on the inner-join PnL series from
+    MultiAssetBacktestResult (the common date range across all assets).
+
+    See Architecture Section 5 (Layer 6) and ADR-003.
+    """
+
+    strategy_name: str
+    """Strategy identifier matching strategies.yaml."""
+
+    run_id: str
+    """Portfolio run ID from MultiAssetBacktestResult.run_id."""
+
+    assets: list[str]
+    """Successfully backtested assets included in this risk report."""
+
+    computation_date: datetime.date
+    """Date this report was computed (typically today)."""
+
+    lookback_days: int
+    """Number of trading days used for VaR/ES historical simulation."""
+
+    initial_capital_total: float
+    """Total portfolio initial capital (sum across all assets, USD)."""
+
+    # ── Portfolio-level Value at Risk ─────────────────────────────────────
+
+    portfolio_var_95: float
+    """Historical VaR at 95% confidence (positive USD loss magnitude).
+    Interpretation: on 95% of days, portfolio loss will not exceed this amount.
+    Computed from portfolio_pnl_series over lookback_days."""
+
+    portfolio_var_99: float
+    """Historical VaR at 99% confidence (positive USD loss magnitude).
+    Always >= portfolio_var_95. NaN if insufficient lookback data."""
+
+    portfolio_var_95_pct: float
+    """portfolio_var_95 / initial_capital_total. Fraction of total capital."""
+
+    portfolio_var_99_pct: float
+    """portfolio_var_99 / initial_capital_total. Fraction of total capital."""
+
+    # ── Portfolio-level Expected Shortfall ───────────────────────────────
+
+    portfolio_es_95: float
+    """Expected Shortfall (CVaR) at 95% confidence (positive USD).
+    Mean of portfolio daily losses exceeding portfolio_var_95.
+    Always >= portfolio_var_95. Coherent risk measure."""
+
+    portfolio_es_99: float
+    """Expected Shortfall (CVaR) at 99% confidence (positive USD).
+    Mean of portfolio daily losses exceeding portfolio_var_99.
+    Always >= portfolio_var_99 and >= portfolio_es_95."""
+
+    # ── Per-asset Value at Risk ───────────────────────────────────────────
+
+    asset_var_95: dict[str, float]
+    """Per-asset historical VaR at 95% confidence (positive USD).
+    Computed from each asset's individual pnl_series over lookback_days.
+    Does not account for cross-asset diversification effects."""
+
+    asset_var_99: dict[str, float]
+    """Per-asset historical VaR at 99% confidence (positive USD)."""
+
+    # ── Notional Exposure ─────────────────────────────────────────────────
+
+    avg_gross_notional_by_asset: dict[str, float]
+    """Mean |position| in USD over active trading days (positions != 0).
+    Represents typical active exposure per asset. Zero if never in a trade."""
+
+    avg_net_notional_by_asset: dict[str, float]
+    """Mean signed position in USD over active trading days.
+    Positive = net long bias. Negative = net short bias."""
+
+    total_avg_gross_notional: float
+    """Sum of avg_gross_notional_by_asset across all assets."""
+
+    total_avg_net_notional: float
+    """Sum of avg_net_notional_by_asset across all assets (signed)."""
+
+    @property
+    def portfolio_diversification_benefit(self) -> float:
+        """Ratio of sum of per-asset VaR99 to portfolio VaR99.
+
+        Values > 1.0 indicate diversification is reducing portfolio risk
+        below what a naive sum of individual risks would suggest.
+        NaN if portfolio_var_99 is zero or NaN.
+        """
+        if math.isnan(self.portfolio_var_99) or self.portfolio_var_99 == 0.0:
+            return float("nan")
+        sum_asset_var = sum(v for v in self.asset_var_99.values() if not math.isnan(v))
+        return sum_asset_var / self.portfolio_var_99
