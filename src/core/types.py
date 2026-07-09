@@ -518,3 +518,58 @@ class MultiAssetBacktestResult:
     def total_trades(self) -> int:
         """Sum of all trades across all assets."""
         return sum(len(r.trades) for r in self.asset_results.values())
+
+
+@dataclass
+class PortfolioPerformanceReport:
+    """Portfolio-level performance analytics from MultiAssetBacktestResult.
+
+    Produced by PortfolioPerformanceEngine.compute(multi_result).
+    Consumed by Module 19 (Dashboard Page 7).
+
+    Contains portfolio-level scalars, per-asset attribution fractions,
+    and individual PerformanceReport for each successful asset.
+
+    Note: portfolio_date_range explicitly surfaces the inner-join alignment
+    from MultiAssetRunner._aggregate_portfolio(). The portfolio equity curve
+    only spans dates where ALL assets have data — this field makes that
+    visible to the researcher.
+
+    See ADR-010 (Multi-Asset Research Scope and Phasing).
+    """
+
+    strategy_name: str
+    run_id: str
+    assets: list[str]
+    skipped_assets: list[str]
+    initial_capital_per_asset: float
+    initial_capital_total: float
+    portfolio_date_range: tuple[datetime.date, datetime.date]
+    portfolio_metrics: dict[str, float]
+    asset_contributions: dict[str, float]
+    per_asset_reports: dict[str, PerformanceReport]
+
+    @property
+    def n_assets(self) -> int:
+        """Number of successfully backtested assets."""
+        return len(self.assets)
+
+    @property
+    def portfolio_sharpe(self) -> float:
+        """Portfolio Sharpe ratio. NaN if insufficient data."""
+        return self.portfolio_metrics.get("sharpe", float("nan"))
+
+    @property
+    def portfolio_max_drawdown(self) -> float:
+        """Portfolio max drawdown (negative fraction)."""
+        return self.portfolio_metrics.get("max_drawdown", float("nan"))
+
+    @property
+    def portfolio_total_return(self) -> float:
+        """Portfolio total return as decimal fraction."""
+        return self.portfolio_metrics.get("total_return", float("nan"))
+
+    @property
+    def portfolio_cagr(self) -> float:
+        """Portfolio annualized compound return."""
+        return self.portfolio_metrics.get("cagr", float("nan"))
