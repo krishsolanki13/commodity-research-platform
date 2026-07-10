@@ -17,7 +17,7 @@ import pandas as pd
 from src.core.config import Config
 from src.data.normalizer import OHLCVNormalizer
 from src.data.sources.csv import LocalCSVSource
-from src.data.store import ParquetStore
+from src.data.store import DataStore, ParquetStore
 from src.data.validator import OHLCVValidator
 
 
@@ -49,8 +49,20 @@ class DataLoader:
         self._config = config
         self._source = LocalCSVSource(config)
         self._normalizer = OHLCVNormalizer()
-        self._store = ParquetStore(config)
         self._logger = logging.getLogger(__name__)
+        if config.storage_backend == "clickhouse":
+            from src.data.clickhouse_store import ClickHouseStore  # noqa: PLC0415
+
+            self._store: DataStore = ClickHouseStore(config)
+            self._logger.info(
+                "DataLoader: using ClickHouseStore backend (%s:%d/%s)",
+                config.clickhouse_host,
+                config.clickhouse_port,
+                config.clickhouse_database,
+            )
+        else:
+            self._store = ParquetStore(config)
+            self._logger.debug("DataLoader: using ParquetStore backend")
 
     def load(
         self,
