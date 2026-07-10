@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import math
 from datetime import UTC, datetime
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -436,3 +437,60 @@ def test_absolute_pnl_by_asset_populated(
     assert (
         abs(total - portfolio_total) < 1.0
     ), f"Sum of absolute_pnl_by_asset ({total:.2f}) must match portfolio total ({portfolio_total:.2f})"
+
+
+def test_save_portfolio_summary_writes_json_file(
+    config: Config, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """save_portfolio_summary() writes portfolio_summary.json to run_dir."""
+    multi_result = _make_multi_asset_result(config, monkeypatch, seeds=[99, 100])
+    engine = PortfolioPerformanceEngine()
+    report = engine.compute(multi_result)
+
+    from src.performance.portfolio import save_portfolio_summary
+
+    run_dir = tmp_path / report.run_id
+    out_path = save_portfolio_summary(report, run_dir)
+
+    assert out_path.exists(), "portfolio_summary.json must exist after save"
+    assert out_path.name == "portfolio_summary.json"
+    assert out_path.parent == run_dir
+
+
+def test_save_portfolio_summary_json_contains_required_keys(
+    config: Config, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """portfolio_summary.json contains all required keys and valid values."""
+    import json as json_module
+
+    multi_result = _make_multi_asset_result(config, monkeypatch, seeds=[101, 102])
+    engine = PortfolioPerformanceEngine()
+    report = engine.compute(multi_result)
+
+    from src.performance.portfolio import save_portfolio_summary
+
+    run_dir = tmp_path / report.run_id
+    out_path = save_portfolio_summary(report, run_dir)
+
+    with open(out_path, encoding="utf-8") as f:
+        data = json_module.load(f)
+
+    required_keys = {
+        "run_id",
+        "strategy_name",
+        "assets",
+        "skipped_assets",
+        "portfolio_date_range",
+        "initial_capital_total",
+        "portfolio_metrics",
+        "asset_contributions",
+        "absolute_pnl_by_asset",
+    }
+    assert required_keys.issubset(
+        set(data.keys())
+    ), f"Missing keys: {required_keys - set(data.keys())}"
+    assert data["strategy_name"] == "ema_crossover"
+    assert isinstance(data["assets"], list)
+    assert isinstance(data["portfolio_metrics"], dict)
+    assert "sharpe" in data["portfolio_metrics"]
+    assert "absolute_pnl_by_asset" in data

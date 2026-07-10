@@ -18,8 +18,10 @@ See Architecture Section 5 (Layer 4) and ADR-010.
 
 from __future__ import annotations
 
+import json
 import logging
 import math
+from pathlib import Path
 
 import pandas as pd
 
@@ -311,3 +313,55 @@ class PortfolioPerformanceEngine:
             contributions[asset] = asset_total_pnl / total_pnl
 
         return contributions
+
+
+def save_portfolio_summary(
+    report: PortfolioPerformanceReport,
+    run_dir: Path,
+) -> Path:
+    """Save portfolio-level performance summary to a JSON file.
+
+    Writes portfolio_summary.json alongside per-asset run artifacts in
+    data/runs/{run_id}/. This fulfills the portfolio persistence commitment
+    from ADR-009 Phase 3 (portfolio run tracking).
+
+    Args:
+        report: PortfolioPerformanceReport from PortfolioPerformanceEngine.compute().
+        run_dir: Directory to write the summary file. Typically:
+            Path(config.paths["runs"]) / report.run_id
+
+    Returns:
+        Path to the written portfolio_summary.json file.
+
+    Raises:
+        OSError: If run_dir does not exist or is not writable.
+    """
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    summary: dict = {
+        "run_id": report.run_id,
+        "strategy_name": report.strategy_name,
+        "assets": report.assets,
+        "skipped_assets": report.skipped_assets,
+        "portfolio_date_range": [
+            str(report.portfolio_date_range[0]),
+            str(report.portfolio_date_range[1]),
+        ],
+        "initial_capital_per_asset": report.initial_capital_per_asset,
+        "initial_capital_total": report.initial_capital_total,
+        "portfolio_metrics": {
+            k: v if not math.isnan(v) else None
+            for k, v in report.portfolio_metrics.items()
+        },
+        "asset_contributions": {
+            k: (v if not math.isnan(v) else None)
+            for k, v in report.asset_contributions.items()
+        },
+        "absolute_pnl_by_asset": report.absolute_pnl_by_asset,
+    }
+
+    out_path = run_dir / "portfolio_summary.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2, default=str)
+
+    return out_path
