@@ -123,6 +123,7 @@ def test_portfolio_performance_report_properties(config: Config) -> None:
         portfolio_date_range=(dt.date(2023, 1, 2), dt.date(2024, 12, 31)),
         portfolio_metrics=metrics,
         asset_contributions=contributions,
+        absolute_pnl_by_asset={"gold": 6000.0, "silver": 4000.0},
         per_asset_reports={},
     )
 
@@ -149,6 +150,7 @@ def test_portfolio_performance_report_skipped_assets_counted(
         portfolio_date_range=(dt.date(2023, 1, 2), dt.date(2024, 12, 31)),
         portfolio_metrics={},
         asset_contributions={},
+        absolute_pnl_by_asset={"gold": 5000.0},
         per_asset_reports={},
     )
 
@@ -415,3 +417,22 @@ def test_portfolio_engine_raises_for_empty_asset_results(
     engine = PortfolioPerformanceEngine()
     with pytest.raises(ValueError, match="no asset results"):
         engine.compute(empty_result)
+
+
+def test_absolute_pnl_by_asset_populated(
+    config: Config, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """absolute_pnl_by_asset is populated for all successful assets."""
+    multi_result = _make_multi_asset_result(config, monkeypatch, seeds=[1, 2])
+    engine = PortfolioPerformanceEngine()
+    report = engine.compute(multi_result)
+
+    assert set(report.absolute_pnl_by_asset.keys()) == set(multi_result.assets)
+    for asset, pnl in report.absolute_pnl_by_asset.items():
+        assert isinstance(pnl, float), f"absolute_pnl_by_asset[{asset}] must be float"
+    # Sum of absolute PnLs must approximately equal portfolio total PnL
+    total = sum(report.absolute_pnl_by_asset.values())
+    portfolio_total = float(multi_result.portfolio_pnl_series.sum())
+    assert (
+        abs(total - portfolio_total) < 1.0
+    ), f"Sum of absolute_pnl_by_asset ({total:.2f}) must match portfolio total ({portfolio_total:.2f})"

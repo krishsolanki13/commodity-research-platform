@@ -548,6 +548,13 @@ class PortfolioPerformanceReport:
     portfolio_date_range: tuple[datetime.date, datetime.date]
     portfolio_metrics: dict[str, float]
     asset_contributions: dict[str, float]
+    absolute_pnl_by_asset: dict[str, float]
+    """Per-asset total P&L in absolute USD over the portfolio date range.
+    Always meaningful regardless of total portfolio P&L magnitude.
+    Use this when |total_portfolio_pnl / initial_capital_total| < 1% —
+    asset_contributions becomes numerically unstable near-zero denominators.
+    Sign convention: positive = profit, negative = loss.
+    Computed over the inner-join date range (same as portfolio_pnl_series index)."""
     per_asset_reports: dict[str, PerformanceReport]
 
     @property

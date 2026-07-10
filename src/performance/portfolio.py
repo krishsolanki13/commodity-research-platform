@@ -128,6 +128,16 @@ class PortfolioPerformanceEngine:
             multi_result.portfolio_pnl_series,
         )
 
+        # Absolute PnL per asset (always stable regardless of portfolio total PnL)
+        absolute_pnl_by_asset = {
+            asset: float(
+                bt_result.pnl_series.reindex(
+                    multi_result.portfolio_pnl_series.index, fill_value=0.0
+                ).sum()
+            )
+            for asset, bt_result in multi_result.asset_results.items()
+        }
+
         # Step 5: Portfolio date range
         idx = multi_result.portfolio_equity_curve.index
         portfolio_date_range = (
@@ -155,6 +165,7 @@ class PortfolioPerformanceEngine:
             portfolio_date_range=portfolio_date_range,
             portfolio_metrics=portfolio_metrics,
             asset_contributions=asset_contributions,
+            absolute_pnl_by_asset=absolute_pnl_by_asset,
             per_asset_reports=per_asset_reports,
         )
 
