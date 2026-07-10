@@ -27,3 +27,13 @@ data:
 mlflow:
   tracking_uri: "file:./data/mlruns"
   experiment_prefix: "commodity_research"
+
+storage:
+  backend: "parquet"
+  clickhouse:
+    host: "localhost"
+    port: 8123
+    database: "commodity_research"
+    table_ohlcv: "ohlcv_continuous"
+    connect_timeout: 10
+    send_receive_timeout: 30

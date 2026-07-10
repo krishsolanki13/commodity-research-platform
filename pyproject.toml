@@ -18,6 +18,7 @@ dependencies = [
     "scipy>=1.11",
     "python-dotenv>=1.0",
     "mlflow>=2.0",
+    "clickhouse-connect>=0.7",
 ]
 
 [project.optional-dependencies]

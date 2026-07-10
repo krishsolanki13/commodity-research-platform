@@ -176,3 +176,60 @@ class Config:
             "experiment_prefix", "commodity_research"
         )
         return str(prefix)
+
+    @property
+    def storage_backend(self) -> str:
+        return str(self._config.get("storage", {}).get("backend", "parquet"))
+
+    @property
+    def clickhouse_host(self) -> str:
+        return str(
+            self._config.get("storage", {})
+            .get("clickhouse", {})
+            .get("host", "localhost")
+        )
+
+    @property
+    def clickhouse_port(self) -> int:
+        return int(
+            self._config.get("storage", {}).get("clickhouse", {}).get("port", 8123)
+        )
+
+    @property
+    def clickhouse_database(self) -> str:
+        return str(
+            self._config.get("storage", {})
+            .get("clickhouse", {})
+            .get("database", "commodity_research")
+        )
+
+    @property
+    def clickhouse_table_ohlcv(self) -> str:
+        return str(
+            self._config.get("storage", {})
+            .get("clickhouse", {})
+            .get("table_ohlcv", "ohlcv_continuous")
+        )
+
+    @property
+    def clickhouse_connect_timeout(self) -> int:
+        return int(
+            self._config.get("storage", {})
+            .get("clickhouse", {})
+            .get("connect_timeout", 10)
+        )
+
+    @property
+    def clickhouse_send_receive_timeout(self) -> int:
+        """ClickHouse query send/receive timeout in seconds.
+
+        Controls how long clickhouse-connect waits for query results.
+        Default 30 seconds is appropriate for single-asset OHLCV reads.
+        Increase if running heavy aggregations (e.g. multi-year range scans).
+        Controlled by storage.clickhouse.send_receive_timeout in config.yaml.
+        """
+        return int(
+            self._config.get("storage", {})
+            .get("clickhouse", {})
+            .get("send_receive_timeout", 30)
+        )
