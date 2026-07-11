@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import datetime
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from enum import Enum
 from typing import Any
@@ -170,6 +170,15 @@ class BacktestMetadata:
     sizing_model_params: dict[str, Any]
     executed_at: datetime.datetime
     git_commit_hash: str
+    git_sha: str = "unknown"
+    """Short git commit SHA at time of backtest run (first 8 chars).
+    'unknown' if not running in a git repository."""
+
+    dirty_flag: bool = False
+    """True if working tree had uncommitted changes at run time."""
+
+    package_versions: dict[str, str] = field(default_factory=dict)
+    """Key package versions at run time: pandas, numpy, yfinance, etc."""
 
 
 @dataclass

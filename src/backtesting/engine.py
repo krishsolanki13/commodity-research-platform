@@ -18,6 +18,7 @@ from src.backtesting.costs import CostModel
 from src.backtesting.run_manager import generate_run_id
 from src.backtesting.sizing import FixedNotionalSizer
 from src.backtesting.trade_log import TradeLog
+from src.core import provenance
 from src.core.config import Config
 from src.core.registry import BacktestEngine, PositionSizer
 from src.core.types import BacktestMetadata, BacktestResult, TradeRecord
@@ -115,6 +116,7 @@ class VectorizedBacktester(BacktestEngine):
         equity_curve = self._initial_capital_usd + pnl_series.cumsum()
         equity_curve.name = "equity"
 
+        _prov = provenance.capture()
         metadata = BacktestMetadata(
             run_id=run_id,
             asset=self._asset,
@@ -135,6 +137,9 @@ class VectorizedBacktester(BacktestEngine):
             },
             executed_at=datetime.datetime.now(tz=datetime.UTC),
             git_commit_hash=self._get_git_commit_hash(),
+            git_sha=_prov["git_sha"],
+            dirty_flag=_prov["dirty_flag"],
+            package_versions=_prov["package_versions"],
         )
 
         self._logger.info(
