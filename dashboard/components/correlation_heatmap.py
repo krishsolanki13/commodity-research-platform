@@ -110,12 +110,11 @@ def render_correlation_heatmap(
             zmid=0.0,
             showscale=True,
             colorbar=dict(
-                title="Corr",
+                title=dict(text="Corr", font=dict(color=SLATE, size=10)),
                 thickness=12,
                 len=0.8,
                 tickvals=[-1, -0.5, 0, 0.5, 1],
                 tickfont=dict(color=SLATE, size=10),
-                titlefont=dict(color=SLATE, size=10),
             ),
             hovertemplate=("<b>%{x} / %{y}</b><br>Correlation: %{text}<extra></extra>"),
         )
