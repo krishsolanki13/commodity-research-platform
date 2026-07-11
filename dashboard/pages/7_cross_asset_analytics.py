@@ -278,6 +278,7 @@ section_header("Portfolio Equity Curve")
 
 fig_equity = render_equity_curve_chart(
     equity_curve=multi_result.portfolio_equity_curve,
+    initial_capital=perf_report.initial_capital_total,
     title=f"Portfolio Equity Curve — {STRATEGY_DISPLAY.get(multi_result.strategy_name, multi_result.strategy_name)}",
 )
 st.plotly_chart(fig_equity)
