@@ -49,6 +49,12 @@ def create_app() -> FastAPI:
         """Health check. Used by the frontend TopBar health indicator."""
         return HealthResponse(status="ok", version="0.1.0", backend_tests=267)
 
+    from api.routers import assets as assets_router
+    from api.routers import system as system_router
+
+    app.include_router(assets_router.router)
+    app.include_router(system_router.router)
+
     return app
 
 
