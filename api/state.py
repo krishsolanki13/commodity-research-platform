@@ -14,6 +14,8 @@ from typing import Any, Literal
 TaskStatus = Literal["queued", "running", "complete", "failed"]
 
 _store: dict[str, dict[str, Any]] = {}
+# Maps polling_run_id → actual artifact run_id (set after completion)
+_artifact_map: dict[str, str] = {}
 _lock = Lock()
 
 
@@ -45,3 +47,13 @@ def get(run_id: str) -> dict[str, Any] | None:
     """Return a copy of the task state, or None if not registered."""
     with _lock:
         return dict(_store[run_id]) if run_id in _store else None
+
+
+def set_artifact_id(polling_id: str, artifact_id: str) -> None:
+    with _lock:
+        _artifact_map[polling_id] = artifact_id
+
+
+def get_artifact_id(polling_id: str) -> str | None:
+    with _lock:
+        return _artifact_map.get(polling_id)
