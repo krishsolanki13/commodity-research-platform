@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from fastapi import APIRouter, Query
@@ -51,7 +51,9 @@ def get_data_status(asset: str | None = Query(None)) -> DataStatusResponse:
             bar_count = len(ohlcv)
             from_date = ohlcv.index[0].date().isoformat() if bar_count else None
             to_date = ohlcv.index[-1].date().isoformat() if bar_count else None
-            health = "ok" if bar_count > 0 else "missing"
+            health: Literal["ok", "warn", "crit", "missing"] = (
+                "ok" if bar_count > 0 else "missing"
+            )
             statuses.append(
                 AssetDataStatus(
                     name=name,
@@ -108,6 +110,7 @@ def trigger_ingest(request: IngestRequest) -> IngestResponse:
         except Exception:
             failed.append(name)
 
+    status: Literal["ok", "partial", "failed"]
     if not failed:
         status = "ok"
     elif not ingested:

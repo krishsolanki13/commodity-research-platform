@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
 
 import pandas as pd
 from fastapi import APIRouter, Query
@@ -40,7 +40,7 @@ def _load_params(run_dir: Path) -> dict[str, Any]:
     p = run_dir / "params.json"
     if not p.exists():
         return {}
-    return json.loads(p.read_text())
+    return cast(dict[str, Any], json.loads(p.read_text()))
 
 
 def _load_metrics(run_dir: Path) -> dict[str, float | None]:
@@ -60,11 +60,13 @@ def _load_metrics(run_dir: Path) -> dict[str, float | None]:
 
 def _param_date(params: dict[str, Any], start: bool) -> str:
     if start:
-        return params.get("data_start") or params.get("from_date", "")
-    return params.get("data_end") or params.get("to_date", "")
+        val = params.get("data_start") or params.get("from_date", "")
+    else:
+        val = params.get("data_end") or params.get("to_date", "")
+    return str(val) if val else ""
 
 
-def _trade_direction(val: object) -> str:
+def _trade_direction(val: object) -> Literal["long", "short"]:
     if val in ("long", "short"):
         return val  # type: ignore[return-value]
     if val in (1, 1.0, "1"):

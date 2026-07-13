@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter
 
@@ -22,7 +22,9 @@ from api.models import (
 router = APIRouter(prefix="/api", tags=["signals"])
 
 
-def classify_ic_band(ic: float | None) -> str:
+def classify_ic_band(
+    ic: float | None,
+) -> Literal["strong", "weak_positive", "weak_inverse", "inverse_meaningful", "noise"]:
     """ADR-007 five-way IC classification."""
     if ic is None:
         return "noise"
@@ -188,7 +190,9 @@ def _parse_date(s: str | None) -> datetime.date | None:
     return datetime.date.fromisoformat(s)
 
 
-def _build_signal_pipeline(strategy: str, params: dict[str, Any]):
+def _build_signal_pipeline(
+    strategy: str, params: dict[str, Any]
+) -> tuple[list[Any], Any]:
     """Return (indicators, signal_generator) for a given strategy + params."""
     from src.research.momentum import Momentum  # noqa: PLC0415
     from src.research.moving_averages import EMA  # noqa: PLC0415
@@ -196,6 +200,9 @@ def _build_signal_pipeline(strategy: str, params: dict[str, Any]):
     from src.signal.breakout import DonchianBreakoutSignal  # noqa: PLC0415
     from src.signal.reversion import RSIReversionSignal  # noqa: PLC0415
     from src.signal.trend import EMACrossoverSignal, MomentumSignal  # noqa: PLC0415
+
+    indicators: list[Any]
+    gen: Any
 
     if strategy == "ema_crossover":
         fast = params.get("fast_period", 50)

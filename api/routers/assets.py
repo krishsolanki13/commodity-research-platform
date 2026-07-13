@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 
 import pandas as pd
 from fastapi import APIRouter, Depends, Query
@@ -87,7 +88,9 @@ def _compute_summary(asset: str, ohlcv: pd.DataFrame) -> AssetSummaryResponse:
 
     close = ohlcv["close"]
     flagged_anomalies = 0
-    data_health: str = "ok" if flagged_anomalies == 0 else "warn"
+    data_health: Literal["ok", "warn", "crit", "missing"] = (
+        "ok" if flagged_anomalies == 0 else "warn"
+    )
 
     vol_slice = close.pct_change().iloc[-63:]
     realized_vol = (

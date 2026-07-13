@@ -17,7 +17,9 @@ from api.models import (
 router = APIRouter(prefix="/api", tags=["backtests"])
 
 
-def _build_full_pipeline(strategy: str, params: dict[str, Any], asset: str):
+def _build_full_pipeline(
+    strategy: str, params: dict[str, Any], asset: str
+) -> tuple[list[Any], Any]:
     """Return (indicators, signal_generator) for strategy + params.
 
     Mirrors _build_signal_pipeline() in signals.py — kept local to avoid
@@ -30,6 +32,9 @@ def _build_full_pipeline(strategy: str, params: dict[str, Any], asset: str):
     from src.signal.breakout import DonchianBreakoutSignal  # noqa: PLC0415
     from src.signal.reversion import RSIReversionSignal  # noqa: PLC0415
     from src.signal.trend import EMACrossoverSignal, MomentumSignal  # noqa: PLC0415
+
+    indicators: list[Any]
+    gen: Any
 
     if strategy == "ema_crossover":
         fast = params.get("fast_period", 50)
@@ -119,6 +124,7 @@ def _run_backtest_task(polling_run_id: str, request: BacktestLaunchRequest) -> N
         threshold = request.params.get("signal_threshold", request.signal_threshold)
         pos_signal = PositionSignalConstructor().build(raw_signal, threshold=threshold)
 
+        sizer: VolatilityScaledSizer | FixedNotionalSizer
         if (
             request.sizing_method == "volatility_scaled"
             and request.target_annual_vol is not None
