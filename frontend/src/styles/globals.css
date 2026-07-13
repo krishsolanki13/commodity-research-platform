@@ -59,3 +59,46 @@ pre {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-strong);
 }
+
+/* ============================================================
+   CSS ANIMATIONS (TDR-009 — no animation library)
+   shimmer: LoadingSkeleton skeleton shimmer
+   pulse-dot: RunStatusBadge "running" indicator pulse
+   Both respect prefers-reduced-motion via explicit @media block.
+   ============================================================ */
+
+@keyframes shimmer {
+  0%   { opacity: 0.5; }
+  50%  { opacity: 1;   }
+  100% { opacity: 0.5; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1;   }
+  50%       { opacity: 0.4; }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer,
+  .animate-pulse-dot {
+    animation: none;
+  }
+}
+
+/* ── ICGateStrip band backgrounds ────────────────────────────
+   Pre-computed rgba at 8% opacity. Cannot be Tailwind classes
+   because the color is selected at runtime based on IC band.
+   These three are the ONLY permitted static CSS definitions
+   outside tailwind.config.ts in this codebase.
+   ─────────────────────────────────────────────────────────── */
+.ic-gate-bg-strong { background-color: rgba(63,  182, 139, 0.08); }
+.ic-gate-bg-weak   { background-color: rgba(217, 160, 60,  0.08); }
+.ic-gate-bg-noise  { background-color: rgba(124, 138, 156, 0.08); }

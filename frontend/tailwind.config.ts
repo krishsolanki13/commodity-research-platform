@@ -35,6 +35,30 @@ const config: Config = {
       'accent-hover':  'var(--amber-600)',
       'accent-subtle': 'var(--amber-300)',
       'accent-fill':   'var(--amber-900a)',
+      // ── shadcn compatibility aliases ──────────────────────────────────────
+      // Maps shadcn class names (bg-background, text-foreground, etc.) to our
+      // design tokens. Only src/ui/ (shadcn-generated files) uses these names.
+      // All authored components use our semantic token classes exclusively.
+      'background':             'var(--bg-app)',
+      'foreground':             'var(--text-primary)',
+      'card':                   'var(--bg-panel)',
+      'card-foreground':        'var(--text-primary)',
+      'popover':                'var(--bg-raised)',
+      'popover-foreground':     'var(--text-primary)',
+      'primary':                'var(--amber-500)',
+      'primary-foreground':     'var(--gray-950)',
+      'secondary':              'var(--bg-raised)',
+      'secondary-foreground':   'var(--text-primary)',
+      'muted':                  'var(--bg-raised)',
+      'muted-foreground':       'var(--text-secondary)',
+      'accent-compat':          'var(--bg-hover)',
+      'accent-foreground':      'var(--text-primary)',
+      'destructive':            'var(--loss-500)',
+      'destructive-foreground': 'var(--gray-050)',
+      'border':                 'var(--border-default)',
+      'input':                  'var(--border-strong)',
+      'ring':                   'var(--focus-ring)',
+      // ──────────────────────────────────────────────────────────────────────
       white: '#ffffff',
       transparent: 'transparent',
       current: 'currentColor',
