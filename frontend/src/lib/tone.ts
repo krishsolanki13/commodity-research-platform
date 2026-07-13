@@ -22,7 +22,7 @@ export function icTone(value: number | null | undefined): string {
   return 'var(--ic-noise)'
 }
 
-export function icBandTone(band: IcBand | string): string {
+export function icBandTone(band: IcBand): string {
   if (band === 'strong' || band === 'inverse_meaningful') return 'var(--ic-strong)'
   if (band === 'weak_positive' || band === 'weak_inverse') return 'var(--ic-weak)'
   return 'var(--ic-noise)'
