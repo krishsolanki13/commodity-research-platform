@@ -1,0 +1,350 @@
+from __future__ import annotations
+
+import datetime
+from typing import Any
+
+from fastapi import APIRouter
+
+from api.exceptions import ApiError
+from api.models import (
+    DecayEntry,
+    ParamSpec,
+    SignalEvaluateRequest,
+    SignalEvaluateResponse,
+    SignalEvaluationData,
+    SignalGenerateRequest,
+    SignalGenerateResponse,
+    StrategyCatalogResponse,
+    StrategyMeta,
+    series_to_columnar,
+)
+
+router = APIRouter(prefix="/api", tags=["signals"])
+
+
+def classify_ic_band(ic: float | None) -> str:
+    """ADR-007 five-way IC classification."""
+    if ic is None:
+        return "noise"
+    abs_ic = abs(ic)
+    if abs_ic >= 0.05:
+        return "strong" if ic > 0 else "inverse_meaningful"
+    if abs_ic >= 0.02:
+        return "weak_positive" if ic > 0 else "weak_inverse"
+    return "noise"
+
+
+def _load_strategy_catalog() -> list[StrategyMeta]:
+    """Build strategy catalog from strategies.yaml defaults."""
+    from pathlib import Path  # noqa: PLC0415
+
+    import yaml  # noqa: PLC0415
+
+    p = Path("config/strategies.yaml")
+    raw: dict[str, Any] = yaml.safe_load(p.read_text()) if p.exists() else {}
+
+    strategies = [
+        StrategyMeta(
+            name="ema_crossover",
+            display_name="EMA Crossover",
+            description=(
+                "Long when fast EMA > slow EMA, short when fast EMA < slow EMA. "
+                "Classic trend-following signal."
+            ),
+            params_schema=[
+                ParamSpec(
+                    name="fast_period",
+                    kind="int",
+                    default=50,
+                    min=2,
+                    max=200,
+                    description="Fast EMA period",
+                    unit="bars",
+                ),
+                ParamSpec(
+                    name="slow_period",
+                    kind="int",
+                    default=200,
+                    min=10,
+                    max=500,
+                    description="Slow EMA period",
+                    unit="bars",
+                ),
+                ParamSpec(
+                    name="signal_threshold",
+                    kind="float",
+                    default=0.0,
+                    min=0.0,
+                    max=1.0,
+                    description="Threshold for position entry",
+                ),
+            ],
+            default_params=raw.get("ema_crossover", {}),
+        ),
+        StrategyMeta(
+            name="momentum",
+            display_name="Momentum",
+            description=(
+                "Long when z-scored momentum is positive, short when negative. "
+                "Cross-sectional momentum adapted for single-asset use."
+            ),
+            params_schema=[
+                ParamSpec(
+                    name="lookback_period",
+                    kind="int",
+                    default=20,
+                    min=5,
+                    max=252,
+                    description="Momentum lookback",
+                    unit="bars",
+                ),
+                ParamSpec(
+                    name="z_score_window",
+                    kind="int",
+                    default=63,
+                    min=10,
+                    max=252,
+                    description="Z-score window",
+                    unit="bars",
+                ),
+                ParamSpec(
+                    name="signal_threshold",
+                    kind="float",
+                    default=0.5,
+                    min=0.0,
+                    max=3.0,
+                    description="Z-score threshold",
+                ),
+            ],
+            default_params=raw.get("momentum", {}),
+        ),
+        StrategyMeta(
+            name="rsi_reversion",
+            display_name="RSI Reversion",
+            description=(
+                "Long when RSI is oversold, short when overbought. "
+                "Mean-reversion signal using RSI oscillator."
+            ),
+            params_schema=[
+                ParamSpec(
+                    name="period",
+                    kind="int",
+                    default=14,
+                    min=2,
+                    max=50,
+                    description="RSI period",
+                    unit="bars",
+                ),
+                ParamSpec(
+                    name="oversold_threshold",
+                    kind="float",
+                    default=30.0,
+                    min=10.0,
+                    max=45.0,
+                    description="Oversold level",
+                ),
+                ParamSpec(
+                    name="overbought_threshold",
+                    kind="float",
+                    default=70.0,
+                    min=55.0,
+                    max=90.0,
+                    description="Overbought level",
+                ),
+            ],
+            default_params=raw.get("rsi_reversion", {}),
+        ),
+        StrategyMeta(
+            name="donchian_breakout",
+            display_name="Donchian Breakout",
+            description=(
+                "Long on upward channel breakout, short on downward breakout. "
+                "Classic trend-following channel system."
+            ),
+            params_schema=[
+                ParamSpec(
+                    name="channel_period",
+                    kind="int",
+                    default=20,
+                    min=5,
+                    max=252,
+                    description="Channel lookback",
+                    unit="bars",
+                ),
+            ],
+            default_params=raw.get("donchian_breakout", {}),
+        ),
+    ]
+    return strategies
+
+
+STRATEGY_CATALOG = _load_strategy_catalog()
+_STRATEGY_MAP: dict[str, StrategyMeta] = {s.name: s for s in STRATEGY_CATALOG}
+
+
+def _parse_date(s: str | None) -> datetime.date | None:
+    if s is None:
+        return None
+    return datetime.date.fromisoformat(s)
+
+
+def _build_signal_pipeline(strategy: str, params: dict[str, Any]):
+    """Return (indicators, signal_generator) for a given strategy + params."""
+    from src.research.momentum import Momentum  # noqa: PLC0415
+    from src.research.moving_averages import EMA  # noqa: PLC0415
+    from src.research.oscillators import RSI  # noqa: PLC0415
+    from src.signal.breakout import DonchianBreakoutSignal  # noqa: PLC0415
+    from src.signal.reversion import RSIReversionSignal  # noqa: PLC0415
+    from src.signal.trend import EMACrossoverSignal, MomentumSignal  # noqa: PLC0415
+
+    if strategy == "ema_crossover":
+        fast = params.get("fast_period", 50)
+        slow = params.get("slow_period", 200)
+        indicators = [EMA(period=fast), EMA(period=slow)]
+        gen = EMACrossoverSignal(fast_period=fast, slow_period=slow)
+
+    elif strategy == "momentum":
+        lookback = params.get("lookback_period", 20)
+        z_window = params.get("z_score_window", 63)
+        indicators = [Momentum(lookback=lookback)]
+        gen = MomentumSignal(lookback=lookback, z_score_window=z_window)
+
+    elif strategy == "rsi_reversion":
+        period = params.get("period", 14)
+        indicators = [RSI(period=period)]
+        gen = RSIReversionSignal(period=period)
+
+    elif strategy == "donchian_breakout":
+        ch_period = params.get("channel_period", 20)
+        indicators = []
+        gen = DonchianBreakoutSignal(channel_period=ch_period)
+
+    else:
+        raise ApiError(
+            code="UNKNOWN_STRATEGY",
+            message=f"Strategy '{strategy}' is not registered.",
+            status=400,
+        )
+
+    return indicators, gen
+
+
+def _run_signal_pipeline(
+    asset: str,
+    strategy: str,
+    params: dict[str, Any],
+    from_date: str | None,
+    to_date: str | None,
+):
+    """Full pipeline: DataLoader → FeaturePipeline → SignalGenerator."""
+    from src.core.config import Config  # noqa: PLC0415
+    from src.data.loader import DataLoader  # noqa: PLC0415
+    from src.research.feature_frame import FeatureFrame  # noqa: PLC0415
+    from src.research.pipeline import FeaturePipeline  # noqa: PLC0415
+    from src.signal.position import PositionSignalConstructor  # noqa: PLC0415
+
+    cfg = Config.load()
+    ohlcv = DataLoader(cfg).load(
+        asset,
+        start=_parse_date(from_date),
+        end=_parse_date(to_date),
+    )
+
+    indicators, signal_gen = _build_signal_pipeline(strategy, params)
+
+    if indicators:
+        feature_frame = FeaturePipeline(indicators).compute(ohlcv, asset=asset)
+    else:
+        feature_frame = FeatureFrame(ohlcv, feature_specs=[], asset=asset)
+
+    raw_signal = signal_gen.generate(feature_frame)
+
+    threshold = params.get("signal_threshold", 0.0)
+    pos_signal = PositionSignalConstructor().build(raw_signal, threshold=threshold)
+
+    return ohlcv, raw_signal, pos_signal
+
+
+@router.get("/strategies", response_model=StrategyCatalogResponse)
+def get_strategies() -> StrategyCatalogResponse:
+    """Strategy catalog: names, param schemas, strategies.yaml defaults."""
+    return StrategyCatalogResponse(strategies=STRATEGY_CATALOG)
+
+
+@router.post("/signals/generate", response_model=SignalGenerateResponse)
+def generate_signal(request: SignalGenerateRequest) -> SignalGenerateResponse:
+    """Generate RawSignal and PositionSignal for an asset + strategy."""
+    if request.strategy not in _STRATEGY_MAP:
+        raise ApiError(
+            code="UNKNOWN_STRATEGY",
+            message=f"Strategy '{request.strategy}' is not registered.",
+            status=400,
+        )
+
+    ohlcv, raw_signal, pos_signal = _run_signal_pipeline(
+        request.asset,
+        request.strategy,
+        request.params,
+        request.from_date,
+        request.to_date,
+    )
+
+    valid = raw_signal.dropna()
+    return SignalGenerateResponse(
+        asset=request.asset,
+        strategy=request.strategy,
+        params=request.params,
+        bars=len(valid),
+        raw_signal=series_to_columnar(valid, col_name="raw"),
+        position_signal=series_to_columnar(
+            pos_signal.loc[valid.index], col_name="position"
+        ),
+    )
+
+
+@router.post("/signals/evaluate", response_model=SignalEvaluateResponse)
+def evaluate_signal(request: SignalEvaluateRequest) -> SignalEvaluateResponse:
+    """Evaluate signal quality: IC, ICIR, decay. This is the IC Gate data source."""
+    if request.strategy not in _STRATEGY_MAP:
+        raise ApiError(
+            code="UNKNOWN_STRATEGY",
+            message=f"Strategy '{request.strategy}' is not registered.",
+            status=400,
+        )
+
+    from src.signal.evaluation import SignalEvaluator  # noqa: PLC0415
+
+    ohlcv, raw_signal, _ = _run_signal_pipeline(
+        request.asset,
+        request.strategy,
+        request.params,
+        request.from_date,
+        request.to_date,
+    )
+
+    evaluation = SignalEvaluator(asset=request.asset).evaluate(raw_signal, ohlcv)
+
+    decay = [
+        DecayEntry(horizon=h, ic=evaluation.ic_decay.get(h))
+        for h in sorted(evaluation.ic_decay)
+    ]
+
+    eval_data = SignalEvaluationData(
+        ic=evaluation.ic,
+        icir=evaluation.icir,
+        turnover=evaluation.turnover,
+        decay=decay,
+        evaluation_window=len(raw_signal.dropna()),
+        computed_at=datetime.datetime.now(datetime.UTC).strftime(
+            "%Y-%m-%dT%H:%M:%S.%f"
+        )[:-3]
+        + "Z",
+        ic_band=classify_ic_band(evaluation.ic),
+    )
+
+    return SignalEvaluateResponse(
+        asset=request.asset,
+        strategy=request.strategy,
+        params=request.params,
+        evaluation=eval_data,
+    )
