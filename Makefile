@@ -1,13 +1,14 @@
-.PHONY: dev types test-api lint-api
+.PHONY: dev dev-frontend types test-api lint-api
 
 dev:
 	uvicorn api.main:app --reload --host 127.0.0.1 --port 8000
 
+dev-frontend:
+	cd frontend && npm run dev
+
 types:
-	@echo "Fetching OpenAPI schema..."
-	curl -sf http://localhost:8000/openapi.json -o /tmp/openapi.json
-	@echo "Generating TypeScript types..."
-	npx openapi-typescript /tmp/openapi.json -o frontend/src/api/schema.d.ts
+	cd frontend && npx openapi-typescript http://localhost:8000/openapi.json \
+		-o src/api/schema.d.ts
 	@echo "Done: frontend/src/api/schema.d.ts"
 
 test-api:
