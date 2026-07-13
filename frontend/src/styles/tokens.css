@@ -1,0 +1,181 @@
+/* ============================================================
+   COMMODITY RESEARCH PLATFORM — DESIGN TOKENS
+   Source of truth. All hex values in the entire codebase live here.
+   Components reference semantic tokens only (var(--bg-panel) etc).
+   Never reference primitive tokens (var(--gray-950)) in components.
+   ============================================================ */
+
+/* ============================================================
+   PRIMITIVE COLOR TOKENS — dark theme (default)
+   ============================================================ */
+:root {
+  /* Surface ramp */
+  --gray-950: #0e1116;
+  --gray-900: #141922;
+  --gray-850: #1a202b;
+  --gray-800: #222a37;
+  --gray-700: #2e3948;
+  --gray-500: #5b6878;
+  --gray-400: #7c8a9c;
+  --gray-200: #c3cdd9;
+  --gray-050: #eef2f6;
+
+  /* Accent — terminal amber */
+  --amber-500: #e8a33d;
+  --amber-600: #c8862b;
+  --amber-300: #f2c376;
+  --amber-900a: rgba(232, 163, 61, 0.12);
+
+  /* Directional */
+  --gain-500:  #3fb68b;
+  --gain-900a: rgba(63, 182, 139, 0.12);
+  --loss-500:  #e05d5d;
+  --loss-900a: rgba(224, 93, 93, 0.12);
+
+  /* Status */
+  --info-500: #4e9cdb;
+  --warn-500: #d9a03c;
+  --crit-500: #e05d5d;
+  --ok-500:   #3fb68b;
+
+  /* IC quality bands — thresholds from ADR-007 */
+  --ic-noise:  #7c8a9c;
+  --ic-weak:   #d9a03c;
+  --ic-strong: #3fb68b;
+}
+
+/* ============================================================
+   SEMANTIC COLOR TOKENS
+   ============================================================ */
+:root {
+  /* Surfaces */
+  --bg-app:      var(--gray-950);
+  --bg-panel:    var(--gray-900);
+  --bg-raised:   var(--gray-850);
+  --bg-hover:    var(--gray-850);
+  --bg-selected: var(--amber-900a);
+
+  /* Borders */
+  --border-default: var(--gray-800);
+  --border-strong:  var(--gray-700);
+
+  /* Text */
+  --text-primary:   var(--gray-200);
+  --text-emphasis:  var(--gray-050);
+  --text-secondary: var(--gray-400);
+  --text-disabled:  var(--gray-500);
+  --text-accent:    var(--amber-500);
+  --text-gain:      var(--gain-500);
+  --text-loss:      var(--loss-500);
+
+  /* Interactive */
+  --focus-ring: var(--amber-500);
+}
+
+/* ============================================================
+   TYPOGRAPHY TOKENS
+   ============================================================ */
+:root {
+  --font-ui:   'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  --type-xs:       11px;   --type-xs-lh:    16px;
+  --type-sm:       12.5px; --type-sm-lh:    18px;
+  --type-md:       14px;   --type-md-lh:    20px;
+  --type-lg:       16px;   --type-lg-lh:    24px;
+  --type-xl:       20px;   --type-xl-lh:    28px;
+
+  --type-metric:    22px;  --type-metric-lh:    28px;
+  --type-metric-lg: 32px;  --type-metric-lg-lh: 36px;
+}
+
+/* ============================================================
+   SPACING TOKENS — 4px base scale
+   ============================================================ */
+:root {
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  32px;
+  --space-8:  40px;
+  --space-9:  48px;
+  --space-10: 64px;
+}
+
+/* ============================================================
+   LAYOUT TOKENS
+   ============================================================ */
+:root {
+  --sidebar-width:            232px;
+  --sidebar-width-collapsed:   56px;
+  --topbar-height:             48px;
+  --context-bar-height:        40px;
+  --content-gutter:            16px;
+  --panel-padding: var(--space-4);
+}
+
+/* ============================================================
+   BORDER RADIUS TOKENS
+   ============================================================ */
+:root {
+  --radius-sm:   3px;
+  --radius-md:   6px;
+  --radius-lg:  10px;
+  --radius-full: 9999px;
+}
+
+/* ============================================================
+   DENSITY TOKENS
+   ============================================================ */
+:root {
+  --row-height:    32px;
+  --input-height:  32px;
+  --density-scale: 1;
+}
+
+[data-density='comfortable'] {
+  --row-height:    40px;
+  --input-height:  36px;
+  --density-scale: 1.0625;
+}
+
+/* ============================================================
+   MOTION TOKENS
+   ============================================================ */
+:root {
+  --dur-fast: 120ms;
+  --dur-base: 160ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+  }
+}
+
+/* ============================================================
+   ELEVATION
+   ============================================================ */
+:root {
+  --shadow-overlay: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================================
+   LIGHT THEME OVERRIDES
+   ============================================================ */
+[data-theme='light'] {
+  --gray-950: #f7f8fa;
+  --gray-900: #eceef2;
+  --gray-850: #e2e5eb;
+  --gray-800: #d1d5dd;
+  --gray-700: #b8bec9;
+  --gray-500: #8891a0;
+  --gray-400: #5d6678;
+  --gray-200: #2c3444;
+  --gray-050: #1b2430;
+}
