@@ -1,3 +1,4 @@
+import '@/lib/echarts-setup' // Side-effect: registers ECharts chart types globally. Must run before any ECharts instance is created.
 import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useWorkspace } from '@/stores/workspace'
