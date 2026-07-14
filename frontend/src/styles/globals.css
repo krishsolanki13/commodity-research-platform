@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -32,7 +34,9 @@ body {
 code,
 kbd,
 pre {
-  font-feature-settings: 'tnum' 1, 'zero' 1;
+  font-feature-settings:
+    'tnum' 1,
+    'zero' 1;
   font-variant-numeric: tabular-nums;
 }
 
@@ -68,14 +72,25 @@ pre {
    ============================================================ */
 
 @keyframes shimmer {
-  0%   { opacity: 0.5; }
-  50%  { opacity: 1;   }
-  100% { opacity: 0.5; }
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1;   }
-  50%       { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .animate-shimmer {
@@ -99,6 +114,12 @@ pre {
    These three are the ONLY permitted static CSS definitions
    outside tailwind.config.ts in this codebase.
    ─────────────────────────────────────────────────────────── */
-.ic-gate-bg-strong { background-color: rgba(63,  182, 139, 0.08); }
-.ic-gate-bg-weak   { background-color: rgba(217, 160, 60,  0.08); }
-.ic-gate-bg-noise  { background-color: rgba(124, 138, 156, 0.08); }
+.ic-gate-bg-strong {
+  background-color: rgba(63, 182, 139, 0.08);
+}
+.ic-gate-bg-weak {
+  background-color: rgba(217, 160, 60, 0.08);
+}
+.ic-gate-bg-noise {
+  background-color: rgba(124, 138, 156, 0.08);
+}

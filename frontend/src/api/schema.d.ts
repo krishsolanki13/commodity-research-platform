@@ -4,2323 +4,2315 @@
  */
 
 export interface paths {
-    "/api/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Health
-         * @description Health check. Used by the frontend TopBar health indicator.
-         */
-        get: operations["health_api_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/assets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Assets
-         * @description Universe summary: all 6 assets with metadata and headline stats.
-         */
-        get: operations["get_assets_api_assets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/assets/{asset}/ohlcv": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Ohlcv
-         * @description OHLCV data in columnar format. ?downsample=view applies LTTB to ≤3,000 bars.
-         */
-        get: operations["get_ohlcv_api_assets__asset__ohlcv_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/assets/{asset}/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Asset Summary
-         * @description Headline metrics for one asset: last price, returns, vol, bar count.
-         */
-        get: operations["get_asset_summary_api_assets__asset__summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/backtests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Launch Backtest
-         * @description Launch a backtest asynchronously. Returns polling run_id immediately.
-         *
-         *     signal_evaluation: null is accepted without error — gate
-         *     enforcement is client-side doctrine only (ADR-007).
-         */
-        post: operations["launch_backtest_api_backtests_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/backtests/{run_id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Backtest Status
-         * @description Poll task status. Returns queued|running|complete|failed.
-         */
-        get: operations["get_backtest_status_api_backtests__run_id__status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/indicators": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Indicators
-         * @description Indicator catalog: drives the IndicatorPicker in the frontend.
-         */
-        get: operations["get_indicators_api_indicators_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/features/compute": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Compute Features
-         * @description Compute indicator columns for an asset. Returns columnar FeatureFrame.
-         */
-        post: operations["compute_features_api_features_compute_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/portfolio/run": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Launch Portfolio
-         * @description Launch a portfolio backtest asynchronously.
-         */
-        post: operations["launch_portfolio_api_portfolio_run_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/portfolio/{run_id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Portfolio Status
-         * @description Poll portfolio run status.
-         */
-        get: operations["get_portfolio_status_api_portfolio__run_id__status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/portfolio/{run_id}/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Portfolio Summary
-         * @description Portfolio performance summary.
-         */
-        get: operations["get_portfolio_summary_api_portfolio__run_id__summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/portfolio/{run_id}/risk": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Portfolio Risk
-         * @description Portfolio risk analytics: VaR, ES, notional exposure.
-         */
-        get: operations["get_portfolio_risk_api_portfolio__run_id__risk_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/portfolio/{run_id}/correlation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Portfolio Correlation
-         * @description Cross-asset correlation report with symmetrized rolling correlations.
-         */
-        get: operations["get_portfolio_correlation_api_portfolio__run_id__correlation_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/portfolio/{run_id}/equity": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Portfolio Equity
-         * @description Portfolio equity curve and daily PnL series.
-         */
-        get: operations["get_portfolio_equity_api_portfolio__run_id__equity_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/portfolio/{run_id}/assets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Portfolio Assets
-         * @description Per-asset headline metrics for a portfolio run.
-         */
-        get: operations["get_portfolio_assets_api_portfolio__run_id__assets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/portfolio/{run_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete Portfolio Run
-         * @description Remove portfolio run artifacts from state.
-         */
-        delete: operations["delete_portfolio_run_api_portfolio__run_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Runs
-         * @description List all completed backtest runs with headline metrics.
-         */
-        get: operations["list_runs_api_runs_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs/{run_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Run Detail
-         * @description Full run detail: params, metrics, provenance.
-         */
-        get: operations["get_run_detail_api_runs__run_id__get"];
-        put?: never;
-        post?: never;
-        /**
-         * Delete Run
-         * @description Delete a run's artifacts from disk.
-         */
-        delete: operations["delete_run_api_runs__run_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs/{run_id}/series/{name}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Run Series
-         * @description Return one time series artifact (equity_curve, pnl, positions).
-         */
-        get: operations["get_run_series_api_runs__run_id__series__name__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs/{run_id}/trades": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Run Trades
-         * @description Paginated trade log for a run.
-         */
-        get: operations["get_run_trades_api_runs__run_id__trades_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs/compare": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Compare Runs
-         * @description Compare multiple runs: aligned equity curves + metric matrix.
-         */
-        post: operations["compare_runs_api_runs_compare_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/strategies": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Strategies
-         * @description Strategy catalog: names, param schemas, strategies.yaml defaults.
-         */
-        get: operations["get_strategies_api_strategies_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/signals/generate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Generate Signal
-         * @description Generate RawSignal and PositionSignal for an asset + strategy.
-         */
-        post: operations["generate_signal_api_signals_generate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/signals/evaluate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Evaluate Signal
-         * @description Evaluate signal quality: IC, ICIR, decay. This is the IC Gate data source.
-         */
-        post: operations["evaluate_signal_api_signals_evaluate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/system/data-status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Data Status
-         * @description Per-asset ingestion status: bar count, date range, health.
-         */
-        get: operations["get_data_status_api_system_data_status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/system/ingest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Trigger Ingest
-         * @description Trigger DataLoader.load() to refresh processed Parquet from raw CSV.
-         */
-        post: operations["trigger_ingest_api_system_ingest_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/system/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Config
-         * @description Sanitized read-only view of config.yaml, assets.yaml, strategies.yaml.
-         */
-        get: operations["get_config_api_system_config_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  '/api/health': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Health
+     * @description Health check. Used by the frontend TopBar health indicator.
+     */
+    get: operations['health_api_health_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/assets': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Assets
+     * @description Universe summary: all 6 assets with metadata and headline stats.
+     */
+    get: operations['get_assets_api_assets_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/assets/{asset}/ohlcv': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Ohlcv
+     * @description OHLCV data in columnar format. ?downsample=view applies LTTB to ≤3,000 bars.
+     */
+    get: operations['get_ohlcv_api_assets__asset__ohlcv_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/assets/{asset}/summary': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Asset Summary
+     * @description Headline metrics for one asset: last price, returns, vol, bar count.
+     */
+    get: operations['get_asset_summary_api_assets__asset__summary_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/backtests': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Launch Backtest
+     * @description Launch a backtest asynchronously. Returns polling run_id immediately.
+     *
+     *     signal_evaluation: null is accepted without error — gate
+     *     enforcement is client-side doctrine only (ADR-007).
+     */
+    post: operations['launch_backtest_api_backtests_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/backtests/{run_id}/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Backtest Status
+     * @description Poll task status. Returns queued|running|complete|failed.
+     */
+    get: operations['get_backtest_status_api_backtests__run_id__status_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/indicators': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Indicators
+     * @description Indicator catalog: drives the IndicatorPicker in the frontend.
+     */
+    get: operations['get_indicators_api_indicators_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/features/compute': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Compute Features
+     * @description Compute indicator columns for an asset. Returns columnar FeatureFrame.
+     */
+    post: operations['compute_features_api_features_compute_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/portfolio/run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Launch Portfolio
+     * @description Launch a portfolio backtest asynchronously.
+     */
+    post: operations['launch_portfolio_api_portfolio_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/portfolio/{run_id}/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Portfolio Status
+     * @description Poll portfolio run status.
+     */
+    get: operations['get_portfolio_status_api_portfolio__run_id__status_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/portfolio/{run_id}/summary': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Portfolio Summary
+     * @description Portfolio performance summary.
+     */
+    get: operations['get_portfolio_summary_api_portfolio__run_id__summary_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/portfolio/{run_id}/risk': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Portfolio Risk
+     * @description Portfolio risk analytics: VaR, ES, notional exposure.
+     */
+    get: operations['get_portfolio_risk_api_portfolio__run_id__risk_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/portfolio/{run_id}/correlation': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Portfolio Correlation
+     * @description Cross-asset correlation report with symmetrized rolling correlations.
+     */
+    get: operations['get_portfolio_correlation_api_portfolio__run_id__correlation_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/portfolio/{run_id}/equity': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Portfolio Equity
+     * @description Portfolio equity curve and daily PnL series.
+     */
+    get: operations['get_portfolio_equity_api_portfolio__run_id__equity_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/portfolio/{run_id}/assets': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Portfolio Assets
+     * @description Per-asset headline metrics for a portfolio run.
+     */
+    get: operations['get_portfolio_assets_api_portfolio__run_id__assets_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/portfolio/{run_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * Delete Portfolio Run
+     * @description Remove portfolio run artifacts from state.
+     */
+    delete: operations['delete_portfolio_run_api_portfolio__run_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/runs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Runs
+     * @description List all completed backtest runs with headline metrics.
+     */
+    get: operations['list_runs_api_runs_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/runs/{run_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Run Detail
+     * @description Full run detail: params, metrics, provenance.
+     */
+    get: operations['get_run_detail_api_runs__run_id__get']
+    put?: never
+    post?: never
+    /**
+     * Delete Run
+     * @description Delete a run's artifacts from disk.
+     */
+    delete: operations['delete_run_api_runs__run_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/runs/{run_id}/series/{name}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Run Series
+     * @description Return one time series artifact (equity_curve, pnl, positions).
+     */
+    get: operations['get_run_series_api_runs__run_id__series__name__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/runs/{run_id}/trades': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Run Trades
+     * @description Paginated trade log for a run.
+     */
+    get: operations['get_run_trades_api_runs__run_id__trades_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/runs/compare': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Compare Runs
+     * @description Compare multiple runs: aligned equity curves + metric matrix.
+     */
+    post: operations['compare_runs_api_runs_compare_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/strategies': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Strategies
+     * @description Strategy catalog: names, param schemas, strategies.yaml defaults.
+     */
+    get: operations['get_strategies_api_strategies_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/signals/generate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Generate Signal
+     * @description Generate RawSignal and PositionSignal for an asset + strategy.
+     */
+    post: operations['generate_signal_api_signals_generate_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/signals/evaluate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Evaluate Signal
+     * @description Evaluate signal quality: IC, ICIR, decay. This is the IC Gate data source.
+     */
+    post: operations['evaluate_signal_api_signals_evaluate_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/system/data-status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Data Status
+     * @description Per-asset ingestion status: bar count, date range, health.
+     */
+    get: operations['get_data_status_api_system_data_status_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/system/ingest': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Trigger Ingest
+     * @description Trigger DataLoader.load() to refresh processed Parquet from raw CSV.
+     */
+    post: operations['trigger_ingest_api_system_ingest_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/system/config': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Config
+     * @description Sanitized read-only view of config.yaml, assets.yaml, strategies.yaml.
+     */
+    get: operations['get_config_api_system_config_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
-export type webhooks = Record<string, never>;
+export type webhooks = Record<string, never>
 export interface components {
-    schemas: {
-        /** AlignedRunSeries */
-        AlignedRunSeries: {
-            /** Run Id */
-            run_id: string;
-            equity_normalized: components["schemas"]["ColumnarSeries"];
-            rolling_sharpe_63: components["schemas"]["ColumnarSeries"];
-        };
-        /** AssetDataStatus */
-        AssetDataStatus: {
-            /** Name */
-            name: string;
-            /** Bar Count */
-            bar_count: number;
-            /** From Date */
-            from_date: string | null;
-            /** To Date */
-            to_date: string | null;
-            /** Last Ingested */
-            last_ingested: string | null;
-            /** Flagged Anomalies */
-            flagged_anomalies: number;
-            /**
-             * Data Health
-             * @enum {string}
-             */
-            data_health: "ok" | "warn" | "crit" | "missing";
-            /** Flags */
-            flags: components["schemas"]["DataFlag"][];
-        };
-        /**
-         * AssetMetadata
-         * @description assets.yaml contract for one asset.
-         */
-        AssetMetadata: {
-            /** Name */
-            name: string;
-            /** Display Name */
-            display_name: string;
-            /** Ticker Continuous */
-            ticker_continuous: string;
-            /** Contract Root */
-            contract_root: string;
-            /** Exchange Suffix */
-            exchange_suffix: string;
-            /** Exchange */
-            exchange: string;
-            /** Currency */
-            currency: string;
-            /** Unit */
-            unit: string;
-            /** Contract Multiplier */
-            contract_multiplier: number;
-            /** Tick Size */
-            tick_size: number;
-            /** Tick Value */
-            tick_value: number;
-        };
-        /** AssetSummaryResponse */
-        AssetSummaryResponse: {
-            /** Name */
-            name: string;
-            /** Last Price */
-            last_price: number | null;
-            /** Last Date */
-            last_date: string | null;
-            /** Return 1D */
-            return_1d: number | null;
-            /** Return 1W */
-            return_1w: number | null;
-            /** Return 1M */
-            return_1m: number | null;
-            /** Realized Vol 63D */
-            realized_vol_63d: number | null;
-            /** Avg Volume 20D */
-            avg_volume_20d: number | null;
-            /** Bar Count */
-            bar_count: number;
-            /**
-             * Data Health
-             * @enum {string}
-             */
-            data_health: "ok" | "warn" | "crit" | "missing";
-            /** Flagged Anomalies */
-            flagged_anomalies: number;
-        };
-        /** BacktestLaunchRequest */
-        BacktestLaunchRequest: {
-            /** Asset */
-            asset: string;
-            /** Strategy */
-            strategy: string;
-            /** Params */
-            params: {
-                [key: string]: unknown;
-            };
-            /** From Date */
-            from_date?: string | null;
-            /** To Date */
-            to_date?: string | null;
-            /**
-             * Initial Capital
-             * @default 1000000
-             */
-            initial_capital: number;
-            /**
-             * Commission Per Trade
-             * @default 5
-             */
-            commission_per_trade: number;
-            /**
-             * Slippage Ticks
-             * @default 1
-             */
-            slippage_ticks: number;
-            /**
-             * Sizing Method
-             * @default fixed_notional
-             * @enum {string}
-             */
-            sizing_method: "fixed_notional" | "volatility_scaled";
-            /**
-             * Notional Usd
-             * @default 100000
-             */
-            notional_usd: number;
-            /** Target Annual Vol */
-            target_annual_vol?: number | null;
-            /**
-             * Signal Threshold
-             * @default 0
-             */
-            signal_threshold: number;
-            signal_evaluation?: components["schemas"]["SignalEvaluationData"] | null;
-        };
-        /**
-         * ColumnarSeries
-         * @description Time series in columnar format.
-         *
-         *     index: epoch milliseconds UTC.
-         *     columns: column_name → list of float | None (None encodes NaN).
-         *     This is the wire format for ALL time series (OHLCV, equity, signals, etc.).
-         *     3–5× smaller than row-of-objects format.
-         */
-        ColumnarSeries: {
-            /**
-             * Index
-             * @description Epoch milliseconds UTC
-             */
-            index: number[];
-            /**
-             * Columns
-             * @description Column values. None encodes NaN (JSON null).
-             */
-            columns: {
-                [key: string]: (number | null)[];
-            };
-        };
-        /** CompareRequest */
-        CompareRequest: {
-            /** Ids */
-            ids: string[];
-        };
-        /** CompareResponse */
-        CompareResponse: {
-            /** Runs */
-            runs: components["schemas"]["CompareRunSummary"][];
-            /** Aligned Series */
-            aligned_series: components["schemas"]["AlignedRunSeries"][];
-            /** Intersection From */
-            intersection_from: string | null;
-            /** Intersection To */
-            intersection_to: string | null;
-            /** Intersection Bars */
-            intersection_bars: number | null;
-            /** Mixed Assets */
-            mixed_assets: boolean;
-        };
-        /** CompareRunSummary */
-        CompareRunSummary: {
-            /** Run Id */
-            run_id: string;
-            /** Asset */
-            asset: string;
-            /** Strategy */
-            strategy: string;
-            /** Params */
-            params: {
-                [key: string]: unknown;
-            };
-            /** Metrics */
-            metrics: {
-                [key: string]: number | null;
-            };
-            /** From Date */
-            from_date: string;
-            /** To Date */
-            to_date: string;
-        };
-        /** ConfigResponse */
-        ConfigResponse: {
-            /** Config */
-            config: {
-                [key: string]: unknown;
-            };
-            /** Assets */
-            assets: {
-                [key: string]: unknown;
-            };
-            /** Strategies */
-            strategies: {
-                [key: string]: unknown;
-            };
-        };
-        /** CorrelationReportResponse */
-        CorrelationReportResponse: {
-            /** Run Id */
-            run_id: string;
-            /** Correlation Matrix */
-            correlation_matrix: {
-                [key: string]: {
-                    [key: string]: number;
-                };
-            };
-            /** Rolling Correlations 63 */
-            rolling_correlations_63: {
-                [key: string]: {
-                    [key: string]: components["schemas"]["RollingCorrSeries"];
-                };
-            };
-            /** Rolling Correlations 126 */
-            rolling_correlations_126: {
-                [key: string]: {
-                    [key: string]: components["schemas"]["RollingCorrSeries"];
-                };
-            };
-            /** Realized Vol By Asset */
-            realized_vol_by_asset: {
-                [key: string]: number;
-            };
-            /** Portfolio Realized Vol */
-            portfolio_realized_vol: number;
-            /** Avg Pairwise Correlation */
-            avg_pairwise_correlation: number;
-            /** Most Correlated Pair */
-            most_correlated_pair: [
-                string,
-                string,
-                number
-            ];
-            /** Least Correlated Pair */
-            least_correlated_pair: [
-                string,
-                string,
-                number
-            ];
-            /**
-             * Framing Note
-             * @default Correlations are between strategy daily returns (PnL / initial_capital), not commodity price returns. Strategies with frequent flat periods show lower static correlation than underlying prices. Use rolling charts to see structural relationships.
-             */
-            framing_note: string;
-        };
-        /** DataFlag */
-        DataFlag: {
-            /** Date */
-            date: string;
-            /** Violation Type */
-            violation_type: string;
-            /** Detail */
-            detail: string;
-        };
-        /** DataStatusResponse */
-        DataStatusResponse: {
-            /** Assets */
-            assets: components["schemas"]["AssetDataStatus"][];
-            /** Total Flags */
-            total_flags: number;
-        };
-        /** DecayEntry */
-        DecayEntry: {
-            /** Horizon */
-            horizon: number;
-            /** Ic */
-            ic: number | null;
-        };
-        /** DeleteResponse */
-        DeleteResponse: {
-            /** Deleted */
-            deleted: boolean;
-            /** Run Id */
-            run_id: string;
-        };
-        /** FeatureComputeRequest */
-        FeatureComputeRequest: {
-            /** Asset */
-            asset: string;
-            /** From Date */
-            from_date?: string | null;
-            /** To Date */
-            to_date?: string | null;
-            /** Specs */
-            specs: components["schemas"]["FeatureSpecRequest"][];
-        };
-        /** FeatureComputeResponse */
-        FeatureComputeResponse: {
-            /** Asset */
-            asset: string;
-            /** From Date */
-            from_date: string;
-            /** To Date */
-            to_date: string;
-            /** Bars */
-            bars: number;
-            /** Specs */
-            specs: components["schemas"]["FeatureSpecResponse"][];
-            columns: components["schemas"]["ColumnarSeries"];
-        };
-        /** FeatureSpecRequest */
-        FeatureSpecRequest: {
-            /** Name */
-            name: string;
-            /** Params */
-            params: {
-                [key: string]: unknown;
-            };
-        };
-        /** FeatureSpecResponse */
-        FeatureSpecResponse: {
-            /** Indicator Name */
-            indicator_name: string;
-            /** Params */
-            params: {
-                [key: string]: unknown;
-            };
-            /** Column Name */
-            column_name: string;
-            /** Asset */
-            asset: string;
-            /** Computed At */
-            computed_at: string;
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /** HealthResponse */
-        HealthResponse: {
-            /**
-             * Status
-             * @constant
-             */
-            status: "ok";
-            /** Version */
-            version: string;
-            /** Backend Tests */
-            backend_tests: number;
-        };
-        /** IndicatorCatalogResponse */
-        IndicatorCatalogResponse: {
-            /** Indicators */
-            indicators: components["schemas"]["IndicatorMeta"][];
-        };
-        /** IndicatorMeta */
-        IndicatorMeta: {
-            /** Name */
-            name: string;
-            /** Display Name */
-            display_name: string;
-            /**
-             * Category
-             * @enum {string}
-             */
-            category: "trend" | "momentum" | "oscillator" | "volatility" | "volume";
-            /** Params Schema */
-            params_schema: components["schemas"]["ParamSpec"][];
-            /** Column Name Template */
-            column_name_template: string;
-        };
-        /** IngestRequest */
-        IngestRequest: {
-            /** Asset */
-            asset?: string | null;
-        };
-        /** IngestResponse */
-        IngestResponse: {
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "ok" | "partial" | "failed";
-            /** Assets Ingested */
-            assets_ingested: string[];
-            /** Assets Failed */
-            assets_failed: string[];
-            /** Detail */
-            detail?: string | null;
-        };
-        /** OhlcvResponse */
-        OhlcvResponse: {
-            /** Asset */
-            asset: string;
-            /** From Date */
-            from_date: string;
-            /** To Date */
-            to_date: string;
-            /** Bars */
-            bars: number;
-            /** Bars Original */
-            bars_original: number;
-            /** Downsampled */
-            downsampled: boolean;
-            data: components["schemas"]["ColumnarSeries"];
-        };
-        /** ParamSpec */
-        ParamSpec: {
-            /** Name */
-            name: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "int" | "float" | "bool" | "str";
-            /** Default */
-            default: unknown;
-            /** Min */
-            min?: number | null;
-            /** Max */
-            max?: number | null;
-            /** Description */
-            description: string;
-            /** Unit */
-            unit?: string | null;
-        };
-        /** PortfolioAssetHeadline */
-        PortfolioAssetHeadline: {
-            /** Asset */
-            asset: string;
-            /** Sharpe */
-            sharpe: number | null;
-            /** Max Drawdown */
-            max_drawdown: number | null;
-            /** Total Return */
-            total_return: number | null;
-            /** Cagr */
-            cagr: number | null;
-            /** N Trades */
-            n_trades: number | null;
-            /** Absolute Pnl */
-            absolute_pnl: number | null;
-        };
-        /** PortfolioAssetsResponse */
-        PortfolioAssetsResponse: {
-            /** Run Id */
-            run_id: string;
-            /** Assets */
-            assets: components["schemas"]["PortfolioAssetHeadline"][];
-            /** Skipped Assets */
-            skipped_assets: string[];
-        };
-        /** PortfolioEquityResponse */
-        PortfolioEquityResponse: {
-            /** Run Id */
-            run_id: string;
-            portfolio_equity: components["schemas"]["ColumnarSeries"];
-            portfolio_pnl: components["schemas"]["ColumnarSeries"];
-        };
-        /** PortfolioLaunchRequest */
-        PortfolioLaunchRequest: {
-            /** Strategy */
-            strategy: string;
-            /** Params */
-            params: {
-                [key: string]: unknown;
-            };
-            /** Assets */
-            assets?: string[] | null;
-            /** From Date */
-            from_date?: string | null;
-            /** To Date */
-            to_date?: string | null;
-            /**
-             * Initial Capital Per Asset
-             * @default 1000000
-             */
-            initial_capital_per_asset: number;
-            /**
-             * Commission Per Trade
-             * @default 5
-             */
-            commission_per_trade: number;
-            /**
-             * Slippage Ticks
-             * @default 1
-             */
-            slippage_ticks: number;
-            /**
-             * Sizing Method
-             * @default fixed_notional
-             * @enum {string}
-             */
-            sizing_method: "fixed_notional" | "volatility_scaled";
-            /**
-             * Notional Usd
-             * @default 100000
-             */
-            notional_usd: number;
-            /**
-             * Signal Threshold
-             * @default 0
-             */
-            signal_threshold: number;
-        };
-        /** PortfolioSummaryResponse */
-        PortfolioSummaryResponse: {
-            /** Run Id */
-            run_id: string;
-            /** Strategy */
-            strategy: string;
-            /** Assets */
-            assets: string[];
-            /** Skipped Assets */
-            skipped_assets: string[];
-            /** Portfolio Date Range From */
-            portfolio_date_range_from: string;
-            /** Portfolio Date Range To */
-            portfolio_date_range_to: string;
-            /** Portfolio Date Range Bars */
-            portfolio_date_range_bars: number;
-            /** Initial Capital Per Asset */
-            initial_capital_per_asset: number;
-            /** Initial Capital Total */
-            initial_capital_total: number;
-            /** Portfolio Metrics */
-            portfolio_metrics: {
-                [key: string]: number | null;
-            };
-            /** Absolute Pnl By Asset */
-            absolute_pnl_by_asset: {
-                [key: string]: number;
-            };
-            /** Asset Contributions */
-            asset_contributions: {
-                [key: string]: number;
-            } | null;
-            /** Per Asset Headlines */
-            per_asset_headlines: components["schemas"]["PortfolioAssetHeadline"][];
-        };
-        /** ProvenanceInfo */
-        ProvenanceInfo: {
-            /** Git Sha */
-            git_sha: string;
-            /** Dirty Flag */
-            dirty_flag: boolean;
-            /** Package Versions */
-            package_versions: {
-                [key: string]: string;
-            };
-        };
-        /** RiskReportResponse */
-        RiskReportResponse: {
-            /** Run Id */
-            run_id: string;
-            /** Portfolio Var 95 */
-            portfolio_var_95: number | null;
-            /** Portfolio Var 99 */
-            portfolio_var_99: number | null;
-            /** Portfolio Var 95 Pct */
-            portfolio_var_95_pct: number | null;
-            /** Portfolio Var 99 Pct */
-            portfolio_var_99_pct: number | null;
-            /** Portfolio Es 95 */
-            portfolio_es_95: number | null;
-            /** Portfolio Es 99 */
-            portfolio_es_99: number | null;
-            /** Asset Var 95 */
-            asset_var_95: {
-                [key: string]: number | null;
-            };
-            /** Asset Var 99 */
-            asset_var_99: {
-                [key: string]: number | null;
-            };
-            /** Avg Gross Notional By Asset */
-            avg_gross_notional_by_asset: {
-                [key: string]: number;
-            };
-            /** Avg Net Notional By Asset */
-            avg_net_notional_by_asset: {
-                [key: string]: number;
-            };
-            /** Total Avg Gross Notional */
-            total_avg_gross_notional: number;
-            /** Total Avg Net Notional */
-            total_avg_net_notional: number;
-            /** Portfolio Diversification Benefit */
-            portfolio_diversification_benefit: number | null;
-            /** Lookback Days */
-            lookback_days: number;
-            /**
-             * Methodology
-             * @default historical_simulation
-             */
-            methodology: string;
-        };
-        /**
-         * RollingCorrSeries
-         * @description Rolling correlation between one asset pair.
-         */
-        RollingCorrSeries: {
-            /** Asset A */
-            asset_a: string;
-            /** Asset B */
-            asset_b: string;
-            data: components["schemas"]["ColumnarSeries"];
-        };
-        /** RunDetailResponse */
-        RunDetailResponse: {
-            /** Run Id */
-            run_id: string;
-            /** Asset */
-            asset: string;
-            /** Strategy */
-            strategy: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "complete" | "failed";
-            /** From Date */
-            from_date: string;
-            /** To Date */
-            to_date: string;
-            /** Params */
-            params: {
-                [key: string]: unknown;
-            };
-            /** Metrics */
-            metrics: {
-                [key: string]: number | null;
-            };
-            provenance: components["schemas"]["ProvenanceInfo"];
-            signal_evaluation: components["schemas"]["SignalEvaluationData"] | null;
-        };
-        /** RunListItem */
-        RunListItem: {
-            /** Run Id */
-            run_id: string;
-            /** Asset */
-            asset: string;
-            /** Strategy */
-            strategy: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "complete" | "failed" | "running" | "queued";
-            /** From Date */
-            from_date: string;
-            /** To Date */
-            to_date: string;
-            /** Sharpe */
-            sharpe: number | null;
-            /** Max Drawdown */
-            max_drawdown: number | null;
-            /** Total Return */
-            total_return: number | null;
-            /** Cagr */
-            cagr: number | null;
-            /** Win Rate */
-            win_rate: number | null;
-            /** N Trades */
-            n_trades: number | null;
-            /** Ic */
-            ic: number | null;
-            /** Ic Band */
-            ic_band: string | null;
-            /** Executed At */
-            executed_at: string;
-        };
-        /** RunListResponse */
-        RunListResponse: {
-            /** Runs */
-            runs: components["schemas"]["RunListItem"][];
-            /** Total */
-            total: number;
-            /** Page */
-            page: number;
-            /** Page Size */
-            page_size: number;
-        };
-        /** SeriesResponse */
-        SeriesResponse: {
-            /** Run Id */
-            run_id: string;
-            /**
-             * Name
-             * @enum {string}
-             */
-            name: "equity_curve" | "pnl" | "positions";
-            data: components["schemas"]["ColumnarSeries"];
-        };
-        /** SignalEvaluateRequest */
-        SignalEvaluateRequest: {
-            /** Asset */
-            asset: string;
-            /** Strategy */
-            strategy: string;
-            /** Params */
-            params: {
-                [key: string]: unknown;
-            };
-            /** From Date */
-            from_date?: string | null;
-            /** To Date */
-            to_date?: string | null;
-        };
-        /** SignalEvaluateResponse */
-        SignalEvaluateResponse: {
-            /** Asset */
-            asset: string;
-            /** Strategy */
-            strategy: string;
-            /** Params */
-            params: {
-                [key: string]: unknown;
-            };
-            evaluation: components["schemas"]["SignalEvaluationData"];
-        };
-        /**
-         * SignalEvaluationData
-         * @description IC Gate data. ic_band follows ADR-007 five-way classification:
-         *     |IC| >= 0.05 and IC > 0  → "strong"
-         *     |IC| >= 0.05 and IC < 0  → "inverse_meaningful"
-         *     0.02 <= IC < 0.05        → "weak_positive"
-         *     -0.05 < IC <= -0.02      → "weak_inverse"
-         *     |IC| < 0.02              → "noise"
-         */
-        SignalEvaluationData: {
-            /** Ic */
-            ic: number | null;
-            /** Icir */
-            icir: number | null;
-            /** Turnover */
-            turnover: number | null;
-            /** Decay */
-            decay: components["schemas"]["DecayEntry"][];
-            /** Evaluation Window */
-            evaluation_window: number;
-            /** Computed At */
-            computed_at: string;
-            /**
-             * Ic Band
-             * @enum {string}
-             */
-            ic_band: "strong" | "weak_positive" | "weak_inverse" | "inverse_meaningful" | "noise";
-        };
-        /** SignalGenerateRequest */
-        SignalGenerateRequest: {
-            /** Asset */
-            asset: string;
-            /** Strategy */
-            strategy: string;
-            /** Params */
-            params: {
-                [key: string]: unknown;
-            };
-            /** From Date */
-            from_date?: string | null;
-            /** To Date */
-            to_date?: string | null;
-        };
-        /** SignalGenerateResponse */
-        SignalGenerateResponse: {
-            /** Asset */
-            asset: string;
-            /** Strategy */
-            strategy: string;
-            /** Params */
-            params: {
-                [key: string]: unknown;
-            };
-            /** Bars */
-            bars: number;
-            raw_signal: components["schemas"]["ColumnarSeries"];
-            position_signal: components["schemas"]["ColumnarSeries"];
-        };
-        /** StrategyCatalogResponse */
-        StrategyCatalogResponse: {
-            /** Strategies */
-            strategies: components["schemas"]["StrategyMeta"][];
-        };
-        /** StrategyMeta */
-        StrategyMeta: {
-            /** Name */
-            name: string;
-            /** Display Name */
-            display_name: string;
-            /** Description */
-            description: string;
-            /** Params Schema */
-            params_schema: components["schemas"]["ParamSpec"][];
-            /** Default Params */
-            default_params: {
-                [key: string]: unknown;
-            };
-        };
-        /** TaskLaunchResponse */
-        TaskLaunchResponse: {
-            /** Run Id */
-            run_id: string;
-            /**
-             * Status
-             * @default queued
-             * @constant
-             */
-            status: "queued";
-        };
-        /** TaskStatusResponse */
-        TaskStatusResponse: {
-            /** Run Id */
-            run_id: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "queued" | "running" | "complete" | "failed";
-            /** Error */
-            error?: string | null;
-            /** Executed At */
-            executed_at?: string | null;
-        };
-        /** TradeRecord */
-        TradeRecord: {
-            /**
-             * Direction
-             * @enum {string}
-             */
-            direction: "long" | "short";
-            /** Entry Date */
-            entry_date: string;
-            /** Exit Date */
-            exit_date: string;
-            /** Entry Price */
-            entry_price: number;
-            /** Exit Price */
-            exit_price: number;
-            /** Duration Bars */
-            duration_bars: number;
-            /** Gross Pnl */
-            gross_pnl: number;
-            /** Cost */
-            cost: number;
-            /** Net Pnl */
-            net_pnl: number;
-            /** Return Pct */
-            return_pct: number;
-            /** Force Closed */
-            force_closed: boolean;
-        };
-        /** TradeStats */
-        TradeStats: {
-            /** N Trades */
-            n_trades: number;
-            /** Avg Duration Bars */
-            avg_duration_bars: number | null;
-            /** Avg Win */
-            avg_win: number | null;
-            /** Avg Loss */
-            avg_loss: number | null;
-            /** Largest Win */
-            largest_win: number | null;
-            /** Largest Loss */
-            largest_loss: number | null;
-        };
-        /** TradesPageResponse */
-        TradesPageResponse: {
-            /** Run Id */
-            run_id: string;
-            /** Trades */
-            trades: components["schemas"]["TradeRecord"][];
-            /** Page */
-            page: number;
-            /** Page Size */
-            page_size: number;
-            /** Total */
-            total: number;
-            stats: components["schemas"]["TradeStats"];
-        };
-        /** UniverseResponse */
-        UniverseResponse: {
-            /** Assets */
-            assets: components["schemas"]["AssetMetadata"][];
-            /** Summaries */
-            summaries: {
-                [key: string]: components["schemas"]["AssetSummaryResponse"];
-            };
-            /** Total Runs */
-            total_runs: number;
-            /** Last Ingestion */
-            last_ingestion: string | null;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+  schemas: {
+    /** AlignedRunSeries */
+    AlignedRunSeries: {
+      /** Run Id */
+      run_id: string
+      equity_normalized: components['schemas']['ColumnarSeries']
+      rolling_sharpe_63: components['schemas']['ColumnarSeries']
+    }
+    /** AssetDataStatus */
+    AssetDataStatus: {
+      /** Name */
+      name: string
+      /** Bar Count */
+      bar_count: number
+      /** From Date */
+      from_date: string | null
+      /** To Date */
+      to_date: string | null
+      /** Last Ingested */
+      last_ingested: string | null
+      /** Flagged Anomalies */
+      flagged_anomalies: number
+      /**
+       * Data Health
+       * @enum {string}
+       */
+      data_health: 'ok' | 'warn' | 'crit' | 'missing'
+      /** Flags */
+      flags: components['schemas']['DataFlag'][]
+    }
+    /**
+     * AssetMetadata
+     * @description assets.yaml contract for one asset.
+     */
+    AssetMetadata: {
+      /** Name */
+      name: string
+      /** Display Name */
+      display_name: string
+      /** Ticker Continuous */
+      ticker_continuous: string
+      /** Contract Root */
+      contract_root: string
+      /** Exchange Suffix */
+      exchange_suffix: string
+      /** Exchange */
+      exchange: string
+      /** Currency */
+      currency: string
+      /** Unit */
+      unit: string
+      /** Contract Multiplier */
+      contract_multiplier: number
+      /** Tick Size */
+      tick_size: number
+      /** Tick Value */
+      tick_value: number
+    }
+    /** AssetSummaryResponse */
+    AssetSummaryResponse: {
+      /** Name */
+      name: string
+      /** Last Price */
+      last_price: number | null
+      /** Last Date */
+      last_date: string | null
+      /** Return 1D */
+      return_1d: number | null
+      /** Return 1W */
+      return_1w: number | null
+      /** Return 1M */
+      return_1m: number | null
+      /** Realized Vol 63D */
+      realized_vol_63d: number | null
+      /** Avg Volume 20D */
+      avg_volume_20d: number | null
+      /** Bar Count */
+      bar_count: number
+      /**
+       * Data Health
+       * @enum {string}
+       */
+      data_health: 'ok' | 'warn' | 'crit' | 'missing'
+      /** Flagged Anomalies */
+      flagged_anomalies: number
+    }
+    /** BacktestLaunchRequest */
+    BacktestLaunchRequest: {
+      /** Asset */
+      asset: string
+      /** Strategy */
+      strategy: string
+      /** Params */
+      params: {
+        [key: string]: unknown
+      }
+      /** From Date */
+      from_date?: string | null
+      /** To Date */
+      to_date?: string | null
+      /**
+       * Initial Capital
+       * @default 1000000
+       */
+      initial_capital: number
+      /**
+       * Commission Per Trade
+       * @default 5
+       */
+      commission_per_trade: number
+      /**
+       * Slippage Ticks
+       * @default 1
+       */
+      slippage_ticks: number
+      /**
+       * Sizing Method
+       * @default fixed_notional
+       * @enum {string}
+       */
+      sizing_method: 'fixed_notional' | 'volatility_scaled'
+      /**
+       * Notional Usd
+       * @default 100000
+       */
+      notional_usd: number
+      /** Target Annual Vol */
+      target_annual_vol?: number | null
+      /**
+       * Signal Threshold
+       * @default 0
+       */
+      signal_threshold: number
+      signal_evaluation?: components['schemas']['SignalEvaluationData'] | null
+    }
+    /**
+     * ColumnarSeries
+     * @description Time series in columnar format.
+     *
+     *     index: epoch milliseconds UTC.
+     *     columns: column_name → list of float | None (None encodes NaN).
+     *     This is the wire format for ALL time series (OHLCV, equity, signals, etc.).
+     *     3–5× smaller than row-of-objects format.
+     */
+    ColumnarSeries: {
+      /**
+       * Index
+       * @description Epoch milliseconds UTC
+       */
+      index: number[]
+      /**
+       * Columns
+       * @description Column values. None encodes NaN (JSON null).
+       */
+      columns: {
+        [key: string]: (number | null)[]
+      }
+    }
+    /** CompareRequest */
+    CompareRequest: {
+      /** Ids */
+      ids: string[]
+    }
+    /** CompareResponse */
+    CompareResponse: {
+      /** Runs */
+      runs: components['schemas']['CompareRunSummary'][]
+      /** Aligned Series */
+      aligned_series: components['schemas']['AlignedRunSeries'][]
+      /** Intersection From */
+      intersection_from: string | null
+      /** Intersection To */
+      intersection_to: string | null
+      /** Intersection Bars */
+      intersection_bars: number | null
+      /** Mixed Assets */
+      mixed_assets: boolean
+    }
+    /** CompareRunSummary */
+    CompareRunSummary: {
+      /** Run Id */
+      run_id: string
+      /** Asset */
+      asset: string
+      /** Strategy */
+      strategy: string
+      /** Params */
+      params: {
+        [key: string]: unknown
+      }
+      /** Metrics */
+      metrics: {
+        [key: string]: number | null
+      }
+      /** From Date */
+      from_date: string
+      /** To Date */
+      to_date: string
+    }
+    /** ConfigResponse */
+    ConfigResponse: {
+      /** Config */
+      config: {
+        [key: string]: unknown
+      }
+      /** Assets */
+      assets: {
+        [key: string]: unknown
+      }
+      /** Strategies */
+      strategies: {
+        [key: string]: unknown
+      }
+    }
+    /** CorrelationReportResponse */
+    CorrelationReportResponse: {
+      /** Run Id */
+      run_id: string
+      /** Correlation Matrix */
+      correlation_matrix: {
+        [key: string]: {
+          [key: string]: number
+        }
+      }
+      /** Rolling Correlations 63 */
+      rolling_correlations_63: {
+        [key: string]: {
+          [key: string]: components['schemas']['RollingCorrSeries']
+        }
+      }
+      /** Rolling Correlations 126 */
+      rolling_correlations_126: {
+        [key: string]: {
+          [key: string]: components['schemas']['RollingCorrSeries']
+        }
+      }
+      /** Realized Vol By Asset */
+      realized_vol_by_asset: {
+        [key: string]: number
+      }
+      /** Portfolio Realized Vol */
+      portfolio_realized_vol: number
+      /** Avg Pairwise Correlation */
+      avg_pairwise_correlation: number
+      /** Most Correlated Pair */
+      most_correlated_pair: [string, string, number]
+      /** Least Correlated Pair */
+      least_correlated_pair: [string, string, number]
+      /**
+       * Framing Note
+       * @default Correlations are between strategy daily returns (PnL / initial_capital), not commodity price returns. Strategies with frequent flat periods show lower static correlation than underlying prices. Use rolling charts to see structural relationships.
+       */
+      framing_note: string
+    }
+    /** DataFlag */
+    DataFlag: {
+      /** Date */
+      date: string
+      /** Violation Type */
+      violation_type: string
+      /** Detail */
+      detail: string
+    }
+    /** DataStatusResponse */
+    DataStatusResponse: {
+      /** Assets */
+      assets: components['schemas']['AssetDataStatus'][]
+      /** Total Flags */
+      total_flags: number
+    }
+    /** DecayEntry */
+    DecayEntry: {
+      /** Horizon */
+      horizon: number
+      /** Ic */
+      ic: number | null
+    }
+    /** DeleteResponse */
+    DeleteResponse: {
+      /** Deleted */
+      deleted: boolean
+      /** Run Id */
+      run_id: string
+    }
+    /** FeatureComputeRequest */
+    FeatureComputeRequest: {
+      /** Asset */
+      asset: string
+      /** From Date */
+      from_date?: string | null
+      /** To Date */
+      to_date?: string | null
+      /** Specs */
+      specs: components['schemas']['FeatureSpecRequest'][]
+    }
+    /** FeatureComputeResponse */
+    FeatureComputeResponse: {
+      /** Asset */
+      asset: string
+      /** From Date */
+      from_date: string
+      /** To Date */
+      to_date: string
+      /** Bars */
+      bars: number
+      /** Specs */
+      specs: components['schemas']['FeatureSpecResponse'][]
+      columns: components['schemas']['ColumnarSeries']
+    }
+    /** FeatureSpecRequest */
+    FeatureSpecRequest: {
+      /** Name */
+      name: string
+      /** Params */
+      params: {
+        [key: string]: unknown
+      }
+    }
+    /** FeatureSpecResponse */
+    FeatureSpecResponse: {
+      /** Indicator Name */
+      indicator_name: string
+      /** Params */
+      params: {
+        [key: string]: unknown
+      }
+      /** Column Name */
+      column_name: string
+      /** Asset */
+      asset: string
+      /** Computed At */
+      computed_at: string
+    }
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components['schemas']['ValidationError'][]
+    }
+    /** HealthResponse */
+    HealthResponse: {
+      /**
+       * Status
+       * @constant
+       */
+      status: 'ok'
+      /** Version */
+      version: string
+      /** Backend Tests */
+      backend_tests: number
+    }
+    /** IndicatorCatalogResponse */
+    IndicatorCatalogResponse: {
+      /** Indicators */
+      indicators: components['schemas']['IndicatorMeta'][]
+    }
+    /** IndicatorMeta */
+    IndicatorMeta: {
+      /** Name */
+      name: string
+      /** Display Name */
+      display_name: string
+      /**
+       * Category
+       * @enum {string}
+       */
+      category: 'trend' | 'momentum' | 'oscillator' | 'volatility' | 'volume'
+      /** Params Schema */
+      params_schema: components['schemas']['ParamSpec'][]
+      /** Column Name Template */
+      column_name_template: string
+    }
+    /** IngestRequest */
+    IngestRequest: {
+      /** Asset */
+      asset?: string | null
+    }
+    /** IngestResponse */
+    IngestResponse: {
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'ok' | 'partial' | 'failed'
+      /** Assets Ingested */
+      assets_ingested: string[]
+      /** Assets Failed */
+      assets_failed: string[]
+      /** Detail */
+      detail?: string | null
+    }
+    /** OhlcvResponse */
+    OhlcvResponse: {
+      /** Asset */
+      asset: string
+      /** From Date */
+      from_date: string
+      /** To Date */
+      to_date: string
+      /** Bars */
+      bars: number
+      /** Bars Original */
+      bars_original: number
+      /** Downsampled */
+      downsampled: boolean
+      data: components['schemas']['ColumnarSeries']
+    }
+    /** ParamSpec */
+    ParamSpec: {
+      /** Name */
+      name: string
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: 'int' | 'float' | 'bool' | 'str'
+      /** Default */
+      default: unknown
+      /** Min */
+      min?: number | null
+      /** Max */
+      max?: number | null
+      /** Description */
+      description: string
+      /** Unit */
+      unit?: string | null
+    }
+    /** PortfolioAssetHeadline */
+    PortfolioAssetHeadline: {
+      /** Asset */
+      asset: string
+      /** Sharpe */
+      sharpe: number | null
+      /** Max Drawdown */
+      max_drawdown: number | null
+      /** Total Return */
+      total_return: number | null
+      /** Cagr */
+      cagr: number | null
+      /** N Trades */
+      n_trades: number | null
+      /** Absolute Pnl */
+      absolute_pnl: number | null
+    }
+    /** PortfolioAssetsResponse */
+    PortfolioAssetsResponse: {
+      /** Run Id */
+      run_id: string
+      /** Assets */
+      assets: components['schemas']['PortfolioAssetHeadline'][]
+      /** Skipped Assets */
+      skipped_assets: string[]
+    }
+    /** PortfolioEquityResponse */
+    PortfolioEquityResponse: {
+      /** Run Id */
+      run_id: string
+      portfolio_equity: components['schemas']['ColumnarSeries']
+      portfolio_pnl: components['schemas']['ColumnarSeries']
+    }
+    /** PortfolioLaunchRequest */
+    PortfolioLaunchRequest: {
+      /** Strategy */
+      strategy: string
+      /** Params */
+      params: {
+        [key: string]: unknown
+      }
+      /** Assets */
+      assets?: string[] | null
+      /** From Date */
+      from_date?: string | null
+      /** To Date */
+      to_date?: string | null
+      /**
+       * Initial Capital Per Asset
+       * @default 1000000
+       */
+      initial_capital_per_asset: number
+      /**
+       * Commission Per Trade
+       * @default 5
+       */
+      commission_per_trade: number
+      /**
+       * Slippage Ticks
+       * @default 1
+       */
+      slippage_ticks: number
+      /**
+       * Sizing Method
+       * @default fixed_notional
+       * @enum {string}
+       */
+      sizing_method: 'fixed_notional' | 'volatility_scaled'
+      /**
+       * Notional Usd
+       * @default 100000
+       */
+      notional_usd: number
+      /**
+       * Signal Threshold
+       * @default 0
+       */
+      signal_threshold: number
+    }
+    /** PortfolioSummaryResponse */
+    PortfolioSummaryResponse: {
+      /** Run Id */
+      run_id: string
+      /** Strategy */
+      strategy: string
+      /** Assets */
+      assets: string[]
+      /** Skipped Assets */
+      skipped_assets: string[]
+      /** Portfolio Date Range From */
+      portfolio_date_range_from: string
+      /** Portfolio Date Range To */
+      portfolio_date_range_to: string
+      /** Portfolio Date Range Bars */
+      portfolio_date_range_bars: number
+      /** Initial Capital Per Asset */
+      initial_capital_per_asset: number
+      /** Initial Capital Total */
+      initial_capital_total: number
+      /** Portfolio Metrics */
+      portfolio_metrics: {
+        [key: string]: number | null
+      }
+      /** Absolute Pnl By Asset */
+      absolute_pnl_by_asset: {
+        [key: string]: number
+      }
+      /** Asset Contributions */
+      asset_contributions: {
+        [key: string]: number
+      } | null
+      /** Per Asset Headlines */
+      per_asset_headlines: components['schemas']['PortfolioAssetHeadline'][]
+    }
+    /** ProvenanceInfo */
+    ProvenanceInfo: {
+      /** Git Sha */
+      git_sha: string
+      /** Dirty Flag */
+      dirty_flag: boolean
+      /** Package Versions */
+      package_versions: {
+        [key: string]: string
+      }
+    }
+    /** RiskReportResponse */
+    RiskReportResponse: {
+      /** Run Id */
+      run_id: string
+      /** Portfolio Var 95 */
+      portfolio_var_95: number | null
+      /** Portfolio Var 99 */
+      portfolio_var_99: number | null
+      /** Portfolio Var 95 Pct */
+      portfolio_var_95_pct: number | null
+      /** Portfolio Var 99 Pct */
+      portfolio_var_99_pct: number | null
+      /** Portfolio Es 95 */
+      portfolio_es_95: number | null
+      /** Portfolio Es 99 */
+      portfolio_es_99: number | null
+      /** Asset Var 95 */
+      asset_var_95: {
+        [key: string]: number | null
+      }
+      /** Asset Var 99 */
+      asset_var_99: {
+        [key: string]: number | null
+      }
+      /** Avg Gross Notional By Asset */
+      avg_gross_notional_by_asset: {
+        [key: string]: number
+      }
+      /** Avg Net Notional By Asset */
+      avg_net_notional_by_asset: {
+        [key: string]: number
+      }
+      /** Total Avg Gross Notional */
+      total_avg_gross_notional: number
+      /** Total Avg Net Notional */
+      total_avg_net_notional: number
+      /** Portfolio Diversification Benefit */
+      portfolio_diversification_benefit: number | null
+      /** Lookback Days */
+      lookback_days: number
+      /**
+       * Methodology
+       * @default historical_simulation
+       */
+      methodology: string
+    }
+    /**
+     * RollingCorrSeries
+     * @description Rolling correlation between one asset pair.
+     */
+    RollingCorrSeries: {
+      /** Asset A */
+      asset_a: string
+      /** Asset B */
+      asset_b: string
+      data: components['schemas']['ColumnarSeries']
+    }
+    /** RunDetailResponse */
+    RunDetailResponse: {
+      /** Run Id */
+      run_id: string
+      /** Asset */
+      asset: string
+      /** Strategy */
+      strategy: string
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'complete' | 'failed'
+      /** From Date */
+      from_date: string
+      /** To Date */
+      to_date: string
+      /** Params */
+      params: {
+        [key: string]: unknown
+      }
+      /** Metrics */
+      metrics: {
+        [key: string]: number | null
+      }
+      provenance: components['schemas']['ProvenanceInfo']
+      signal_evaluation: components['schemas']['SignalEvaluationData'] | null
+    }
+    /** RunListItem */
+    RunListItem: {
+      /** Run Id */
+      run_id: string
+      /** Asset */
+      asset: string
+      /** Strategy */
+      strategy: string
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'complete' | 'failed' | 'running' | 'queued'
+      /** From Date */
+      from_date: string
+      /** To Date */
+      to_date: string
+      /** Sharpe */
+      sharpe: number | null
+      /** Max Drawdown */
+      max_drawdown: number | null
+      /** Total Return */
+      total_return: number | null
+      /** Cagr */
+      cagr: number | null
+      /** Win Rate */
+      win_rate: number | null
+      /** N Trades */
+      n_trades: number | null
+      /** Ic */
+      ic: number | null
+      /** Ic Band */
+      ic_band: string | null
+      /** Executed At */
+      executed_at: string
+    }
+    /** RunListResponse */
+    RunListResponse: {
+      /** Runs */
+      runs: components['schemas']['RunListItem'][]
+      /** Total */
+      total: number
+      /** Page */
+      page: number
+      /** Page Size */
+      page_size: number
+    }
+    /** SeriesResponse */
+    SeriesResponse: {
+      /** Run Id */
+      run_id: string
+      /**
+       * Name
+       * @enum {string}
+       */
+      name: 'equity_curve' | 'pnl' | 'positions'
+      data: components['schemas']['ColumnarSeries']
+    }
+    /** SignalEvaluateRequest */
+    SignalEvaluateRequest: {
+      /** Asset */
+      asset: string
+      /** Strategy */
+      strategy: string
+      /** Params */
+      params: {
+        [key: string]: unknown
+      }
+      /** From Date */
+      from_date?: string | null
+      /** To Date */
+      to_date?: string | null
+    }
+    /** SignalEvaluateResponse */
+    SignalEvaluateResponse: {
+      /** Asset */
+      asset: string
+      /** Strategy */
+      strategy: string
+      /** Params */
+      params: {
+        [key: string]: unknown
+      }
+      evaluation: components['schemas']['SignalEvaluationData']
+    }
+    /**
+     * SignalEvaluationData
+     * @description IC Gate data. ic_band follows ADR-007 five-way classification:
+     *     |IC| >= 0.05 and IC > 0  → "strong"
+     *     |IC| >= 0.05 and IC < 0  → "inverse_meaningful"
+     *     0.02 <= IC < 0.05        → "weak_positive"
+     *     -0.05 < IC <= -0.02      → "weak_inverse"
+     *     |IC| < 0.02              → "noise"
+     */
+    SignalEvaluationData: {
+      /** Ic */
+      ic: number | null
+      /** Icir */
+      icir: number | null
+      /** Turnover */
+      turnover: number | null
+      /** Decay */
+      decay: components['schemas']['DecayEntry'][]
+      /** Evaluation Window */
+      evaluation_window: number
+      /** Computed At */
+      computed_at: string
+      /**
+       * Ic Band
+       * @enum {string}
+       */
+      ic_band: 'strong' | 'weak_positive' | 'weak_inverse' | 'inverse_meaningful' | 'noise'
+    }
+    /** SignalGenerateRequest */
+    SignalGenerateRequest: {
+      /** Asset */
+      asset: string
+      /** Strategy */
+      strategy: string
+      /** Params */
+      params: {
+        [key: string]: unknown
+      }
+      /** From Date */
+      from_date?: string | null
+      /** To Date */
+      to_date?: string | null
+    }
+    /** SignalGenerateResponse */
+    SignalGenerateResponse: {
+      /** Asset */
+      asset: string
+      /** Strategy */
+      strategy: string
+      /** Params */
+      params: {
+        [key: string]: unknown
+      }
+      /** Bars */
+      bars: number
+      raw_signal: components['schemas']['ColumnarSeries']
+      position_signal: components['schemas']['ColumnarSeries']
+    }
+    /** StrategyCatalogResponse */
+    StrategyCatalogResponse: {
+      /** Strategies */
+      strategies: components['schemas']['StrategyMeta'][]
+    }
+    /** StrategyMeta */
+    StrategyMeta: {
+      /** Name */
+      name: string
+      /** Display Name */
+      display_name: string
+      /** Description */
+      description: string
+      /** Params Schema */
+      params_schema: components['schemas']['ParamSpec'][]
+      /** Default Params */
+      default_params: {
+        [key: string]: unknown
+      }
+    }
+    /** TaskLaunchResponse */
+    TaskLaunchResponse: {
+      /** Run Id */
+      run_id: string
+      /**
+       * Status
+       * @default queued
+       * @constant
+       */
+      status: 'queued'
+    }
+    /** TaskStatusResponse */
+    TaskStatusResponse: {
+      /** Run Id */
+      run_id: string
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'queued' | 'running' | 'complete' | 'failed'
+      /** Error */
+      error?: string | null
+      /** Executed At */
+      executed_at?: string | null
+    }
+    /** TradeRecord */
+    TradeRecord: {
+      /**
+       * Direction
+       * @enum {string}
+       */
+      direction: 'long' | 'short'
+      /** Entry Date */
+      entry_date: string
+      /** Exit Date */
+      exit_date: string
+      /** Entry Price */
+      entry_price: number
+      /** Exit Price */
+      exit_price: number
+      /** Duration Bars */
+      duration_bars: number
+      /** Gross Pnl */
+      gross_pnl: number
+      /** Cost */
+      cost: number
+      /** Net Pnl */
+      net_pnl: number
+      /** Return Pct */
+      return_pct: number
+      /** Force Closed */
+      force_closed: boolean
+    }
+    /** TradeStats */
+    TradeStats: {
+      /** N Trades */
+      n_trades: number
+      /** Avg Duration Bars */
+      avg_duration_bars: number | null
+      /** Avg Win */
+      avg_win: number | null
+      /** Avg Loss */
+      avg_loss: number | null
+      /** Largest Win */
+      largest_win: number | null
+      /** Largest Loss */
+      largest_loss: number | null
+    }
+    /** TradesPageResponse */
+    TradesPageResponse: {
+      /** Run Id */
+      run_id: string
+      /** Trades */
+      trades: components['schemas']['TradeRecord'][]
+      /** Page */
+      page: number
+      /** Page Size */
+      page_size: number
+      /** Total */
+      total: number
+      stats: components['schemas']['TradeStats']
+    }
+    /** UniverseResponse */
+    UniverseResponse: {
+      /** Assets */
+      assets: components['schemas']['AssetMetadata'][]
+      /** Summaries */
+      summaries: {
+        [key: string]: components['schemas']['AssetSummaryResponse']
+      }
+      /** Total Runs */
+      total_runs: number
+      /** Last Ingestion */
+      last_ingestion: string | null
+    }
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[]
+      /** Message */
+      msg: string
+      /** Error Type */
+      type: string
+      /** Input */
+      input?: unknown
+      /** Context */
+      ctx?: Record<string, never>
+    }
+  }
+  responses: never
+  parameters: never
+  requestBodies: never
+  headers: never
+  pathItems: never
 }
-export type $defs = Record<string, never>;
+export type $defs = Record<string, never>
 export interface operations {
-    health_api_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthResponse"];
-                };
-            };
-        };
-    };
-    get_assets_api_assets_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UniverseResponse"];
-                };
-            };
-        };
-    };
-    get_ohlcv_api_assets__asset__ohlcv_get: {
-        parameters: {
-            query?: {
-                from_date?: string | null;
-                to_date?: string | null;
-                downsample?: string | null;
-            };
-            header?: never;
-            path: {
-                asset: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OhlcvResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_asset_summary_api_assets__asset__summary_get: {
-        parameters: {
-            query?: {
-                from_date?: string | null;
-                to_date?: string | null;
-            };
-            header?: never;
-            path: {
-                asset: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AssetSummaryResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    launch_backtest_api_backtests_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BacktestLaunchRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskLaunchResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_backtest_status_api_backtests__run_id__status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskStatusResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_indicators_api_indicators_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IndicatorCatalogResponse"];
-                };
-            };
-        };
-    };
-    compute_features_api_features_compute_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FeatureComputeRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FeatureComputeResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    launch_portfolio_api_portfolio_run_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PortfolioLaunchRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskLaunchResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_portfolio_status_api_portfolio__run_id__status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskStatusResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_portfolio_summary_api_portfolio__run_id__summary_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PortfolioSummaryResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_portfolio_risk_api_portfolio__run_id__risk_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RiskReportResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_portfolio_correlation_api_portfolio__run_id__correlation_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CorrelationReportResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_portfolio_equity_api_portfolio__run_id__equity_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PortfolioEquityResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_portfolio_assets_api_portfolio__run_id__assets_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PortfolioAssetsResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_portfolio_run_api_portfolio__run_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeleteResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_runs_api_runs_get: {
-        parameters: {
-            query?: {
-                strategy?: string | null;
-                asset?: string | null;
-                sort?: string | null;
-                q?: string | null;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RunListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_run_detail_api_runs__run_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RunDetailResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_run_api_runs__run_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeleteResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_run_series_api_runs__run_id__series__name__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-                name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SeriesResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_run_trades_api_runs__run_id__trades_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-                direction?: string | null;
-                force_closed?: boolean | null;
-            };
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TradesPageResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    compare_runs_api_runs_compare_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CompareRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CompareResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_strategies_api_strategies_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StrategyCatalogResponse"];
-                };
-            };
-        };
-    };
-    generate_signal_api_signals_generate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignalGenerateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SignalGenerateResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    evaluate_signal_api_signals_evaluate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignalEvaluateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SignalEvaluateResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_data_status_api_system_data_status_get: {
-        parameters: {
-            query?: {
-                asset?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataStatusResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    trigger_ingest_api_system_ingest_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IngestRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IngestResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_config_api_system_config_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConfigResponse"];
-                };
-            };
-        };
-    };
+  health_api_health_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HealthResponse']
+        }
+      }
+    }
+  }
+  get_assets_api_assets_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseResponse']
+        }
+      }
+    }
+  }
+  get_ohlcv_api_assets__asset__ohlcv_get: {
+    parameters: {
+      query?: {
+        from_date?: string | null
+        to_date?: string | null
+        downsample?: string | null
+      }
+      header?: never
+      path: {
+        asset: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['OhlcvResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_asset_summary_api_assets__asset__summary_get: {
+    parameters: {
+      query?: {
+        from_date?: string | null
+        to_date?: string | null
+      }
+      header?: never
+      path: {
+        asset: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AssetSummaryResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  launch_backtest_api_backtests_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BacktestLaunchRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TaskLaunchResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_backtest_status_api_backtests__run_id__status_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TaskStatusResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_indicators_api_indicators_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IndicatorCatalogResponse']
+        }
+      }
+    }
+  }
+  compute_features_api_features_compute_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FeatureComputeRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FeatureComputeResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  launch_portfolio_api_portfolio_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PortfolioLaunchRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TaskLaunchResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_portfolio_status_api_portfolio__run_id__status_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TaskStatusResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_portfolio_summary_api_portfolio__run_id__summary_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PortfolioSummaryResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_portfolio_risk_api_portfolio__run_id__risk_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RiskReportResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_portfolio_correlation_api_portfolio__run_id__correlation_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CorrelationReportResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_portfolio_equity_api_portfolio__run_id__equity_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PortfolioEquityResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_portfolio_assets_api_portfolio__run_id__assets_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PortfolioAssetsResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_portfolio_run_api_portfolio__run_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DeleteResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_runs_api_runs_get: {
+    parameters: {
+      query?: {
+        strategy?: string | null
+        asset?: string | null
+        sort?: string | null
+        q?: string | null
+        page?: number
+        page_size?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RunListResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_run_detail_api_runs__run_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RunDetailResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_run_api_runs__run_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DeleteResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_run_series_api_runs__run_id__series__name__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+        name: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SeriesResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_run_trades_api_runs__run_id__trades_get: {
+    parameters: {
+      query?: {
+        page?: number
+        page_size?: number
+        direction?: string | null
+        force_closed?: boolean | null
+      }
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TradesPageResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  compare_runs_api_runs_compare_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CompareRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CompareResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_strategies_api_strategies_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['StrategyCatalogResponse']
+        }
+      }
+    }
+  }
+  generate_signal_api_signals_generate_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignalGenerateRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SignalGenerateResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  evaluate_signal_api_signals_evaluate_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignalEvaluateRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SignalEvaluateResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_data_status_api_system_data_status_get: {
+    parameters: {
+      query?: {
+        asset?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DataStatusResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  trigger_ingest_api_system_ingest_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IngestRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IngestResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_config_api_system_config_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ConfigResponse']
+        }
+      }
+    }
+  }
 }

@@ -30,10 +30,10 @@ export function icBandTone(band: IcBand): string {
 
 export function statusTone(status: RunStatus): string {
   const map: Record<RunStatus, string> = {
-    queued:   'var(--text-secondary)',
-    running:  'var(--info-500)',
+    queued: 'var(--text-secondary)',
+    running: 'var(--info-500)',
     complete: 'var(--ok-500)',
-    failed:   'var(--crit-500)',
+    failed: 'var(--crit-500)',
   }
   return map[status] ?? 'var(--text-secondary)'
 }
