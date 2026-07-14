@@ -14,15 +14,12 @@ export function RunStatusBadge({ status, className }: RunStatusBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-mono text-xs',
+        'gap-1.5 py-0.5 inline-flex items-center rounded-full px-2 font-mono text-xs',
         className
       )}
     >
       <span
-        className={cn(
-          'h-1.5 w-1.5 rounded-full',
-          status === 'running' && 'animate-pulse-dot'
-        )}
+        className={cn('h-1.5 w-1.5 rounded-full', status === 'running' && 'animate-pulse-dot')}
         style={{ backgroundColor: color }}
       />
       <span style={{ color }}>{status}</span>

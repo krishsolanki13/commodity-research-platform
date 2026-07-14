@@ -21,12 +21,7 @@ function extractError(error: ErrorLike | Error): { code?: string; message: strin
   return { code: error.code, message: error.message }
 }
 
-export function ErrorState({
-  error,
-  onRetry,
-  compact = false,
-  className,
-}: ErrorStateProps) {
+export function ErrorState({ error, onRetry, compact = false, className }: ErrorStateProps) {
   const { code, message } = extractError(error)
 
   if (compact) {
@@ -34,9 +29,7 @@ export function ErrorState({
       <div className={cn('flex items-center gap-3 px-4 py-2', className)}>
         <AlertCircle size={16} strokeWidth={1.75} className="shrink-0 text-crit" />
         <div className="flex flex-1 flex-col">
-          {code && (
-            <span className="font-mono text-xs text-text-secondary">{code}</span>
-          )}
+          {code && <span className="font-mono text-xs text-text-secondary">{code}</span>}
           <span className="text-sm text-text-primary">{message}</span>
         </div>
         {onRetry && (
@@ -49,17 +42,10 @@ export function ErrorState({
   }
 
   return (
-    <div
-      className={cn(
-        'flex flex-col items-center justify-center gap-4 p-8',
-        className
-      )}
-    >
+    <div className={cn('flex flex-col items-center justify-center gap-4 p-8', className)}>
       <AlertCircle size={48} strokeWidth={1.5} className="text-crit" />
       <div className="flex flex-col items-center gap-1 text-center">
-        {code && (
-          <span className="font-mono text-xs text-text-secondary">{code}</span>
-        )}
+        {code && <span className="font-mono text-xs text-text-secondary">{code}</span>}
         <p className="text-sm text-text-primary">{message}</p>
       </div>
       {onRetry && (

@@ -2,12 +2,7 @@ import { Sun, Moon, AlignJustify, Search } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useWorkspace } from '@/stores/workspace'
 import { cn } from '@/lib/cn'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
 import { client } from '@/api/client'
 import { Kbd } from '@/ui/Kbd'
 
@@ -18,7 +13,11 @@ interface TopBarProps {
 export function TopBar({ onOpenPalette }: TopBarProps) {
   const { theme, density, setTheme, setDensity } = useWorkspace()
 
-  const { data: health, isError, isPending } = useQuery({
+  const {
+    data: health,
+    isError,
+    isPending,
+  } = useQuery({
     queryKey: ['health'],
     queryFn: () => client.get<{ status: string }>('/api/health'),
     staleTime: 0,
@@ -40,15 +39,13 @@ export function TopBar({ onOpenPalette }: TopBarProps) {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <header className="flex h-12 shrink-0 items-center border-b border-border-default bg-bg-panel px-4 z-40">
-        <span className="text-lg font-semibold text-text-emphasis">
-          Commodity Research
-        </span>
+      <header className="h-12 z-40 flex shrink-0 items-center border-b border-border-default bg-bg-panel px-4">
+        <span className="text-lg font-semibold text-text-emphasis">Commodity Research</span>
 
-        <div className="mx-auto flex-1 px-8 max-w-lg">
+        <div className="mx-auto max-w-lg flex-1 px-8">
           <button
             onClick={onOpenPalette}
-            className="flex w-full items-center gap-2 rounded-md border border-border-default bg-bg-app px-3 py-1.5 text-sm text-text-secondary hover:border-border-strong hover:text-text-primary transition-colors duration-fast"
+            className="py-1.5 flex w-full items-center gap-2 rounded-md border border-border-default bg-bg-app px-3 text-sm text-text-secondary transition-colors duration-fast hover:border-border-strong hover:text-text-primary"
           >
             <Search size={14} strokeWidth={1.75} />
             <span className="flex-1 text-left">Search or jump to...</span>
@@ -70,20 +67,19 @@ export function TopBar({ onOpenPalette }: TopBarProps) {
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-            className="rounded-sm p-1.5 text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+            className="p-1.5 rounded-sm text-text-secondary hover:bg-bg-hover hover:text-text-primary"
           >
-            {theme === 'dark'
-              ? <Sun size={16} strokeWidth={1.75} />
-              : <Moon size={16} strokeWidth={1.75} />
-            }
+            {theme === 'dark' ? (
+              <Sun size={16} strokeWidth={1.75} />
+            ) : (
+              <Moon size={16} strokeWidth={1.75} />
+            )}
           </button>
 
           <button
-            onClick={() =>
-              setDensity(density === 'compact' ? 'comfortable' : 'compact')
-            }
+            onClick={() => setDensity(density === 'compact' ? 'comfortable' : 'compact')}
             aria-label={`Switch to ${density === 'compact' ? 'comfortable' : 'compact'} density`}
-            className="rounded-sm p-1.5 text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+            className="p-1.5 rounded-sm text-text-secondary hover:bg-bg-hover hover:text-text-primary"
           >
             <AlignJustify size={16} strokeWidth={1.75} />
           </button>

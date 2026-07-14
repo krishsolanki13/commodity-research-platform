@@ -31,10 +31,7 @@ export function LoadingSkeleton({
         {Array.from({ length: columns * 2 }).map((_, i) => (
           <Skeleton
             key={i}
-            className={cn(
-              'animate-shimmer',
-              i % 2 === 0 ? 'h-3 w-16' : 'h-6 w-24'
-            )}
+            className={cn('animate-shimmer', i % 2 === 0 ? 'w-16 h-3' : 'w-24 h-6')}
           />
         ))}
       </div>
@@ -43,13 +40,10 @@ export function LoadingSkeleton({
 
   if (variant === 'chart') {
     return (
-      <div
-        data-variant="chart"
-        className={cn('relative', className)}
-      >
-        <Skeleton className="h-[55vh] w-full animate-shimmer rounded-md" />
-        <Skeleton className="absolute bottom-6 left-6 h-0.5 w-[calc(100%-3rem)] animate-shimmer" />
-        <Skeleton className="absolute bottom-6 left-6 h-[calc(55vh-1.5rem)] w-0.5 animate-shimmer" />
+      <div data-variant="chart" className={cn('relative', className)}>
+        <Skeleton className="animate-shimmer h-[55vh] w-full rounded-md" />
+        <Skeleton className="h-0.5 animate-shimmer absolute bottom-6 left-6 w-[calc(100%-3rem)]" />
+        <Skeleton className="w-0.5 animate-shimmer absolute bottom-6 left-6 h-[calc(55vh-1.5rem)]" />
       </div>
     )
   }
@@ -57,9 +51,9 @@ export function LoadingSkeleton({
   if (variant === 'table') {
     return (
       <div data-variant="table" className={cn('flex flex-col gap-2', className)}>
-        <Skeleton className="h-8 w-full animate-shimmer rounded-sm" />
+        <Skeleton className="animate-shimmer h-8 w-full rounded-sm" />
         {Array.from({ length: rows }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full animate-shimmer rounded-sm" />
+          <Skeleton key={i} className="animate-shimmer h-10 w-full rounded-sm" />
         ))}
       </div>
     )
@@ -69,9 +63,9 @@ export function LoadingSkeleton({
   return (
     <div data-variant="form" className={cn('flex flex-col gap-4', className)}>
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="flex flex-col gap-1.5">
-          <Skeleton className="h-3 w-24 animate-shimmer" />
-          <Skeleton className="h-8 w-full animate-shimmer rounded-sm" />
+        <div key={i} className="gap-1.5 flex flex-col">
+          <Skeleton className="w-24 animate-shimmer h-3" />
+          <Skeleton className="animate-shimmer h-8 w-full rounded-sm" />
         </div>
       ))}
     </div>

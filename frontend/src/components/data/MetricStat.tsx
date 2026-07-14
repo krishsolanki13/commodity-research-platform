@@ -5,15 +5,7 @@ import { cn } from '@/lib/cn'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
 
 type MetricFormat =
-  | 'percent'
-  | 'ratio'
-  | 'ic'
-  | 'drawdown'
-  | 'compactUsd'
-  | 'fullUsd'
-  | 'bars'
-  | 'integer'
-  | 'raw'
+  'percent' | 'ratio' | 'ic' | 'drawdown' | 'compactUsd' | 'fullUsd' | 'bars' | 'integer' | 'raw'
 
 interface MetricStatProps {
   label: string
@@ -29,15 +21,24 @@ interface MetricStatProps {
 
 function formatValue(value: number, format: MetricFormat): string {
   switch (format) {
-    case 'percent':    return fmt.percent(value)
-    case 'ratio':      return fmt.ratio(value)
-    case 'ic':         return fmt.ic(value)
-    case 'drawdown':   return fmt.drawdown(value)
-    case 'compactUsd': return fmt.compactUsd(value)
-    case 'fullUsd':    return fmt.fullUsd(value)
-    case 'bars':       return fmt.tradeBars(value)
-    case 'integer':    return Math.round(value).toString()
-    case 'raw':        return String(value)
+    case 'percent':
+      return fmt.percent(value)
+    case 'ratio':
+      return fmt.ratio(value)
+    case 'ic':
+      return fmt.ic(value)
+    case 'drawdown':
+      return fmt.drawdown(value)
+    case 'compactUsd':
+      return fmt.compactUsd(value)
+    case 'fullUsd':
+      return fmt.fullUsd(value)
+    case 'bars':
+      return fmt.tradeBars(value)
+    case 'integer':
+      return Math.round(value).toString()
+    case 'raw':
+      return String(value)
   }
 }
 
@@ -52,11 +53,7 @@ function getValueColor(
   if (toneProp === 'neutral') return 'var(--text-primary)'
   // auto tone
   if (format === 'ic') return tone.ic(value)
-  if (
-    format === 'percent' ||
-    format === 'compactUsd' ||
-    format === 'fullUsd'
-  ) {
+  if (format === 'percent' || format === 'compactUsd' || format === 'fullUsd') {
     return tone.pnl(value)
   }
   // ratio, bars, integer, raw — no sign semantics
@@ -79,12 +76,10 @@ export function MetricStat({
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className={cn('flex flex-col gap-0.5', className)}>
+      <div className={cn('gap-0.5 flex flex-col', className)}>
         {/* Label row */}
         <div className="flex items-center gap-1">
-          <span className="text-xs uppercase tracking-wider text-text-secondary">
-            {label}
-          </span>
+          <span className="text-xs uppercase tracking-wider text-text-secondary">{label}</span>
           {hint && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -102,23 +97,15 @@ export function MetricStat({
         {/* Value */}
         <span
           style={{ color }}
-          className={cn(
-            'font-mono font-medium',
-            size === 'lg' ? 'text-metric-lg' : 'text-metric'
-          )}
+          className={cn('font-mono font-medium', size === 'lg' ? 'text-metric-lg' : 'text-metric')}
         >
           {isEmpty ? '—' : formatValue(value, format)}
         </span>
 
         {/* Delta */}
         {delta !== undefined && !isEmpty && (
-          <span
-            style={{ color: tone.pnl(delta) }}
-            className="font-mono text-xs"
-          >
-            {deltaFormat === 'percent'
-              ? fmt.percent(delta)
-              : fmt.ratio(delta)}
+          <span style={{ color: tone.pnl(delta) }} className="font-mono text-xs">
+            {deltaFormat === 'percent' ? fmt.percent(delta) : fmt.ratio(delta)}
           </span>
         )}
       </div>

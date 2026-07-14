@@ -29,11 +29,15 @@ function getBgClass(band: ICBand | null): string {
 function getVerdictText(band: ICBand | null): string {
   if (band === null) return 'EVALUATE THIS SIGNAL TO UNLOCK BACKTESTING'
   switch (band) {
-    case 'noise':             return 'SIGNAL LIKELY NOISE'
+    case 'noise':
+      return 'SIGNAL LIKELY NOISE'
     case 'weak_positive':
-    case 'weak_inverse':      return 'WEAK SIGNAL — INVESTIGATE FURTHER'
-    case 'strong':            return 'MEANINGFUL SIGNAL — BACKTEST WARRANTED'
-    case 'inverse_meaningful':return 'INVERSE SIGNAL — BACKTEST WARRANTED (INVERT THRESHOLD)'
+    case 'weak_inverse':
+      return 'WEAK SIGNAL — INVESTIGATE FURTHER'
+    case 'strong':
+      return 'MEANINGFUL SIGNAL — BACKTEST WARRANTED'
+    case 'inverse_meaningful':
+      return 'INVERSE SIGNAL — BACKTEST WARRANTED (INVERT THRESHOLD)'
   }
 }
 
@@ -65,16 +69,13 @@ export function ICGateStrip({
   const bandColor = getBandColor(band)
   const bgClass = getBgClass(band)
 
-  const isEnabled =
-    evaluation !== null &&
-    band !== 'noise' &&
-    band !== null
+  const isEnabled = evaluation !== null && band !== 'noise' && band !== null
   const isWeak = band === 'weak_positive' || band === 'weak_inverse'
 
   return (
     <div
       className={cn(
-        'flex min-h-20 w-full items-center gap-8 border border-border-default px-6 py-4',
+        'min-h-20 flex w-full items-center gap-8 border border-border-default px-6 py-4',
         bgClass
       )}
       style={{ borderLeft: `3px solid ${bandColor}` }}
@@ -87,35 +88,27 @@ export function ICGateStrip({
         >
           {getVerdictText(band)}
         </span>
-        <span className="text-xs text-text-secondary">
-          {getThresholdText(band)}
-        </span>
+        <span className="text-xs text-text-secondary">{getThresholdText(band)}</span>
       </div>
 
       {/* Center: IC + ICIR hero metrics */}
       <div className="flex gap-8">
-        <div className="flex flex-col items-center gap-0.5">
+        <div className="gap-0.5 flex flex-col items-center">
           <span className="text-xs text-text-secondary">IC</span>
-          <span
-            style={{ color: bandColor }}
-            className="font-mono text-metric-lg"
-          >
+          <span style={{ color: bandColor }} className="font-mono text-metric-lg">
             {evaluation?.ic != null ? fmt.ic(evaluation.ic) : '—'}
           </span>
         </div>
-        <div className="flex flex-col items-center gap-0.5">
+        <div className="gap-0.5 flex flex-col items-center">
           <span className="text-xs text-text-secondary">ICIR</span>
-          <span
-            style={{ color: bandColor }}
-            className="font-mono text-metric"
-          >
+          <span style={{ color: bandColor }} className="font-mono text-metric">
             {evaluation?.icir != null ? fmt.ic(evaluation.icir) : '—'}
           </span>
         </div>
       </div>
 
       {/* Right: actions */}
-      <div className="flex flex-col items-end gap-1.5">
+      <div className="gap-1.5 flex flex-col items-end">
         <Button
           variant={isEnabled && !isWeak ? 'primary' : 'outline'}
           disabled={!isEnabled}
@@ -125,9 +118,7 @@ export function ICGateStrip({
           Configure backtest →
         </Button>
         {isWeak && (
-          <span className="text-xs text-warn">
-            Weak signal — result may not be robust
-          </span>
+          <span className="text-xs text-warn">Weak signal — result may not be robust</span>
         )}
         {/* Override link — ALWAYS PRESENT in every state */}
         <button

@@ -15,12 +15,7 @@ const gridColsClass: Record<number, string> = {
   6: 'grid-cols-6',
 }
 
-export function MetricGrid({
-  metrics,
-  columns = 4,
-  loading = false,
-  className,
-}: MetricGridProps) {
+export function MetricGrid({ metrics, columns = 4, loading = false, className }: MetricGridProps) {
   if (loading) {
     return <LoadingSkeleton variant="metric-grid" columns={columns} className={className} />
   }

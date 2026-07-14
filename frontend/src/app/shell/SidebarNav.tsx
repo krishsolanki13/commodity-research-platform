@@ -13,12 +13,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { useWorkspace } from '@/stores/workspace'
 import { cn } from '@/lib/cn'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
 
 interface NavItem {
   id: string
@@ -29,13 +24,13 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'market',    label: 'Market',       icon: TrendingUp,  route: '/market',       phase: null      },
-  { id: 'research',  label: 'Research',     icon: FlaskConical, route: '/research',    phase: null      },
-  { id: 'backtest',  label: 'Backtest',     icon: Zap,          route: '/backtest/new', phase: null     },
-  { id: 'runs',      label: 'Runs',         icon: Layers,       route: '/runs',         phase: null     },
-  { id: 'intel',     label: 'Intelligence', icon: Globe,        route: '/intelligence', phase: 'Phase 2' },
-  { id: 'portfolio', label: 'Portfolio',    icon: BarChart2,    route: '/portfolio',    phase: 'Phase 3' },
-  { id: 'system',    label: 'System',       icon: Database,     route: '/system/data',  phase: null     },
+  { id: 'market', label: 'Market', icon: TrendingUp, route: '/market', phase: null },
+  { id: 'research', label: 'Research', icon: FlaskConical, route: '/research', phase: null },
+  { id: 'backtest', label: 'Backtest', icon: Zap, route: '/backtest/new', phase: null },
+  { id: 'runs', label: 'Runs', icon: Layers, route: '/runs', phase: null },
+  { id: 'intel', label: 'Intelligence', icon: Globe, route: '/intelligence', phase: 'Phase 2' },
+  { id: 'portfolio', label: 'Portfolio', icon: BarChart2, route: '/portfolio', phase: 'Phase 3' },
+  { id: 'system', label: 'System', icon: Database, route: '/system/data', phase: null },
 ]
 
 export function SidebarNav() {
@@ -69,9 +64,7 @@ export function SidebarNav() {
                           className="shrink-0 text-text-secondary"
                         />
                         {!navCollapsed && (
-                          <span className="text-sm text-text-secondary">
-                            {item.label}
-                          </span>
+                          <span className="text-sm text-text-secondary">{item.label}</span>
                         )}
                       </div>
                     </TooltipTrigger>
@@ -93,7 +86,7 @@ export function SidebarNav() {
                       'flex items-center gap-3 px-3 py-2 text-sm transition-colors duration-fast',
                       'hover:bg-bg-hover hover:text-text-emphasis',
                       isActive
-                        ? 'text-text-accent before:absolute before:left-0 before:top-0 before:h-full before:w-0.5 before:bg-accent'
+                        ? 'before:w-0.5 text-text-accent before:absolute before:left-0 before:top-0 before:h-full before:bg-accent'
                         : 'text-text-secondary'
                     )
                   }
@@ -110,12 +103,13 @@ export function SidebarNav() {
           <button
             onClick={toggleNavCollapsed}
             aria-label={navCollapsed ? 'Expand navigation' : 'Collapse navigation'}
-            className="flex w-full items-center justify-center rounded-sm p-1.5 text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+            className="p-1.5 flex w-full items-center justify-center rounded-sm text-text-secondary hover:bg-bg-hover hover:text-text-primary"
           >
-            {navCollapsed
-              ? <ChevronRight size={16} strokeWidth={1.75} />
-              : <ChevronLeft size={16} strokeWidth={1.75} />
-            }
+            {navCollapsed ? (
+              <ChevronRight size={16} strokeWidth={1.75} />
+            ) : (
+              <ChevronLeft size={16} strokeWidth={1.75} />
+            )}
           </button>
         </div>
       </nav>

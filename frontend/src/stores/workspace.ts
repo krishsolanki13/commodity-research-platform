@@ -27,8 +27,7 @@ export const useWorkspace = create<WorkspaceState>()(
         document.documentElement.dataset.density = density
       },
 
-      toggleNavCollapsed: () =>
-        set((state) => ({ navCollapsed: !state.navCollapsed })),
+      toggleNavCollapsed: () => set((state) => ({ navCollapsed: !state.navCollapsed })),
     }),
     {
       name: 'commodity-research-workspace',

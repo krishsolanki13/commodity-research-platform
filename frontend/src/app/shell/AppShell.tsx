@@ -19,11 +19,7 @@ export function AppShell() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable
-      ) {
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
         return
       }
 
@@ -58,11 +54,7 @@ export function AppShell() {
 
         <div className="flex flex-1 flex-col overflow-hidden">
           <ContextBar />
-          <main
-            id="main-content"
-            role="main"
-            className="flex-1 overflow-y-auto"
-          >
+          <main id="main-content" role="main" className="flex-1 overflow-y-auto">
             <Outlet />
           </main>
         </div>

@@ -19,7 +19,7 @@ export function ContextBar() {
     >
       {asset !== null && (
         <>
-          <span className="rounded-sm bg-bg-raised px-2 py-0.5 font-mono text-text-accent">
+          <span className="py-0.5 rounded-sm bg-bg-raised px-2 font-mono text-text-accent">
             {asset}
           </span>
           {fromDate !== null && toDate !== null && (
