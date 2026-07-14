@@ -17,8 +17,37 @@ import { EmptyState } from '@/components/layout/EmptyState'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton'
 import { Combobox } from '@/ui/Combobox'
+import { ChartFrame } from '@/components/charts/ChartFrame'
+import { PriceChart } from '@/components/charts/PriceChart'
+import { EquityCurveChart } from '@/components/charts/EquityCurveChart'
+import { Sparkline } from '@/components/charts/Sparkline'
+import { DataGrid } from '@/components/data/DataGrid'
+import { createColumnHelper } from '@tanstack/react-table'
 
 type SignalEvaluationData = components['schemas']['SignalEvaluationData']
+type ColumnarSeries = components['schemas']['ColumnarSeries']
+
+// Gold OHLCV fixture — 5 bars (2021-01-01 through 2021-01-05)
+const GOLD_OHLCV: ColumnarSeries = {
+  index: [1609459200000, 1609545600000, 1609632000000, 1609718400000, 1609804800000],
+  columns: {
+    open: [1898.0, 1902.5, 1910.0, 1905.0, 1915.0],
+    high: [1908.0, 1915.0, 1918.0, 1912.0, 1925.0],
+    low: [1892.0, 1898.0, 1903.0, 1900.0, 1908.0],
+    close: [1902.5, 1910.0, 1905.0, 1910.0, 1920.0],
+    volume: [12000, 14500, 11000, 13200, 15800],
+  },
+}
+
+const EQUITY_FIXTURE: ColumnarSeries = {
+  index: [1609459200000, 1609545600000, 1609632000000, 1609718400000],
+  columns: { value: [1000000, 1005000, 1003000, 1010000] },
+}
+
+const DRAWDOWN_FIXTURE: ColumnarSeries = {
+  index: [1609459200000, 1609545600000, 1609632000000, 1609718400000],
+  columns: { value: [0, -0.002, -0.003, 0] },
+}
 
 // ── ICGateStrip mock data ────────────────────────────────────────────
 const evalBase = {
@@ -340,6 +369,151 @@ export default function Gallery() {
             </div>
           </Panel>
         </div>
+      </GallerySection>
+
+      {/* ── 12. Charts ──────────────────────────────────────────────────────── */}
+      <GallerySection title="Charts">
+        <div className="flex flex-col gap-6">
+          {/* ChartFrame states */}
+          <div>
+            <p className="mb-1 font-mono text-xs text-text-secondary">ChartFrame — loading state</p>
+            <ChartFrame height={160} loading={true} title="Loading">
+              {null}
+            </ChartFrame>
+          </div>
+          <div>
+            <p className="mb-1 font-mono text-xs text-text-secondary">ChartFrame — empty state</p>
+            <ChartFrame height={160} empty={{ message: 'No data in this range.' }} title="Empty">
+              {null}
+            </ChartFrame>
+          </div>
+
+          {/* PriceChart */}
+          <div>
+            <p className="mb-1 font-mono text-xs text-text-secondary">
+              PriceChart — Gold fixture (5 bars, candlestick + volume)
+            </p>
+            <PriceChart ohlcv={GOLD_OHLCV} height={280} title="Gold · GC=F" />
+          </div>
+
+          {/* EquityCurveChart */}
+          <div>
+            <p className="mb-1 font-mono text-xs text-text-secondary">
+              EquityCurveChart — with drawdown pane + baseline
+            </p>
+            <EquityCurveChart
+              equity={EQUITY_FIXTURE}
+              drawdown={DRAWDOWN_FIXTURE}
+              baseline={1000000}
+              height={300}
+              title="Equity Curve"
+            />
+          </div>
+
+          {/* Sparklines */}
+          <div>
+            <p className="mb-1 font-mono text-xs text-text-secondary">Sparkline — tone variants</p>
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-text-secondary">Rising (auto):</span>
+                <Sparkline values={[100, 105, 110, 108, 115]} tone="auto" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-text-secondary">Falling (auto):</span>
+                <Sparkline values={[115, 110, 108, 105, 100]} tone="auto" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-text-secondary">Null gap:</span>
+                <Sparkline values={[100, 105, null, 108, 115]} tone="auto" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-text-secondary">Explicit loss:</span>
+                <Sparkline values={[100, 95, 90, 88, 85]} tone="loss" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </GallerySection>
+
+      {/* ── 13. DataGrid ─────────────────────────────────────────────────────── */}
+      <GallerySection title="DataGrid">
+        {(() => {
+          interface DemoRow {
+            id: string
+            asset: string
+            value: number
+            status: string
+          }
+
+          const colHelper = createColumnHelper<DemoRow>()
+          const demoColumns = [
+            colHelper.accessor('asset', {
+              header: 'ASSET',
+              cell: (i) => i.getValue(),
+            }),
+            colHelper.accessor('value', {
+              header: 'VALUE',
+              cell: (i) => <span className="font-mono">{i.getValue().toFixed(2)}</span>,
+            }),
+            colHelper.accessor('status', {
+              header: 'STATUS',
+              cell: (i) => i.getValue(),
+            }),
+          ]
+
+          const smallData: DemoRow[] = [
+            { id: '1', asset: 'gold', value: 1920.5, status: 'active' },
+            { id: '2', asset: 'silver', value: 23.45, status: 'active' },
+            { id: '3', asset: 'copper', value: 4.12, status: 'active' },
+            { id: '4', asset: 'wti', value: 78.2, status: 'active' },
+            { id: '5', asset: 'natural_gas', value: 2.85, status: 'active' },
+          ]
+
+          const largeData: DemoRow[] = Array.from({ length: 300 }, (_, i) => ({
+            id: String(i),
+            asset: ['gold', 'silver', 'copper'][i % 3],
+            value: i * 10.5,
+            status: 'active',
+          }))
+
+          return (
+            <div className="flex flex-col gap-6">
+              <div>
+                <p className="mb-1 font-mono text-xs text-text-secondary">
+                  DataGrid — 5 rows, search + CSV export toolbar
+                </p>
+                <div
+                  className="overflow-hidden rounded-md border border-border-default"
+                  style={{ height: 220 }}
+                >
+                  <DataGrid
+                    columns={demoColumns}
+                    data={smallData}
+                    getRowId={(r) => r.id}
+                    toolbar={{ search: true, export: true }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-1 font-mono text-xs text-text-secondary">
+                  DataGrid — 300 rows, virtualized
+                </p>
+                <div
+                  className="overflow-hidden rounded-md border border-border-default"
+                  style={{ height: 220 }}
+                >
+                  <DataGrid
+                    columns={demoColumns}
+                    data={largeData}
+                    getRowId={(r) => r.id}
+                    virtualized={true}
+                  />
+                </div>
+              </div>
+            </div>
+          )
+        })()}
       </GallerySection>
     </div>
   )
