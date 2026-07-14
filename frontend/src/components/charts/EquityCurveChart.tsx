@@ -138,9 +138,11 @@ function EquityCurveChartInner({
         formatter: isCompare
           ? (v: number) => `${v.toFixed(1)}%`
           : (v: number) =>
-              v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2)}M`
-              : v >= 1_000 ? `$${(v / 1_000).toFixed(0)}k`
-              : `$${v}`,
+              v >= 1_000_000
+                ? `$${(v / 1_000_000).toFixed(2)}M`
+                : v >= 1_000
+                  ? `$${(v / 1_000).toFixed(0)}k`
+                  : `$${v}`,
       },
       splitLine: { lineStyle: { color: theme.gridlineColor } },
     }
@@ -168,10 +170,8 @@ function EquityCurveChartInner({
 
     if (isCompare) {
       // Normalise equity to % return from first data point
-      const firstEq = eqValues.find(v => v != null) ?? 1
-      const normEqData = eqValues.map(v =>
-        v != null ? ((v / firstEq) - 1) * 100 : null
-      )
+      const firstEq = eqValues.find((v) => v != null) ?? 1
+      const normEqData = eqValues.map((v) => (v != null ? (v / firstEq - 1) * 100 : null))
       equitySeries = {
         type: 'line' as const,
         name: 'Current',
@@ -194,20 +194,21 @@ function EquityCurveChartInner({
         lineStyle: { color: theme.amber, width: 1.5 },
         itemStyle: { color: theme.amber },
         symbol: 'none',
-        markLine: baseline != null
-          ? {
-              silent: true,
-              symbol: 'none',
-              label: {
-                formatter: 'Initial Capital',
-                color: theme.secondaryText,
-                fontFamily: theme.monoFont,
-                fontSize: 10,
-              },
-              lineStyle: { type: 'dotted', color: theme.secondaryText, width: 1 },
-              data: [{ yAxis: baseline }],
-            }
-          : undefined,
+        markLine:
+          baseline != null
+            ? {
+                silent: true,
+                symbol: 'none',
+                label: {
+                  formatter: 'Initial Capital',
+                  color: theme.secondaryText,
+                  fontFamily: theme.monoFont,
+                  fontSize: 10,
+                },
+                lineStyle: { type: 'dotted', color: theme.secondaryText, width: 1 },
+                data: [{ yAxis: baseline }],
+              }
+            : undefined,
       }
     }
 
@@ -215,10 +216,8 @@ function EquityCurveChartInner({
       ? compare.map((ns, idx) => {
           const cols = ns.equity.columns as Record<string, (number | null)[]>
           const vals = cols['value'] ?? []
-          const firstVal = vals.find(v => v != null) ?? 1
-          const normData = vals.map(v =>
-            v != null ? ((v / firstVal) - 1) * 100 : null
-          )
+          const firstVal = vals.find((v) => v != null) ?? 1
+          const normData = vals.map((v) => (v != null ? (v / firstVal - 1) * 100 : null))
           return {
             type: 'line' as const,
             name: ns.name,
@@ -290,7 +289,10 @@ function EquityCurveChartInner({
         },
       },
       legend: isCompare
-        ? { top: 0, textStyle: { color: theme.secondaryText, fontFamily: theme.monoFont, fontSize: 11 } }
+        ? {
+            top: 0,
+            textStyle: { color: theme.secondaryText, fontFamily: theme.monoFont, fontSize: 11 },
+          }
         : undefined,
       dataZoom,
       series: [equitySeries, ...compareSeries, ...drawdownSeries],

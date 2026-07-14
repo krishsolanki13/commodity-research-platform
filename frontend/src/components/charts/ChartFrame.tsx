@@ -47,7 +47,7 @@ interface ChartFrameProps {
   loading?: boolean
   error?: ApiClientError | Error | null
   empty?: { message: string; action?: { label: string; onClick: () => void } }
-  toolbar?: boolean       // default true
+  toolbar?: boolean // default true
   syncGroup?: string
   onRetry?: () => void
   className?: string
@@ -115,21 +115,21 @@ export function ChartFrame({
       <button
         onClick={handleZoomReset}
         aria-label="Reset zoom"
-        className="rounded-sm p-1 text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-fast"
+        className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
       >
         <ZoomIn size={14} strokeWidth={1.75} />
       </button>
       <button
         onClick={handleExport}
         aria-label="Export chart as PNG"
-        className="rounded-sm p-1 text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-fast"
+        className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
       >
         <Download size={14} strokeWidth={1.75} />
       </button>
       <button
         onClick={() => setIsFullscreen(true)}
         aria-label="View fullscreen"
-        className="rounded-sm p-1 text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-fast"
+        className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
       >
         <Maximize size={14} strokeWidth={1.75} />
       </button>
@@ -169,9 +169,7 @@ export function ChartFrame({
             className="bg-bg-panel p-0"
           >
             <ChartFrameCtx.Provider value={{ onChartReady: onChartReadyFullscreen }}>
-              <div style={{ width: '100%', height: '100%' }}>
-                {children}
-              </div>
+              <div style={{ width: '100%', height: '100%' }}>{children}</div>
             </ChartFrameCtx.Provider>
           </DialogContent>
         </Dialog>

@@ -46,8 +46,7 @@ export function Sparkline({
   const padding = 1
 
   // SVG coordinate system: y=0 is TOP. Invert so high values go up.
-  const toY = (v: number) =>
-    height - padding - ((v - min) / range) * (height - padding * 2)
+  const toY = (v: number) => height - padding - ((v - min) / range) * (height - padding * 2)
   const toX = (i: number) => (i / (values.length - 1)) * width
 
   // Determine stroke color via CSS custom property
@@ -67,8 +66,8 @@ export function Sparkline({
       lastNonNull > firstNonNull
         ? 'var(--gain-500)'
         : lastNonNull < firstNonNull
-        ? 'var(--loss-500)'
-        : 'var(--text-secondary)'
+          ? 'var(--loss-500)'
+          : 'var(--text-secondary)'
   }
 
   // Split values into contiguous non-null segments
@@ -100,7 +99,7 @@ export function Sparkline({
       {segments.map((segment, segIdx) => (
         <polyline
           key={segIdx}
-          points={segment.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ')}
+          points={segment.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ')}
           fill="none"
           stroke="currentColor"
           strokeWidth={1.5}

@@ -51,40 +51,40 @@ export interface ServerPage {
 function selectionToTanstack(ids?: Set<string>): RowSelectionState {
   if (!ids) return {}
   const result: RowSelectionState = {}
-  ids.forEach(id => { result[id] = true })
+  ids.forEach((id) => {
+    result[id] = true
+  })
   return result
 }
 
 function tanstackToSelection(state: RowSelectionState): Set<string> {
-  return new Set(Object.keys(state).filter(k => state[k]))
+  return new Set(Object.keys(state).filter((k) => state[k]))
 }
 
 // ---------------------------------------------------------------------------
 // CSV export
 // ---------------------------------------------------------------------------
 
-function exportToCsv<T>(
-  table: ReturnType<typeof useReactTable<T>>,
-  filename: string
-) {
+function exportToCsv<T>(table: ReturnType<typeof useReactTable<T>>, filename: string) {
   const headers = table
     .getAllLeafColumns()
-    .filter(col => col.getIsVisible() && col.id !== '__select__')
-    .map(col => col.id)
+    .filter((col) => col.getIsVisible() && col.id !== '__select__')
+    .map((col) => col.id)
 
-  const rows = table.getFilteredRowModel().rows.map(row =>
-    headers.map(h => {
+  const rows = table.getFilteredRowModel().rows.map((row) =>
+    headers.map((h) => {
       const v = row.getValue(h)
       let str = ''
       if (v == null) str = ''
       else if (typeof v === 'string') str = v
-      else if (typeof v === 'number' || typeof v === 'boolean' || typeof v === 'bigint') str = String(v)
+      else if (typeof v === 'number' || typeof v === 'boolean' || typeof v === 'bigint')
+        str = String(v)
       else str = JSON.stringify(v)
       return str.includes(',') ? `"${str}"` : str
     })
   )
 
-  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+  const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -169,7 +169,7 @@ export function DataGrid<T>({
               type="checkbox"
               checked={row.getIsSelected()}
               onChange={row.getToggleSelectedHandler()}
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
               aria-label={`Select row ${row.id}`}
               className="cursor-pointer"
             />
@@ -193,11 +193,8 @@ export function DataGrid<T>({
       columnVisibility,
       rowSelection: selectionToTanstack(selection?.ids),
     },
-    onSortingChange: updater => {
-      const next =
-        typeof updater === 'function'
-          ? updater(sortState ?? internalSort)
-          : updater
+    onSortingChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(sortState ?? internalSort) : updater
       if (onSort) {
         onSort(next)
       } else {
@@ -206,7 +203,7 @@ export function DataGrid<T>({
     },
     onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: updater => {
+    onRowSelectionChange: (updater) => {
       const prev = selectionToTanstack(selection?.ids)
       const next = typeof updater === 'function' ? updater(prev) : updater
       selection?.onChange(tanstackToSelection(next))
@@ -237,24 +234,20 @@ export function DataGrid<T>({
 
     function onKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable
-      ) {
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
         return
       }
 
       if (e.key === 'j') {
         e.preventDefault()
-        setFocusedIdx(prev => {
+        setFocusedIdx((prev) => {
           const next = Math.min((prev ?? -1) + 1, rows.length - 1)
           virtualizer.scrollToIndex(next)
           return next
         })
       } else if (e.key === 'k') {
         e.preventDefault()
-        setFocusedIdx(prev => {
+        setFocusedIdx((prev) => {
           const next = Math.max((prev ?? rows.length) - 1, 0)
           virtualizer.scrollToIndex(next)
           return next
@@ -274,9 +267,7 @@ export function DataGrid<T>({
   // ---------------------------------------------------------------------------
 
   if (loading) {
-    return (
-      <LoadingSkeleton variant="table" rows={5} className={className} />
-    )
+    return <LoadingSkeleton variant="table" rows={5} className={className} />
   }
 
   // ---------------------------------------------------------------------------
@@ -287,35 +278,33 @@ export function DataGrid<T>({
     ? virtualizer.getVirtualItems()
     : rows.map((_, i) => ({ index: i, start: i * rowHeight, size: rowHeight }))
 
-  const totalHeight = shouldVirtualize
-    ? virtualizer.getTotalSize()
-    : rows.length * rowHeight
+  const totalHeight = shouldVirtualize ? virtualizer.getTotalSize() : rows.length * rowHeight
 
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Toolbar */}
       {toolbar && (
-        <div className="flex items-center gap-2 border-b border-border-default px-3 py-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-2 border-b border-border-default px-3 py-2">
           {toolbar.search && (
-            <div className="relative flex-1 max-w-xs">
+            <div className="relative max-w-xs flex-1">
               <Search
                 size={12}
                 strokeWidth={1.75}
-                className="absolute left-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none"
+                className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-text-secondary"
               />
               <input
                 type="text"
                 value={globalFilter}
-                onChange={e => setGlobalFilter(e.target.value)}
+                onChange={(e) => setGlobalFilter(e.target.value)}
                 placeholder="Search..."
                 className={cn(
-                  'w-full pl-7 pr-3 h-7 rounded-sm border border-border-strong bg-bg-app',
-                  'text-xs text-text-primary placeholder:text-text-secondary font-mono',
-                  'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
+                  'h-7 w-full rounded-sm border border-border-strong bg-bg-app pl-7 pr-3',
+                  'font-mono text-xs text-text-primary placeholder:text-text-secondary',
+                  'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent'
                 )}
               />
             </div>
@@ -329,7 +318,7 @@ export function DataGrid<T>({
               className={cn(
                 'flex items-center gap-1 rounded-sm px-2 py-1',
                 'text-xs text-text-secondary hover:bg-bg-hover hover:text-text-primary',
-                'transition-colors duration-fast',
+                'transition-colors duration-fast'
               )}
             >
               <Download size={12} strokeWidth={1.75} />
@@ -360,39 +349,35 @@ export function DataGrid<T>({
           style={{ tableLayout: 'fixed' }}
         >
           <thead className="sticky top-0 z-10 bg-bg-raised">
-            {table.getHeaderGroups().map(hg => (
+            {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
-                {hg.headers.map(header => (
+                {hg.headers.map((header) => (
                   <th
                     key={header.id}
                     style={{
-                      width:
-                        header.getSize() !== 150 ? header.getSize() : undefined,
+                      width: header.getSize() !== 150 ? header.getSize() : undefined,
                     }}
                     className={cn(
                       'border-b border-border-default px-3 py-2 text-left',
                       'text-xs font-medium uppercase tracking-wider text-text-secondary',
                       header.column.getCanSort() &&
-                        'cursor-pointer select-none hover:text-text-primary',
+                        'cursor-pointer select-none hover:text-text-primary'
                     )}
                     onClick={header.column.getToggleSortingHandler()}
                     aria-sort={
                       header.column.getIsSorted() === 'asc'
                         ? 'ascending'
                         : header.column.getIsSorted() === 'desc'
-                        ? 'descending'
-                        : header.column.getCanSort()
-                        ? 'none'
-                        : undefined
+                          ? 'descending'
+                          : header.column.getCanSort()
+                            ? 'none'
+                            : undefined
                     }
                   >
                     <div className="flex items-center gap-1">
                       {header.isPlaceholder
                         ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                        : flexRender(header.column.columnDef.header, header.getContext())}
                       {header.column.getIsSorted() === 'asc' && (
                         <ChevronUp size={10} strokeWidth={2} />
                       )}
@@ -425,7 +410,7 @@ export function DataGrid<T>({
                 </td>
               </tr>
             ) : (
-              virtualItems.map(virtualRow => {
+              virtualItems.map((virtualRow) => {
                 const row = rows[virtualRow.index]
                 if (!row) return null
                 return (
@@ -435,13 +420,12 @@ export function DataGrid<T>({
                     onClick={() => onRowClick?.(row.original)}
                     aria-selected={row.getIsSelected() || undefined}
                     className={cn(
-                      'absolute top-0 left-0 w-full border-b border-border-default',
+                      'absolute left-0 top-0 w-full border-b border-border-default',
                       'transition-colors duration-fast',
                       onRowClick && 'cursor-pointer',
                       'hover:bg-bg-hover',
-                      row.getIsSelected() &&
-                        'bg-bg-selected border-l-2 border-l-accent',
-                      focusedIdx === virtualRow.index && 'bg-bg-hover',
+                      row.getIsSelected() && 'border-l-2 border-l-accent bg-bg-selected',
+                      focusedIdx === virtualRow.index && 'bg-bg-hover'
                     )}
                     style={{
                       height: rowHeight,
@@ -451,16 +435,13 @@ export function DataGrid<T>({
                       width: '100%',
                     }}
                   >
-                    {row.getVisibleCells().map(cell => (
+                    {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}
                         className="overflow-hidden text-ellipsis whitespace-nowrap px-3 py-0 text-text-primary"
                         style={{ verticalAlign: 'middle', height: rowHeight }}
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
                   </tr>
@@ -473,13 +454,13 @@ export function DataGrid<T>({
 
       {/* Server pagination */}
       {serverPage && (
-        <div className="flex items-center justify-end gap-2 border-t border-border-default px-3 py-2 shrink-0">
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border-default px-3 py-2">
           <button
             onClick={() => serverPage.onPage(serverPage.page - 1)}
             disabled={serverPage.page <= 1}
             className={cn(
               'rounded-sm px-2 py-1 text-xs text-text-secondary',
-              'hover:bg-bg-hover disabled:opacity-50 disabled:cursor-not-allowed',
+              'hover:bg-bg-hover disabled:cursor-not-allowed disabled:opacity-50'
             )}
           >
             Previous
@@ -489,7 +470,7 @@ export function DataGrid<T>({
             disabled={serverPage.page * serverPage.pageSize >= serverPage.total}
             className={cn(
               'rounded-sm px-2 py-1 text-xs text-text-secondary',
-              'hover:bg-bg-hover disabled:opacity-50 disabled:cursor-not-allowed',
+              'hover:bg-bg-hover disabled:cursor-not-allowed disabled:opacity-50'
             )}
           >
             Next

@@ -36,7 +36,7 @@ export interface OverlayData {
 }
 
 export interface DateMarker {
-  date: number          // epoch ms
+  date: number // epoch ms
   type: 'entry' | 'exit' | 'event'
   label?: string
 }
@@ -74,14 +74,7 @@ interface PriceChartProps {
 // Inner component — owns ECharts lifecycle, accesses ChartFrameContext
 // ---------------------------------------------------------------------------
 
-function PriceChartInner({
-  ohlcv,
-  overlays,
-  markers,
-  volume,
-  style,
-  theme,
-}: PriceChartInnerProps) {
+function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: PriceChartInnerProps) {
   const divRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<ECharts | null>(null)
   const ctx = useChartFrame()
@@ -160,7 +153,7 @@ function PriceChartInner({
       ? [
           {
             gridIndex: 0,
-            min: null,    // ← auto-scale: required for negative prices
+            min: null, // ← auto-scale: required for negative prices
             axisLabel: {
               color: theme.secondaryText,
               fontFamily: theme.monoFont,
@@ -170,15 +163,17 @@ function PriceChartInner({
           },
           {
             gridIndex: 1,
-            min: 0,       // volume is always >= 0
+            min: 0, // volume is always >= 0
             axisLabel: {
               color: theme.secondaryText,
               fontFamily: theme.monoFont,
               fontSize: 11,
               formatter: (v: number) =>
-                v >= 1000000 ? `${(v / 1000000).toFixed(1)}M`
-                : v >= 1000 ? `${(v / 1000).toFixed(0)}k`
-                : String(v),
+                v >= 1000000
+                  ? `${(v / 1000000).toFixed(1)}M`
+                  : v >= 1000
+                    ? `${(v / 1000).toFixed(0)}k`
+                    : String(v),
             },
             splitLine: { show: false },
             splitNumber: 2,
@@ -186,7 +181,7 @@ function PriceChartInner({
         ]
       : [
           {
-            min: null,    // ← auto-scale: required for negative prices
+            min: null, // ← auto-scale: required for negative prices
             axisLabel: {
               color: theme.secondaryText,
               fontFamily: theme.monoFont,
@@ -205,8 +200,8 @@ function PriceChartInner({
             data: candleData,
             connectNulls: false, // ← null gap policy: gaps, not interpolation
             itemStyle: {
-              color: theme.gain,        // up candle body
-              color0: theme.loss,       // down candle body
+              color: theme.gain, // up candle body
+              color0: theme.loss, // down candle body
               borderColor: theme.gain,
               borderColor0: theme.loss,
             },

@@ -30,15 +30,15 @@ export interface EChartsTheme {
     borderColor: string
     textStyle: { color: string; fontFamily: string; fontSize: number }
   }
-  seriesPalette: string[]   // 6 colors from --series-1..6 tokens
-  gain: string              // resolved --gain-500
-  loss: string              // resolved --loss-500
-  gainFill: string          // resolved --gain-900a
-  lossFill: string          // resolved --loss-900a
-  amber: string             // resolved --amber-500
-  gridlineColor: string     // --gray-800 at ~60% opacity (hex alpha)
-  secondaryText: string     // resolved --text-secondary
-  monoFont: string          // resolved --font-mono
+  seriesPalette: string[] // 6 colors from --series-1..6 tokens
+  gain: string // resolved --gain-500
+  loss: string // resolved --loss-500
+  gainFill: string // resolved --gain-900a
+  lossFill: string // resolved --loss-900a
+  amber: string // resolved --amber-500
+  gridlineColor: string // --gray-800 at ~60% opacity (hex alpha)
+  secondaryText: string // resolved --text-secondary
+  monoFont: string // resolved --font-mono
 }
 
 export function useChartTheme(): EChartsTheme {
@@ -77,7 +77,7 @@ export function useChartTheme(): EChartsTheme {
           fontSize: 12,
         },
       },
-      seriesPalette: [1, 2, 3, 4, 5, 6].map(i => get(`--series-${i}`)),
+      seriesPalette: [1, 2, 3, 4, 5, 6].map((i) => get(`--series-${i}`)),
       gain: get('--gain-500'),
       loss: get('--loss-500'),
       gainFill: get('--gain-900a'),

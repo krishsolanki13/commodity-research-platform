@@ -29,12 +29,12 @@
   /* Series palette — for non-semantic multi-series overlays (comparison runs, indicator overlays).
      Read in chart-theme.ts via getComputedStyle() — never reference these tokens directly in
      .ts/.tsx files. Never reuse gain/loss colors for arbitrary series. */
-  --series-1: #E8A33D;   /* accent amber — primary series, current run */
-  --series-2: #4E9CDB;   /* sky blue */
-  --series-3: #3FB68B;   /* teal-green */
-  --series-4: #B48EDE;   /* purple */
-  --series-5: #D9A03C;   /* warm amber */
-  --series-6: #6FB8C9;   /* cyan */
+  --series-1: #e8a33d; /* accent amber — primary series, current run */
+  --series-2: #4e9cdb; /* sky blue */
+  --series-3: #3fb68b; /* teal-green */
+  --series-4: #b48ede; /* purple */
+  --series-5: #d9a03c; /* warm amber */
+  --series-6: #6fb8c9; /* cyan */
 
   /* Directional */
   --gain-500: #3fb68b;
