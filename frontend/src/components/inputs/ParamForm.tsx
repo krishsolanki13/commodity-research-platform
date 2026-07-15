@@ -99,9 +99,7 @@ export function ParamForm({
               <label htmlFor={p.name} className="text-sm text-text-secondary">
                 {p.name}
               </label>
-              {p.unit && (
-                <span className="text-xs text-text-secondary">({p.unit})</span>
-              )}
+              {p.unit && <span className="text-xs text-text-secondary">({p.unit})</span>}
               <button
                 type="button"
                 onClick={() => form.setValue(p.name, p.default, { shouldValidate: true })}

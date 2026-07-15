@@ -256,13 +256,7 @@ export function SignalOverlayChart({
   const theme = useChartTheme()
 
   return (
-    <ChartFrame
-      title={title}
-      height={height}
-      loading={loading}
-      error={error}
-      syncGroup={syncGroup}
-    >
+    <ChartFrame title={title} height={height} loading={loading} error={error} syncGroup={syncGroup}>
       <SignalOverlayChartInner ohlcv={ohlcv} raw={raw} position={position} theme={theme} />
     </ChartFrame>
   )

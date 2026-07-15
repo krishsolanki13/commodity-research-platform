@@ -53,8 +53,7 @@ export function IndicatorPicker({
     const q = search.trim().toLowerCase()
     if (!q) return catalog
     return catalog.filter(
-      (i) =>
-        i.name.toLowerCase().includes(q) || i.display_name.toLowerCase().includes(q)
+      (i) => i.name.toLowerCase().includes(q) || i.display_name.toLowerCase().includes(q)
     )
   }, [catalog, search])
 
@@ -108,8 +107,7 @@ export function IndicatorPicker({
   function handleRemove(spec: FeatureSpecRequest) {
     onChange(
       selected.filter(
-        (s) =>
-          !(s.name === spec.name && JSON.stringify(s.params) === JSON.stringify(spec.params))
+        (s) => !(s.name === spec.name && JSON.stringify(s.params) === JSON.stringify(spec.params))
       )
     )
   }
@@ -179,7 +177,7 @@ export function IndicatorPicker({
                     type="button"
                     onClick={() => handleIndicatorClick(indicator)}
                     className={cn(
-                      'w-full rounded-sm px-2 py-1.5 text-left text-sm',
+                      'py-1.5 w-full rounded-sm px-2 text-left text-sm',
                       'hover:bg-bg-hover',
                       expanded === indicator.name && 'bg-bg-selected'
                     )}

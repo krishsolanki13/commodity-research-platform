@@ -153,13 +153,7 @@ function ICRollingChartInner({ ic, window: _window, theme }: ICRollingChartInner
 // Outer component
 // ---------------------------------------------------------------------------
 
-export function ICRollingChart({
-  ic,
-  window,
-  title,
-  height = 200,
-  loading,
-}: ICRollingChartProps) {
+export function ICRollingChart({ ic, window, title, height = 200, loading }: ICRollingChartProps) {
   const theme = useChartTheme()
 
   return (

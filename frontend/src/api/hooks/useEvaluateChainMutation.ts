@@ -31,9 +31,7 @@ type ProgressStep = {
 }
 
 // Q7 ruling: onProgress passed as hook param, held in ref — keeps mutateAsync params serializable
-export function useEvaluateChainMutation(
-  onProgress?: (step: ProgressStep) => void
-) {
+export function useEvaluateChainMutation(onProgress?: (step: ProgressStep) => void) {
   const onProgressRef = useRef(onProgress)
   useEffect(() => {
     onProgressRef.current = onProgress
@@ -51,10 +49,7 @@ export function useEvaluateChainMutation(
         to_date: p.toDate,
         specs: p.featureSpecs,
       })
-      queryClient.setQueryData(
-        qk.features(p.asset, p.fromDate, p.toDate, p.featureSpecs),
-        features
-      )
+      queryClient.setQueryData(qk.features(p.asset, p.fromDate, p.toDate, p.featureSpecs), features)
 
       // Step 2: Generate signal
       onProgressRef.current?.({ step: 'signal', stepIndex: 2 })
@@ -65,10 +60,7 @@ export function useEvaluateChainMutation(
         from_date: p.fromDate,
         to_date: p.toDate,
       })
-      queryClient.setQueryData(
-        qk.signalGenerate(p.asset, p.strategy, p.params),
-        signal
-      )
+      queryClient.setQueryData(qk.signalGenerate(p.asset, p.strategy, p.params), signal)
 
       // Step 3: Evaluate signal
       onProgressRef.current?.({ step: 'evaluation', stepIndex: 3 })
@@ -79,10 +71,7 @@ export function useEvaluateChainMutation(
         from_date: p.fromDate,
         to_date: p.toDate,
       })
-      queryClient.setQueryData(
-        qk.signalEvaluate(p.asset, p.strategy, p.params),
-        evaluation
-      )
+      queryClient.setQueryData(qk.signalEvaluate(p.asset, p.strategy, p.params), evaluation)
 
       return {
         features,

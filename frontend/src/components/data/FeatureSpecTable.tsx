@@ -32,9 +32,7 @@ export function FeatureSpecTable({ specs, className }: FeatureSpecTableProps) {
       colHelper.accessor('column_name', {
         header: 'COLUMN',
         enableSorting: false,
-        cell: (info) => (
-          <span className="font-mono text-xs text-accent">{info.getValue()}</span>
-        ),
+        cell: (info) => <span className="font-mono text-xs text-accent">{info.getValue()}</span>,
       }),
       colHelper.accessor('computed_at', {
         header: 'COMPUTED',
