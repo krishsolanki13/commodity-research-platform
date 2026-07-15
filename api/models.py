@@ -529,7 +529,7 @@ def series_to_columnar(series: pd.Series, col_name: str = "value") -> ColumnarSe
 
     NaN values become None (serialized as JSON null).
     """
-    index_ms = (series.index.view("int64") // 1_000_000).tolist()
+    index_ms = (series.index.as_unit("ns").view("int64") // 1_000_000).tolist()
     values: list[float | None] = [
         None if pd.isna(v) else float(v) for v in series.values
     ]
@@ -541,7 +541,7 @@ def df_to_columnar(df: pd.DataFrame) -> ColumnarSeries:
 
     NaN values become None (serialized as JSON null).
     """
-    index_ms = (df.index.view("int64") // 1_000_000).tolist()
+    index_ms = (df.index.as_unit("ns").view("int64") // 1_000_000).tolist()
     columns: dict[str, list[float | None]] = {
         col: [None if pd.isna(v) else float(v) for v in df[col].values]
         for col in df.columns

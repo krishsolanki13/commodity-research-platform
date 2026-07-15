@@ -13,13 +13,25 @@ def test_columnar_series_nan_serializes_as_null() -> None:
     assert "NaN" not in json_str
 
 
-def test_df_to_columnar_epoch_ms() -> None:
-    """df_to_columnar must emit epoch-millisecond integers, not nanoseconds."""
-    idx = pd.date_range("2024-01-01", periods=5, freq="D", tz="UTC")
-    df = pd.DataFrame({"close": [100.0, 101.0, 102.0, 103.0, 104.0]}, index=idx)
+def test_df_to_columnar_epoch_ms():
+    """Verify index is epoch MILLISECONDS — not seconds, not nanoseconds.
+
+    Any real date in 2010-2026 produces epoch-ms > 1_000_000_000_000.
+    Epoch-seconds for the same dates are < 1_000_000_000_000.
+    Epoch-nanoseconds for the same dates are > 1_000_000_000_000_000.
+    The two bounds below pin the value to the millisecond range exactly.
+    """
+    df = pd.DataFrame(
+        {"close": [1900.5]},
+        index=pd.DatetimeIndex(["2026-01-01"], tz="UTC"),
+    )
     result = df_to_columnar(df)
-    # 2024-01-01 UTC in epoch ms ≈ 1_704_067_200_000 — well above 1 trillion
-    assert result.index[0] > 1_000_000_000_000
-    assert len(result.index) == 5
-    assert "close" in result.columns
-    assert len(result.columns["close"]) == 5
+
+    assert result.index[0] > 1_000_000_000_000, (
+        f"Expected epoch-ms (> 1e12), got {result.index[0]} — "
+        f"check df_to_columnar divisor: must be 1_000_000 (not 1_000_000_000)"
+    )
+    assert (
+        result.index[0] < 2_000_000_000_000
+    ), f"Value {result.index[0]} looks like nanoseconds, not milliseconds"
+    assert result.columns["close"] == [1900.5]
