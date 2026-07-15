@@ -1,5 +1,7 @@
 import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+import { setupServer } from 'msw/node'
+import { handlers } from './mocks/handlers/index'
 
 // --- ECharts global mock ---
 // jsdom has no canvas support. ECharts calls canvas.getContext('2d') on init, which
@@ -36,3 +38,14 @@ Object.defineProperty(URL, 'revokeObjectURL', {
   writable: true,
   value: vi.fn(),
 })
+
+// ─── MSW Global Server ────────────────────────────────────────────────────────
+// Shared across all hook and screen tests.
+// Individual test files add scenario overrides via server.use(...) inside the test.
+// afterEach resets back to the base handlers.
+
+export const server = setupServer(...handlers)
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }))
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
