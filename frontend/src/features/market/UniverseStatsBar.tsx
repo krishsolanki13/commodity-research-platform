@@ -1,0 +1,100 @@
+import { useAssets } from '@/api/hooks/useAssets'
+import { useDataStatus } from '@/api/hooks/useDataStatus'
+import { useIngestMutation } from '@/api/hooks/useIngestMutation'
+import { MetricGrid } from '@/components/data/MetricGrid'
+import type { MetricStatProps } from '@/components/data/MetricStat'
+import { Button } from '@/ui/button'
+import { RANGE_PRESETS } from '@/lib/date-range'
+import type { RangePreset } from '@/lib/date-range'
+import { useUrlState } from '@/lib/useUrlState'
+import { z } from 'zod'
+import { fmt } from '@/lib/fmt'
+import { cn } from '@/lib/cn'
+
+const rangeSchema = z.object({
+  range: z.enum(['1M', '3M', '6M', '1Y', '3Y', '5Y', 'MAX']).default('1Y'),
+})
+
+function daysSinceIngest(iso: string): number {
+  return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000))
+}
+
+export function UniverseStatsBar() {
+  const { data: universe, isLoading: universeLoading } = useAssets()
+  const { data: status } = useDataStatus()
+  const ingest = useIngestMutation()
+  const [{ range }, setUrlState] = useUrlState(rangeSchema, { range: '1Y' })
+
+  // MetricStat requires { label, value: number|null, format }. LAST INGESTION is a
+  // date string in the API — surface days-since as the value with ISO date in hint.
+  const metrics: MetricStatProps[] = [
+    {
+      label: 'ASSETS TRACKED',
+      value: universe?.assets.length ?? null,
+      format: 'integer',
+      tone: 'neutral',
+    },
+    {
+      label: 'LAST INGESTION',
+      value: universe?.last_ingestion ? daysSinceIngest(universe.last_ingestion) : null,
+      format: 'integer',
+      tone: 'neutral',
+      hint: universe?.last_ingestion
+        ? `Last ingested ${fmt.isoDate(universe.last_ingestion)} (days ago)`
+        : 'Never ingested',
+    },
+    {
+      label: 'FLAGGED ANOMALIES',
+      value: status?.total_flags ?? null,
+      format: 'integer',
+      tone: 'neutral',
+    },
+    {
+      label: 'RUNS TOTAL',
+      value: universe?.total_runs ?? null,
+      format: 'integer',
+      tone: 'neutral',
+    },
+  ]
+
+  function handleRange(r: RangePreset) {
+    setUrlState({ range: r })
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold text-text-emphasis">Market Overview</h1>
+        <div className="flex items-center gap-3">
+          <div className="flex overflow-hidden rounded-sm border border-border-strong">
+            {RANGE_PRESETS.map((r) => (
+              <button
+                key={r}
+                onClick={() => handleRange(r)}
+                aria-pressed={range === r}
+                className={cn(
+                  'border-r border-border-strong px-2 py-1 font-mono text-xs last:border-r-0',
+                  'transition-colors duration-fast',
+                  range === r
+                    ? 'bg-accent font-medium text-bg-app'
+                    : 'bg-bg-app text-text-secondary hover:bg-bg-hover hover:text-text-primary'
+                )}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => ingest.mutate({ asset: null })}
+            disabled={ingest.isPending}
+          >
+            {ingest.isPending ? 'Ingesting…' : 'Re-ingest all'}
+          </Button>
+        </div>
+      </div>
+      <MetricGrid metrics={metrics} loading={universeLoading} />
+    </div>
+  )
+}
