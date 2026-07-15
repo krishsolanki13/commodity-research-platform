@@ -1,0 +1,183 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient as qc } from '@/app/queryClient'
+import { goldEmaEvalFixture } from '../mocks/fixtures/signal-eval'
+import { strategyCatalogFixture } from '../mocks/fixtures/strategies'
+import ResearchWorkbenchScreen from '@/screens/research/ResearchWorkbench'
+
+const { mutateAsync } = vi.hoisted(() => ({
+  mutateAsync: vi.fn(),
+}))
+
+vi.mock('@/api/hooks/useEvaluateChainMutation', () => ({
+  useEvaluateChainMutation: (onProgress?: (p: unknown) => void) => ({
+    mutateAsync: (params: unknown) => {
+      onProgress?.({ step: 'features', stepIndex: 1 })
+      onProgress?.({ step: 'signal', stepIndex: 2 })
+      onProgress?.({ step: 'evaluation', stepIndex: 3 })
+      return mutateAsync(params) as Promise<unknown>
+    },
+    isPending: false,
+  }),
+}))
+
+function buildMockEvalResult() {
+  return {
+    features: {
+      asset: 'gold',
+      from_date: '2015-01-01',
+      to_date: '2026-07-15',
+      bars: 3,
+      specs: [
+        {
+          indicator_name: 'ema',
+          params: { period: 50 },
+          column_name: 'ema_50',
+          asset: 'gold',
+          computed_at: '2026-07-15T00:00:00Z',
+        },
+        {
+          indicator_name: 'ema',
+          params: { period: 200 },
+          column_name: 'ema_200',
+          asset: 'gold',
+          computed_at: '2026-07-15T00:00:00Z',
+        },
+      ],
+      columns: { index: [] as number[], columns: {} },
+    },
+    signal: {
+      asset: 'gold',
+      strategy: 'ema_crossover',
+      params: { fast_period: 50, slow_period: 200, signal_threshold: 0.0 },
+      bars: 3,
+      raw_signal: {
+        index: [1609459200000, 1609545600000, 1609632000000],
+        columns: { raw: [0.5, -0.3, 0.8] },
+      },
+      position_signal: {
+        index: [1609459200000, 1609545600000, 1609632000000],
+        columns: { position: [1, -1, 1] },
+      },
+    },
+    evaluation: goldEmaEvalFixture,
+    evaluatedAt: '2026-07-15T00:00:00Z',
+  }
+}
+
+function Wrapper({ initialEntry = '/research' }: { initialEntry?: string }) {
+  return (
+    <QueryClientProvider client={qc}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <Routes>
+          <Route path="/research" element={<ResearchWorkbenchScreen />} />
+          <Route path="/backtest/new" element={<div>Backtest New</div>} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
+  )
+}
+
+const emaUrl =
+  '/research?asset=gold&strategy=ema_crossover' +
+  '&params=' +
+  encodeURIComponent(JSON.stringify({ fast_period: 50, slow_period: 200, signal_threshold: 0.0 })) +
+  '&features=' +
+  encodeURIComponent(
+    JSON.stringify([
+      { name: 'ema', params: { period: 50 } },
+      { name: 'ema', params: { period: 200 } },
+    ])
+  )
+
+beforeEach(() => {
+  qc.clear()
+  mutateAsync.mockReset()
+  mutateAsync.mockResolvedValue(buildMockEvalResult())
+})
+
+describe('ResearchWorkbenchScreen', () => {
+  it('renders config rail with strategy picker loaded from API', async () => {
+    render(<Wrapper />)
+    await waitFor(
+      () => {
+        for (const s of strategyCatalogFixture.strategies) {
+          expect(screen.getAllByText(s.display_name).length).toBeGreaterThan(0)
+        }
+      },
+      { timeout: 5000 }
+    )
+  })
+
+  it('renders empty evidence canvas EmptyState before evaluation', () => {
+    render(<Wrapper />)
+    expect(screen.getByText('Evaluate to see results')).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /chart/i })).not.toBeInTheDocument()
+  })
+
+  it('ICGateStrip renders in locked/null state when no evaluation exists', () => {
+    render(<Wrapper />)
+    expect(screen.getByText(/Backtest without evaluation/i)).toBeInTheDocument()
+    const configureBtn = screen.getByRole('button', { name: /Configure backtest/i })
+    expect(configureBtn).toBeDisabled()
+  })
+
+  it('after evaluate chain completes, evidence canvas shows evaluation results', async () => {
+    const user = userEvent.setup()
+    render(<Wrapper initialEntry={emaUrl} />)
+
+    await waitFor(
+      () => expect(screen.getByRole('button', { name: /Evaluate signal/i })).toBeEnabled(),
+      { timeout: 5000 }
+    )
+
+    await user.click(screen.getByRole('button', { name: /Evaluate signal/i }))
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalled(), { timeout: 5000 })
+    await waitFor(
+      () => {
+        expect(screen.getByText('IC Decay')).toBeInTheDocument()
+        expect(screen.getAllByText('0.012').length).toBeGreaterThan(0)
+      },
+      { timeout: 5000 }
+    )
+  })
+
+  it('changing a param after evaluation causes staleness chip to appear', async () => {
+    const user = userEvent.setup()
+    render(<Wrapper initialEntry={emaUrl} />)
+
+    await waitFor(
+      () => expect(screen.getByRole('button', { name: /Evaluate signal/i })).toBeEnabled(),
+      { timeout: 5000 }
+    )
+    await user.click(screen.getByRole('button', { name: /Evaluate signal/i }))
+    await waitFor(() => expect(screen.getByText('IC Decay')).toBeInTheDocument(), {
+      timeout: 5000,
+    })
+
+    const fastInput = screen.getAllByRole('spinbutton')[0]
+    await user.clear(fastInput)
+    await user.type(fastInput, '40')
+    await user.tab()
+
+    await waitFor(
+      () => expect(screen.getByText(/Configuration changed — re-evaluate/i)).toBeInTheDocument(),
+      { timeout: 5000 }
+    )
+  })
+
+  it('?asset=gold in URL pre-selects Gold in AssetSelector', async () => {
+    render(<Wrapper initialEntry="/research?asset=gold" />)
+    await waitFor(
+      () => {
+        const combo = screen.getByRole('combobox')
+        expect(combo).toHaveTextContent('Gold')
+      },
+      { timeout: 5000 }
+    )
+  })
+})
