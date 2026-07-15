@@ -27,13 +27,45 @@ const emaCrossoverSchema: ParamSpec[] = [
   },
 ]
 
+const mixedSchema: ParamSpec[] = [
+  {
+    name: 'fast_period',
+    kind: 'int',
+    default: 50,
+    min: 5,
+    max: 100,
+    description: 'Fast EMA period',
+    unit: 'bars',
+  },
+  {
+    name: 'signal_threshold',
+    kind: 'float',
+    default: 0.0,
+    min: -1.0,
+    max: 1.0,
+    description: 'Signal threshold',
+  },
+  {
+    name: 'use_filter',
+    kind: 'bool',
+    default: false,
+    description: 'Apply filter',
+  },
+]
+
 const defaultValues = { fast_period: 50, slow_period: 200 }
+const mixedValues = { fast_period: 50, signal_threshold: 0.0, use_filter: false }
 
 describe('ParamForm', () => {
-  test('renders int param fields with correct labels', () => {
-    render(<ParamForm schema={emaCrossoverSchema} values={defaultValues} onChange={vi.fn()} />)
+  test('renders correct field types for int/float/bool params', () => {
+    render(<ParamForm schema={mixedSchema} values={mixedValues} onChange={vi.fn()} />)
     expect(screen.getByText('fast_period')).toBeInTheDocument()
-    expect(screen.getByText('slow_period')).toBeInTheDocument()
+    expect(screen.getByText('signal_threshold')).toBeInTheDocument()
+    expect(screen.getByText('use_filter')).toBeInTheDocument()
+
+    const numberInputs = screen.getAllByRole('spinbutton')
+    expect(numberInputs).toHaveLength(2) // int + float
+    expect(screen.getByRole('switch')).toBeInTheDocument() // bool → Switch
   })
 
   test('onChange called when valid value entered', async () => {

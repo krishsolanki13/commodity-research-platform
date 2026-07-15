@@ -29,6 +29,12 @@ export function AssetMetricsPanel({
   }, [ohlcv])
 
   // MetricStat requires { label, value, format }. LAST has no price format — use raw.
+  // When ohlcv yields a 1Y return, replace 1M% with 1Y% (6 metrics max, never 7).
+  const periodReturnMetric: MetricStatProps =
+    oneYearReturn !== null
+      ? { label: '1Y%', value: oneYearReturn, format: 'percent' }
+      : { label: '1M%', value: summary?.return_1m ?? null, format: 'percent' }
+
   const metrics: MetricStatProps[] = [
     {
       label: 'LAST',
@@ -47,16 +53,7 @@ export function AssetMetricsPanel({
       value: summary?.return_1w ?? null,
       format: 'percent',
     },
-    {
-      label: '1M%',
-      value: summary?.return_1m ?? null,
-      format: 'percent',
-    },
-    {
-      label: '1Y%',
-      value: oneYearReturn,
-      format: 'percent',
-    },
+    periodReturnMetric,
     {
       label: 'VOL 63D',
       value:

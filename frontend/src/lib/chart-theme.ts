@@ -39,6 +39,9 @@ export interface EChartsTheme {
   gridlineColor: string // --gray-800 at ~60% opacity (hex alpha)
   secondaryText: string // resolved --text-secondary
   monoFont: string // resolved --font-mono
+  icStrong: string // resolved --ic-strong
+  icWeak: string // resolved --ic-weak
+  icNoise: string // resolved --ic-noise
 }
 
 export function useChartTheme(): EChartsTheme {
@@ -87,6 +90,9 @@ export function useChartTheme(): EChartsTheme {
       gridlineColor: `${get('--gray-800')}99`,
       secondaryText: get('--text-secondary'),
       monoFont: get('--font-mono'),
+      icStrong: get('--ic-strong'),
+      icWeak: get('--ic-weak'),
+      icNoise: get('--ic-noise'),
     }
   }, [theme]) // 'theme' string is the memoization dependency
 }
