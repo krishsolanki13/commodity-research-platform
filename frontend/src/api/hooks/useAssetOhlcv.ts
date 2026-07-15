@@ -15,8 +15,7 @@ export function useAssetOhlcv(asset: string, params: OhlcvParams = {}) {
 
   return useQuery({
     queryKey: qk.assetOhlcv(asset, params),
-    queryFn: () =>
-      client.get<OhlcvResponse>(`/api/assets/${asset}/ohlcv${qs ? `?${qs}` : ''}`),
+    queryFn: () => client.get<OhlcvResponse>(`/api/assets/${asset}/ohlcv${qs ? `?${qs}` : ''}`),
     staleTime: 5 * 60 * 1000,
     enabled: !!asset,
   })

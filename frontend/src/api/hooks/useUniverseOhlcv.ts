@@ -7,14 +7,7 @@ import type { RangePreset } from '@/lib/date-range'
 
 type OhlcvResponse = components['schemas']['OhlcvResponse']
 
-export const ASSET_NAMES = [
-  'gold',
-  'silver',
-  'copper',
-  'wti',
-  'brent',
-  'natural_gas',
-] as const
+export const ASSET_NAMES = ['gold', 'silver', 'copper', 'wti', 'brent', 'natural_gas'] as const
 
 export type AssetName = (typeof ASSET_NAMES)[number]
 
