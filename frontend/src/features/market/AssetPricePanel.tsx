@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { useAssetOhlcv } from '@/api/hooks/useAssetOhlcv'
 import { useFeatureCompute } from '@/api/hooks/useFeatureCompute'
 import { PriceChart } from '@/components/charts/PriceChart'
 import type { OverlayData } from '@/components/charts/PriceChart'
+import type { ApiClientError } from '@/api/client'
 import { cn } from '@/lib/cn'
 import type { components } from '@/api/schema'
 
 type ColumnarSeries = components['schemas']['ColumnarSeries']
+type OhlcvResponse = components['schemas']['OhlcvResponse']
 
 const EMPTY_OHLCV: ColumnarSeries = { index: [], columns: {} }
 
@@ -24,6 +25,9 @@ interface AssetPricePanelProps {
   toDate: string
   displayName?: string
   ticker?: string
+  ohlcv?: OhlcvResponse | null
+  loading?: boolean
+  error?: ApiClientError | Error | null
 }
 
 export function AssetPricePanel({
@@ -32,18 +36,11 @@ export function AssetPricePanel({
   toDate,
   displayName,
   ticker,
+  ohlcv = null,
+  loading = false,
+  error = null,
 }: AssetPricePanelProps) {
   const [activePresets, setActivePresets] = useState<Set<PresetKey>>(new Set())
-
-  const {
-    data: ohlcv,
-    isLoading,
-    error,
-  } = useAssetOhlcv(asset, {
-    from_date: fromDate,
-    to_date: toDate,
-    downsample: 'view',
-  })
 
   // One useFeatureCompute call per preset — always called (Rules of Hooks)
   // enabled: false when preset is not active (hook accepts null)
@@ -126,7 +123,7 @@ export function AssetPricePanel({
         height="55vh"
         title={title}
         syncGroup="asset-detail"
-        loading={isLoading}
+        loading={loading}
         error={error}
       />
     </div>

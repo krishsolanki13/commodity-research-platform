@@ -1,6 +1,7 @@
 import { useParams, useSearchParams, Navigate, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useAssets } from '@/api/hooks/useAssets'
+import { useAssetOhlcv } from '@/api/hooks/useAssetOhlcv'
 import { useAssetSummary } from '@/api/hooks/useAssetSummary'
 import { useDataStatus } from '@/api/hooks/useDataStatus'
 import { AssetHeader } from '@/features/market/AssetHeader'
@@ -17,6 +18,10 @@ export default function AssetDetailScreen() {
   const [, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
+  // Full history date range — declared before hooks that use it (Rules of Hooks)
+  const fromDate = '2010-01-01'
+  const toDate = new Date().toISOString().slice(0, 10)
+
   const { data: universe } = useAssets()
   const {
     data: summary,
@@ -24,6 +29,15 @@ export default function AssetDetailScreen() {
     error: summaryError,
   } = useAssetSummary(asset ?? '')
   const { data: status } = useDataStatus(asset ?? undefined)
+  const {
+    data: ohlcv,
+    isLoading: ohlcvLoading,
+    error: ohlcvError,
+  } = useAssetOhlcv(asset ?? '', {
+    from_date: fromDate,
+    to_date: toDate,
+    downsample: 'view',
+  })
 
   // Sync asset to URL search params for ContextBar chip
   useEffect(() => {
@@ -65,14 +79,15 @@ export default function AssetDetailScreen() {
   const flags = assetStatus?.flags ?? []
   const hasFlags = flags.length > 0
 
-  // Full history date range
-  const fromDate = '2010-01-01'
-  const toDate = new Date().toISOString().slice(0, 10)
-
   return (
     <div className="flex flex-col gap-6 p-6">
       <AssetHeader asset={asset} metadata={metadata} />
-      <AssetMetricsPanel asset={asset} summary={summary ?? null} loading={summaryLoading} />
+      <AssetMetricsPanel
+        asset={asset}
+        summary={summary ?? null}
+        ohlcv={ohlcv ?? null}
+        loading={summaryLoading}
+      />
       {hasFlags && (
         <ValidationRibbon
           flags={flags}
@@ -87,6 +102,9 @@ export default function AssetDetailScreen() {
         toDate={toDate}
         displayName={metadata?.display_name}
         ticker={metadata?.ticker_continuous}
+        ohlcv={ohlcv ?? null}
+        loading={ohlcvLoading}
+        error={ohlcvError}
       />
       <div className="grid grid-cols-2 gap-6">
         <AssetDistributionPanel asset={asset} fromDate={fromDate} toDate={toDate} />

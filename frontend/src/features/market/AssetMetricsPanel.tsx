@@ -1,16 +1,33 @@
+import { useMemo } from 'react'
 import { MetricGrid } from '@/components/data/MetricGrid'
 import type { MetricStatProps } from '@/components/data/MetricStat'
 import type { components } from '@/api/schema'
 
 type AssetSummaryResponse = components['schemas']['AssetSummaryResponse']
+type OhlcvResponse = components['schemas']['OhlcvResponse']
 
 interface AssetMetricsPanelProps {
   asset: string
   summary: AssetSummaryResponse | null
+  ohlcv?: OhlcvResponse | null
   loading?: boolean
 }
 
-export function AssetMetricsPanel({ asset: _asset, summary, loading }: AssetMetricsPanelProps) {
+export function AssetMetricsPanel({
+  asset: _asset,
+  summary,
+  ohlcv,
+  loading,
+}: AssetMetricsPanelProps) {
+  const oneYearReturn = useMemo(() => {
+    const closes = ohlcv?.data?.columns?.close?.filter((v): v is number => v !== null)
+    if (!closes || closes.length < 252) return null
+    const oneYearAgo = closes[closes.length - 252]
+    const latest = closes[closes.length - 1]
+    if (!oneYearAgo || !latest) return null
+    return (latest - oneYearAgo) / oneYearAgo
+  }, [ohlcv])
+
   // MetricStat requires { label, value, format }. LAST has no price format — use raw.
   const metrics: MetricStatProps[] = [
     {
@@ -33,6 +50,11 @@ export function AssetMetricsPanel({ asset: _asset, summary, loading }: AssetMetr
     {
       label: '1M%',
       value: summary?.return_1m ?? null,
+      format: 'percent',
+    },
+    {
+      label: '1Y%',
+      value: oneYearReturn,
       format: 'percent',
     },
     {
