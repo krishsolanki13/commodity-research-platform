@@ -15,6 +15,8 @@ export type { EvaluateChainParams, EvaluateChainResult } from './useEvaluateChai
 export type { AssetName } from './useUniverseOhlcv'
 export { useBacktestLaunch } from './useBacktestLaunch'
 export { useBacktestStatus } from './useBacktestStatus'
+export { useRunCompare } from './useRunCompare'
+export { useRunDelete } from './useRunDelete'
 export { useRunDetail } from './useRunDetail'
 export { useRunSeries } from './useRunSeries'
 export { useRunTrades } from './useRunTrades'

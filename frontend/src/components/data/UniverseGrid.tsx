@@ -1,4 +1,4 @@
-﻿import { createColumnHelper } from '@tanstack/react-table'
+import { createColumnHelper } from '@tanstack/react-table'
 import { DataGrid } from '@/components/data/DataGrid'
 import { Sparkline } from '@/components/charts/Sparkline'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
@@ -27,7 +27,7 @@ export interface AssetRow {
 interface UniverseGridProps {
   rows: AssetRow[]
   onRowClick: (asset: string) => void
-  onHoverAsset?: (asset: string) => void // accepted but deferred (TD-F4-HOVER)
+  onHoverAsset?: (asset: string) => void
   loading?: boolean
   className?: string
 }
@@ -165,7 +165,13 @@ const columns = [
   }),
 ]
 
-export function UniverseGrid({ rows, onRowClick, loading, className }: UniverseGridProps) {
+export function UniverseGrid({
+  rows,
+  onRowClick,
+  onHoverAsset,
+  loading,
+  className,
+}: UniverseGridProps) {
   return (
     <TooltipProvider>
       <DataGrid<AssetRow>
@@ -173,6 +179,7 @@ export function UniverseGrid({ rows, onRowClick, loading, className }: UniverseG
         data={rows}
         getRowId={(r) => r.name}
         onRowClick={(r) => onRowClick(r.name)}
+        onHoverRow={onHoverAsset ? (row) => onHoverAsset(row.name) : undefined}
         loading={loading}
         toolbar={{ search: false, export: false }}
         emptyState={{ title: 'No market data', body: 'Ingest the universe to begin.' }}

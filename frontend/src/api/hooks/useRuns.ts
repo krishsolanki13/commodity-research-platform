@@ -11,6 +11,8 @@ export function useRuns(filters: RunFilters = {}) {
   if (filters.asset) qs.set('asset', filters.asset)
   if (filters.strategy) qs.set('strategy', filters.strategy)
   if (filters.sort) qs.set('sort', filters.sort)
+  if (filters.order) qs.set('order', filters.order)
+  if (filters.q) qs.set('q', filters.q)
   if (filters.page) qs.set('page', String(filters.page))
   if (filters.page_size) qs.set('page_size', String(filters.page_size))
   const qsStr = qs.toString()
