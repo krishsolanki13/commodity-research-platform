@@ -51,6 +51,7 @@ def create_app() -> FastAPI:
 
     from api.routers import assets as assets_router
     from api.routers import backtests as backtests_router
+    from api.routers import curves as curves_router
     from api.routers import features as features_router
     from api.routers import portfolio as portfolio_router
     from api.routers import runs as runs_router
@@ -64,6 +65,7 @@ def create_app() -> FastAPI:
     app.include_router(runs_router.router)
     app.include_router(signals_router.router)
     app.include_router(system_router.router)
+    app.include_router(curves_router.router)
 
     return app
 

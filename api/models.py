@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import math
 from typing import Any, Literal
 
 import pandas as pd
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 # ── Shared primitives ─────────────────────────────────────────────────────────
 
@@ -519,6 +520,73 @@ class ConfigResponse(BaseModel):
     config: dict[str, Any]  # config.yaml content, sanitized
     assets: dict[str, Any]  # assets.yaml content
     strategies: dict[str, Any]  # strategies.yaml content
+
+
+def _nan_to_none(v: float | None) -> float | None:
+    """Shared NaN→None serializer. JSON does not support NaN."""
+    if v is None or (isinstance(v, float) and math.isnan(v)):
+        return None
+    return v
+
+
+class CurvePointResponse(BaseModel):
+    ticker: str
+    close: float
+    days_to_delivery: int
+    data_date: str
+
+
+class FuturesCurveResponse(BaseModel):
+    asset: str
+    observation_date: str
+    regime: str
+    front_price: float | None
+    back_price: float | None
+    n_contracts: int
+    annualized_slope_pct: float | None
+    roll_yield_annualized: float | None
+    basis: float | None
+    basis_pct: float | None
+    points: list[CurvePointResponse]
+
+    @field_serializer(
+        "annualized_slope_pct",
+        "roll_yield_annualized",
+        "basis",
+        "basis_pct",
+        "front_price",
+        "back_price",
+    )
+    def _nan_float(self, v: float | None) -> float | None:
+        return _nan_to_none(v)
+
+
+class CurveAvailableResponse(BaseModel):
+    assets: list[str]
+
+
+class TermStructureSnapshotSummary(BaseModel):
+    observation_date: str
+    regime: str
+    annualized_slope_pct: float | None
+    roll_yield_annualized: float | None
+    basis: float | None
+    front_price: float | None
+    n_contracts: int
+
+    @field_serializer(
+        "annualized_slope_pct", "roll_yield_annualized", "basis", "front_price"
+    )
+    def _nan_float(self, v: float | None) -> float | None:
+        return _nan_to_none(v)
+
+
+class CurveHistoryResponse(BaseModel):
+    asset: str
+    from_date: str
+    to_date: str
+    n_snapshots: int
+    snapshots: list[TermStructureSnapshotSummary]
 
 
 # ── Serialization utilities ────────────────────────────────────────────────────

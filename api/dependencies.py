@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from api.exceptions import ApiError
+
+if TYPE_CHECKING:
+    from src.data.contract_loader import ContractDataLoader
+    from src.data.loader import DataLoader
 
 KNOWN_ASSETS: set[str] = {
     "gold",
@@ -42,3 +47,27 @@ def get_run_path_or_404(run_id: str) -> Path:
             status=404,
         )
     return run_dir
+
+
+def get_contract_loader() -> ContractDataLoader:
+    """Return a ContractDataLoader bound to the current Config.
+
+    Matches router pattern: Config.load() then instantiate loader per call.
+    Deferred imports avoid loading src/ at API startup.
+    """
+    from src.core.config import Config  # noqa: PLC0415
+    from src.data.contract_loader import ContractDataLoader  # noqa: PLC0415
+
+    return ContractDataLoader(Config.load())
+
+
+def get_data_loader() -> DataLoader:
+    """Return a DataLoader bound to the current Config.
+
+    Matches get_contract_loader() pattern: deferred imports,
+    Config.load() per call, no state.py global required.
+    """
+    from src.core.config import Config  # noqa: PLC0415
+    from src.data.loader import DataLoader  # noqa: PLC0415
+
+    return DataLoader(Config.load())
