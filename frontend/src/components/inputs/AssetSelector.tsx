@@ -10,6 +10,7 @@ interface AssetSelectorProps {
   multiple?: boolean
   disabled?: boolean
   className?: string
+  'aria-label'?: string
 }
 
 export function AssetSelector({
@@ -18,6 +19,7 @@ export function AssetSelector({
   assets,
   disabled,
   className,
+  'aria-label': ariaLabel,
 }: AssetSelectorProps) {
   const options = assets.map((a) => ({
     value: a.name,
@@ -33,6 +35,7 @@ export function AssetSelector({
       placeholder="Select an asset..."
       disabled={disabled}
       className={className}
+      aria-label={ariaLabel}
     />
   )
 }

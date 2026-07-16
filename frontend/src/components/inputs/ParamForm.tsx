@@ -116,6 +116,8 @@ export function ParamForm({
                 control={form.control}
                 render={({ field }) => (
                   <NumberInput
+                    id={p.name}
+                    aria-label={p.description ?? p.name}
                     value={field.value as number | ''}
                     onChange={(v) => {
                       field.onChange(v)

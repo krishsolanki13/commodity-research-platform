@@ -17,8 +17,12 @@ async function auditPage(page: Page) {
 
 test.describe('Accessibility Audit (Axe)', () => {
   test('Market Overview has no critical/serious a11y violations', async ({ page }) => {
+    // networkidle + cold multi-asset OHLCV can exceed the default 30s test timeout
+    test.setTimeout(60_000)
     await page.goto('/market')
-    await page.waitForSelector('table tbody tr', { timeout: 10_000 })
+    await page.waitForLoadState('networkidle')
+    // UniverseGrid/DataGrid renders a real <table>; cold API can exceed 10s
+    await page.waitForSelector('table tbody tr', { timeout: 20_000 })
     await auditPage(page)
   })
 
