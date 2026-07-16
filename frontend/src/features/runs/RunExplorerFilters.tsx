@@ -1,19 +1,8 @@
 import { useState, useEffect } from 'react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/select'
 import { cn } from '@/lib/cn'
 
-export type SortField =
-  | 'sharpe'
-  | 'max_drawdown'
-  | 'total_return'
-  | 'cagr'
-  | 'executed_at'
+export type SortField = 'sharpe' | 'max_drawdown' | 'total_return' | 'cagr' | 'executed_at'
 
 export interface RunExplorerFilterValues {
   strategy?: string
@@ -134,9 +123,7 @@ export function RunExplorerFilters({
       <button
         type="button"
         aria-label={filters.order === 'asc' ? 'Sort ascending' : 'Sort descending'}
-        onClick={() =>
-          onChange({ ...filters, order: filters.order === 'asc' ? 'desc' : 'asc' })
-        }
+        onClick={() => onChange({ ...filters, order: filters.order === 'asc' ? 'desc' : 'asc' })}
         className={cn(
           'flex h-8 w-8 items-center justify-center rounded-md border border-border-strong',
           'font-mono text-xs text-text-primary transition-colors',

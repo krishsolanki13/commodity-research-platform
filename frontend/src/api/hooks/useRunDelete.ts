@@ -9,8 +9,7 @@ export function useRunDelete() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (runId: string) =>
-      client.delete<DeleteResponse>(`/api/runs/${runId}`),
+    mutationFn: (runId: string) => client.delete<DeleteResponse>(`/api/runs/${runId}`),
     onSuccess: (_data, runId) => {
       void queryClient.invalidateQueries({ queryKey: ['runs'] })
       queryClient.removeQueries({ queryKey: qk.run(runId) })

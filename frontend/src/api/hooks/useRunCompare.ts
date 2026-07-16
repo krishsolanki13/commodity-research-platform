@@ -10,8 +10,7 @@ export function useRunCompare(ids: string[]) {
 
   return useQuery({
     queryKey: qk.runCompare(sortedIds),
-    queryFn: () =>
-      client.post<CompareResponse>('/api/runs/compare', { ids: sortedIds }),
+    queryFn: () => client.post<CompareResponse>('/api/runs/compare', { ids: sortedIds }),
     staleTime: Infinity,
     gcTime: 60 * 60 * 1000,
     enabled: ids.length >= 2,

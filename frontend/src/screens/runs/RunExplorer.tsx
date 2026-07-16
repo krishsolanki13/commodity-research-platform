@@ -69,9 +69,7 @@ export function RunExplorer() {
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b px-6 py-4">
         <h1 className="font-mono text-lg font-semibold text-text-emphasis">Run Explorer</h1>
-        <span className="font-mono text-xs text-text-secondary">
-          {data?.total ?? 0} runs total
-        </span>
+        <span className="font-mono text-xs text-text-secondary">{data?.total ?? 0} runs total</span>
       </div>
 
       <div className="border-b px-6 py-3">

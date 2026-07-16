@@ -20,7 +20,7 @@ export function ComparisonTray() {
       aria-label="Comparison basket"
       className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2"
     >
-      <div className="flex items-center gap-2 rounded-full border border-border-strong bg-bg-raised px-4 py-2 shadow-overlay">
+      <div className="shadow-overlay flex items-center gap-2 rounded-full border border-border-strong bg-bg-raised px-4 py-2">
         <span className="font-mono text-sm font-medium text-text-emphasis">
           {ids.length} {ids.length === 1 ? 'run' : 'runs'} selected
         </span>
@@ -35,11 +35,7 @@ export function ComparisonTray() {
               ? 'text-text-accent hover:text-accent-hover'
               : 'cursor-not-allowed text-text-disabled'
           )}
-          title={
-            ids.length < 2
-              ? 'Select at least 2 runs to compare'
-              : 'Compare selected runs'
-          }
+          title={ids.length < 2 ? 'Select at least 2 runs to compare' : 'Compare selected runs'}
         >
           Compare →
         </button>
@@ -52,9 +48,7 @@ export function ComparisonTray() {
         </button>
       </div>
       {ids.length === 1 && (
-        <span className="text-xs text-text-secondary pr-1">
-          Select 1 more run to compare
-        </span>
+        <span className="pr-1 text-xs text-text-secondary">Select 1 more run to compare</span>
       )}
     </div>
   )

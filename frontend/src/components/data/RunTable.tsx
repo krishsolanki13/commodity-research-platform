@@ -165,22 +165,24 @@ export function RunTable({
       enableSorting: false,
       cell: (info) => {
         const v = info.getValue()
-        return (
-          <span className="font-mono">{v === null ? '—' : Math.round(v).toString()}</span>
-        )
+        return <span className="font-mono">{v === null ? '—' : Math.round(v).toString()}</span>
       },
     }),
     colHelper.accessor('from_date', {
       header: 'FROM',
       enableSorting: false,
       cell: (info) => (
-        <span className="font-mono text-xs text-text-secondary">{fmt.isoDate(info.getValue())}</span>
+        <span className="font-mono text-xs text-text-secondary">
+          {fmt.isoDate(info.getValue())}
+        </span>
       ),
     }),
     colHelper.accessor('executed_at', {
       header: 'EXECUTED',
       cell: (info) => (
-        <span className="font-mono text-xs text-text-secondary">{fmt.isoDate(info.getValue())}</span>
+        <span className="font-mono text-xs text-text-secondary">
+          {fmt.isoDate(info.getValue())}
+        </span>
       ),
     }),
   ]

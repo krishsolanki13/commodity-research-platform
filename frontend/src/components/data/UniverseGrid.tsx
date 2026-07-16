@@ -165,7 +165,13 @@ const columns = [
   }),
 ]
 
-export function UniverseGrid({ rows, onRowClick, onHoverAsset, loading, className }: UniverseGridProps) {
+export function UniverseGrid({
+  rows,
+  onRowClick,
+  onHoverAsset,
+  loading,
+  className,
+}: UniverseGridProps) {
   return (
     <TooltipProvider>
       <DataGrid<AssetRow>

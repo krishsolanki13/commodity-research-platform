@@ -95,16 +95,13 @@ function AlignedCurvesChartInner({
             silent: true,
             itemStyle: { color: 'transparent' },
             data: [
-              [
-                { xAxis: Date.parse(intersectionFrom) },
-                { xAxis: Date.parse(intersectionTo) },
-              ],
+              [{ xAxis: Date.parse(intersectionFrom) }, { xAxis: Date.parse(intersectionTo) }],
             ],
           }
         : undefined
 
     if (markArea && echartsSeries.length > 0) {
-      const first = echartsSeries[0] as typeof echartsSeries[0] & { markArea?: unknown }
+      const first = echartsSeries[0] as (typeof echartsSeries)[0] & { markArea?: unknown }
       first.markArea = markArea
     }
 
@@ -190,20 +187,14 @@ export function AlignedCurvesChart({
   const theme = useChartTheme()
 
   return (
-    <ChartFrame
-      title={title}
-      height={height}
-      loading={loading}
-      error={error}
-      className={className}
-    >
+    <ChartFrame title={title} height={height} loading={loading} error={error} className={className}>
       <div className={cn('flex h-full flex-col')}>
         {mixedAssets && (
           <div className="mb-2 flex items-center gap-3 rounded-sm border-l-[3px] border-warn bg-bg-raised px-4 py-2">
             <AlertTriangle size={14} strokeWidth={1.75} className="shrink-0 text-warn" />
             <span className="text-xs text-text-primary">
-              Comparing across different assets — returns reflect both signal and commodity
-              price differences.
+              Comparing across different assets — returns reflect both signal and commodity price
+              differences.
             </span>
           </div>
         )}
