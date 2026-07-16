@@ -19,9 +19,9 @@ describe('useRuns', () => {
     expect(Array.isArray(result.current.data?.runs)).toBe(true)
   })
 
-  it('returns empty runs array without errors', async () => {
+  it('returns fixture runs without errors', async () => {
     const { result } = renderHook(() => useRuns({ asset: 'silver', page_size: 5 }), { wrapper })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data?.runs).toHaveLength(0)
+    expect(result.current.data?.runs).toHaveLength(2)
   })
 })

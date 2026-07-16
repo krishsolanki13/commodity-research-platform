@@ -6,6 +6,7 @@ import { indicatorHandlers } from './indicators'
 import { signalHandlers } from './signals'
 import { backtestHandlers } from './backtests'
 import { runsDetailHandlers } from './runs-detail'
+import { compareHandlers } from './compare'
 
 export const handlers = [
   ...assetHandlers,
@@ -16,4 +17,5 @@ export const handlers = [
   ...signalHandlers,
   ...backtestHandlers,
   ...runsDetailHandlers,
+  ...compareHandlers,
 ]
