@@ -189,6 +189,7 @@ export function WorkbenchConfigRail({
         value={urlState.asset ?? null}
         onChange={(asset) => setUrlState({ asset })}
         assets={assets ?? []}
+        aria-label="Select asset"
       />
       <DateRangePicker
         value={{ from: fromDate, to: toDate }}

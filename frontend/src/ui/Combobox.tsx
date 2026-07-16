@@ -19,6 +19,7 @@ interface ComboboxProps {
   searchPlaceholder?: string
   disabled?: boolean
   className?: string
+  'aria-label'?: string
 }
 
 export function Combobox({
@@ -29,6 +30,7 @@ export function Combobox({
   searchPlaceholder = 'Search...',
   disabled,
   className,
+  'aria-label': ariaLabel,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const selected = options.find((o) => o.value === value)
@@ -40,6 +42,7 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label={ariaLabel}
           disabled={disabled}
           className={cn('w-full justify-between', className)}
         >

@@ -10,6 +10,8 @@ interface NumberInputProps {
   disabled?: boolean
   placeholder?: string
   className?: string
+  id?: string
+  'aria-label'?: string
 }
 
 export function NumberInput({
@@ -22,10 +24,13 @@ export function NumberInput({
   disabled,
   placeholder,
   className,
+  id,
+  'aria-label': ariaLabel,
 }: NumberInputProps) {
   return (
     <div className="relative flex items-center">
       <input
+        id={id}
         type="number"
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
@@ -34,6 +39,7 @@ export function NumberInput({
         step={step}
         disabled={disabled}
         placeholder={placeholder}
+        aria-label={ariaLabel}
         className={cn(
           'h-[var(--input-height)] w-full rounded-sm border border-border-strong bg-bg-app',
           'px-3 font-mono text-sm text-text-primary',

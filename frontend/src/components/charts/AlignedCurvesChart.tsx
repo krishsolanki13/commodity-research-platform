@@ -62,9 +62,6 @@ function AlignedCurvesChartInner({
     chartRef.current = chart
     ctx?.onChartReady(chart)
 
-    // Use first series index as shared x-axis (aligned series share the same index)
-    const index = series[0]?.equityNormalized.index ?? []
-
     const echartsSeries = series.map((item, idx) => {
       const cols = item.equityNormalized.columns as Record<string, (number | null)[]>
       const values = cols['value'] ?? []
@@ -72,7 +69,7 @@ function AlignedCurvesChartInner({
       return {
         type: 'line' as const,
         name: item.label,
-        data: values,
+        data: item.equityNormalized.index.map((t, i) => [t, values[i] ?? null]),
         connectNulls: false,
         symbol: 'none',
         lineStyle: { color, width: 1.5 },
@@ -118,13 +115,17 @@ function AlignedCurvesChartInner({
         },
       },
       xAxis: {
-        type: 'category' as const,
-        data: index,
+        type: 'time',
         axisLabel: {
+          formatter: (value: number) => new Date(value).toISOString().slice(0, 10),
           color: theme.secondaryText,
           fontFamily: theme.monoFont,
           fontSize: 11,
+          hideOverlap: true,
         },
+        axisLine: { lineStyle: { color: theme.gridlineColor } },
+        axisTick: { lineStyle: { color: theme.gridlineColor } },
+        splitLine: { show: false },
       },
       yAxis: {
         axisLabel: {

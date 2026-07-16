@@ -1,11 +1,21 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useRuns, useStrategies } from '@/api/hooks'
+import { useRuns, useStrategies, useRunDelete } from '@/api/hooks'
 import { useComparisonBasket, MAX_COMPARISON_SIZE } from '@/stores/comparisonBasket'
 import { RunTable } from '@/components/data/RunTable'
 import { RunExplorerFilters } from '@/features/runs/RunExplorerFilters'
 import type { SortField } from '@/features/runs/RunExplorerFilters'
 import { Button } from '@/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/ui/alert-dialog'
 import { useUrlState } from '@/lib/useUrlState'
 import { z } from 'zod'
 
@@ -41,6 +51,8 @@ export function RunExplorer() {
   const { data: strategiesData } = useStrategies()
   const basket = useComparisonBasket()
   const navigate = useNavigate()
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const deleteRun = useRunDelete()
 
   const filterKey = JSON.stringify({ strategy, asset, sort, order, q })
   const prevFilterKey = useRef(filterKey)
@@ -58,6 +70,17 @@ export function RunExplorer() {
     const removed = basket.ids.filter((id) => !newIds.has(id))
     added.forEach((id) => basket.add(id))
     removed.forEach((id) => basket.remove(id))
+  }
+
+  function handleConfirmDelete() {
+    if (!deleteConfirmId) return
+    deleteRun.mutate(deleteConfirmId, {
+      onSuccess: () => {
+        basket.remove(deleteConfirmId)
+        setDeleteConfirmId(null)
+      },
+      onError: () => setDeleteConfirmId(null),
+    })
   }
 
   const strategies = (strategiesData?.strategies ?? []).map((s) => ({
@@ -105,8 +128,34 @@ export function RunExplorer() {
             title: 'No runs yet',
             body: 'Evaluate a signal in the Workbench, then launch your first backtest.',
           }}
+          onDeleteRequest={setDeleteConfirmId}
         />
       </div>
+
+      <AlertDialog
+        open={deleteConfirmId !== null}
+        onOpenChange={(open) => !open && setDeleteConfirmId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this run?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Run{' '}
+              <span className="font-mono text-text-emphasis">{deleteConfirmId?.slice(-20)}</span>{' '}
+              will be permanently deleted. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              style={{ backgroundColor: 'var(--loss-500)', color: 'white' }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {data && data.total > 50 && (
         <div className="flex items-center justify-end gap-2 border-t px-6 py-3">

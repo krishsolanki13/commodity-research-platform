@@ -1,11 +1,18 @@
 import type { components } from '@/api/schema'
 import type { SortingState } from '@tanstack/react-table'
 import { createColumnHelper } from '@tanstack/react-table'
+import { MoreHorizontal, Trash2 } from 'lucide-react'
 import { DataGrid } from '@/components/data/DataGrid'
 import { RunStatusBadge } from '@/components/data/RunStatusBadge'
 import { ICBandBadge } from '@/components/data/ICBandBadge'
 import { cn } from '@/lib/cn'
 import { fmt } from '@/lib/fmt'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/ui/dropdown-menu'
 
 type RunListItem = components['schemas']['RunListItem']
 
@@ -19,6 +26,7 @@ interface RunTableProps {
   onSort?: (state: SortingState) => void
   emptyState?: { title: string; body: string }
   className?: string
+  onDeleteRequest?: (runId: string) => void
 }
 
 const colHelper = createColumnHelper<RunListItem>()
@@ -47,6 +55,7 @@ export function RunTable({
   onSort,
   emptyState,
   className,
+  onDeleteRequest,
 }: RunTableProps) {
   const selectionCol = colHelper.display({
     id: '__select__',
@@ -184,6 +193,36 @@ export function RunTable({
           {fmt.isoDate(info.getValue())}
         </span>
       ),
+    }),
+    colHelper.display({
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      size: 40,
+      cell: ({ row }) =>
+        onDeleteRequest ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="rounded-sm p-1 text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+                aria-label="Run actions"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreHorizontal size={14} strokeWidth={1.75} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                style={{ color: 'var(--text-loss)' }}
+                onClick={() => onDeleteRequest(row.original.run_id)}
+              >
+                <Trash2 size={12} strokeWidth={1.75} className="mr-2" />
+                Delete run
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null,
     }),
   ]
 

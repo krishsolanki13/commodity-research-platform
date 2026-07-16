@@ -89,4 +89,22 @@ describe('RunExplorer', () => {
       expect(screen.getByText(/no runs yet/i)).toBeInTheDocument()
     )
   })
+
+  it('shows delete run action in row actions menu', async () => {
+    render(<Wrapper />)
+    await waitFor(() => screen.getAllByRole('button', { name: /run actions/i }))
+    const actionBtn = screen.getAllByRole('button', { name: /run actions/i })[0]
+    await userEvent.click(actionBtn)
+    expect(screen.getByText(/delete run/i)).toBeInTheDocument()
+  })
+
+  it('clicking delete run shows AlertDialog confirmation', async () => {
+    render(<Wrapper />)
+    await waitFor(() => screen.getAllByRole('button', { name: /run actions/i }))
+    const actionBtn = screen.getAllByRole('button', { name: /run actions/i })[0]
+    await userEvent.click(actionBtn)
+    await userEvent.click(screen.getByText(/delete run/i))
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+    expect(screen.getByText(/permanently deleted/i)).toBeInTheDocument()
+  })
 })
