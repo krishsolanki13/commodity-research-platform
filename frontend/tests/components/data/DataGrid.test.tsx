@@ -142,4 +142,19 @@ describe('DataGrid', () => {
     const rows = document.querySelectorAll('tbody tr')
     expect(rows.length).toBeLessThan(300)
   })
+
+  it('onHoverRow fires when mouse enters a row', async () => {
+    const onHover = vi.fn()
+    render(
+      <DataGrid
+        columns={columns}
+        data={SMALL_DATA}
+        getRowId={(r) => r.id}
+        onHoverRow={onHover}
+      />
+    )
+    const firstRow = document.querySelectorAll('tbody tr')[0]
+    if (firstRow) await userEvent.hover(firstRow)
+    expect(onHover).toHaveBeenCalledWith(SMALL_DATA[0])
+  })
 })

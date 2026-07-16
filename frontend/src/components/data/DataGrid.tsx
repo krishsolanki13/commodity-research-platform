@@ -105,6 +105,7 @@ interface DataGridProps<T> {
   data: T[]
   getRowId: (row: T) => string
   onRowClick?: (row: T) => void
+  onHoverRow?: (row: T) => void
   selection?: {
     ids: Set<string>
     onChange: (ids: Set<string>) => void
@@ -133,6 +134,7 @@ export function DataGrid<T>({
   data,
   getRowId,
   onRowClick,
+  onHoverRow,
   selection,
   toolbar,
   virtualized,
@@ -418,6 +420,7 @@ export function DataGrid<T>({
                     key={row.id}
                     data-focused={focusedIdx === virtualRow.index ? 'true' : undefined}
                     onClick={() => onRowClick?.(row.original)}
+                    onMouseEnter={onHoverRow ? () => onHoverRow(row.original) : undefined}
                     aria-selected={row.getIsSelected() || undefined}
                     className={cn(
                       'absolute left-0 top-0 w-full border-b border-border-default',

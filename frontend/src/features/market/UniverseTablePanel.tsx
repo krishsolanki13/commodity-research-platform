@@ -1,7 +1,10 @@
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAssets } from '@/api/hooks/useAssets'
 import { useDataStatus } from '@/api/hooks/useDataStatus'
 import { useUniverseOhlcv } from '@/api/hooks/useUniverseOhlcv'
+import { client } from '@/api/client'
+import { qk } from '@/api/queryKeys'
 import { UniverseGrid } from '@/components/data/UniverseGrid'
 import { EmptyState } from '@/components/layout/EmptyState'
 import { ErrorState } from '@/components/layout/ErrorState'
@@ -15,6 +18,7 @@ const rangeSchema = z.object({
 
 export function UniverseTablePanel() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { data: universe, isLoading, error } = useAssets()
   const { data: status } = useDataStatus()
   const [{ range }] = useUrlState(rangeSchema, { range: '1Y' })
@@ -49,6 +53,14 @@ export function UniverseTablePanel() {
     }
   })
 
+  function handleHoverAsset(assetName: string) {
+    void queryClient.prefetchQuery({
+      queryKey: qk.assetSummary(assetName),
+      queryFn: () => client.get(`/api/assets/${assetName}/summary`),
+      staleTime: 5 * 60 * 1000,
+    })
+  }
+
   const allMissing = rows.length > 0 && rows.every((r) => r.dataHealth === 'missing')
 
   if (allMissing) {
@@ -67,6 +79,7 @@ export function UniverseTablePanel() {
       onRowClick={(name) => {
         void navigate(`/market/${name}`)
       }}
+      onHoverAsset={handleHoverAsset}
       loading={isLoading}
     />
   )
