@@ -40,7 +40,11 @@ export const qk = {
   run: (runId: string) => ['runs', runId] as const,
   runSeries: (runId: string, name: 'equity_curve' | 'pnl' | 'positions') =>
     ['runs', runId, 'series', name] as const,
-  runTrades: (runId: string, page = 1) => ['runs', runId, 'trades', page] as const,
+  runTrades: (
+    runId: string,
+    page = 1,
+    filters: { direction?: 'long' | 'short'; forceClosed?: boolean } = {}
+  ) => ['runs', runId, 'trades', { page, ...filters }] as const,
 
   runCompare: (ids: string[]) => ['runs', 'compare', [...ids].sort()] as const,
 
