@@ -500,6 +500,7 @@ export default function Gallery() {
                   DataGrid — 300 rows, virtualized
                 </p>
                 <div
+                  data-testid="gallery-datagrid-300"
                   className="overflow-hidden rounded-md border border-border-default"
                   style={{ height: 220 }}
                 >

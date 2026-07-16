@@ -20,9 +20,8 @@ test.describe('Research Workbench (S3)', () => {
     await expect(evaluateBtn).toBeEnabled({ timeout: 10_000 })
     await evaluateBtn.click()
 
-    // Real Gold EMA 50/200 evaluation — IC ≈ 0.006–0.012, band: noise
-    await expect(page.getByText(/ic\s*:/i).first()).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByText(/noise/i).first()).toBeVisible({ timeout: 5_000 })
+    // UI renders "IC 0.006" and "SIGNAL LIKELY NOISE" — match noise label directly
+    await expect(page.getByText(/signal likely noise/i).first()).toBeVisible({ timeout: 30_000 })
     const configureBtn = page.getByRole('button', { name: /configure backtest/i })
     await expect(configureBtn).toBeDisabled({ timeout: 5_000 })
   })

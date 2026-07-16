@@ -69,9 +69,7 @@ function AlignedCurvesChartInner({
       return {
         type: 'line' as const,
         name: item.label,
-        data: item.equityNormalized.index.map(
-          (t, i) => [t, values[i] ?? null]
-        ),
+        data: item.equityNormalized.index.map((t, i) => [t, values[i] ?? null]),
         connectNulls: false,
         symbol: 'none',
         lineStyle: { color, width: 1.5 },

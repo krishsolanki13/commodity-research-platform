@@ -8,7 +8,8 @@ test.describe('Market Overview (S1)', () => {
     await page.waitForSelector('table tbody tr', { timeout: 20_000 })
     const rows = page.locator('table tbody tr')
     await expect(rows).toHaveCount(6, { timeout: 20_000 })
-    await expect(page.locator('text=/gold/i').first()).toBeVisible()
+    // Scope to table rows to avoid hidden off-viewport duplicates
+    await expect(rows.filter({ hasText: /gold/i }).first()).toBeVisible()
   })
 
   test('clicking Gold row navigates to Asset Detail', async ({ page }) => {

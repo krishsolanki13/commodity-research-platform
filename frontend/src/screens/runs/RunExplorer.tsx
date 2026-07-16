@@ -141,9 +141,7 @@ export function RunExplorer() {
             <AlertDialogTitle>Delete this run?</AlertDialogTitle>
             <AlertDialogDescription>
               Run{' '}
-              <span className="font-mono text-text-emphasis">
-                {deleteConfirmId?.slice(-20)}
-              </span>{' '}
+              <span className="font-mono text-text-emphasis">{deleteConfirmId?.slice(-20)}</span>{' '}
               will be permanently deleted. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
