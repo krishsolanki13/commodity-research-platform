@@ -112,3 +112,29 @@ def test_curves_history_returns_snapshots_with_correct_structure() -> None:
         assert "NaN" not in json.dumps(
             snap
         ), f"NaN in snapshot {snap['observation_date']} — must be null"
+
+
+def test_curves_snapshot_historical_observation_date() -> None:
+    """GET /api/curves/{asset}/snapshot?observation_date= returns
+    a snapshot for a specific historical date, not today.
+    """
+    assets = _available_assets()
+    asset_to_test = next((a for a in ["gold", "silver", "wti"] if a in assets), None)
+    if asset_to_test is None:
+        pytest.skip("None of gold/silver/wti have contract data")
+
+    # Request a historical date known to be within the contract data window
+    response = client.get(
+        f"/api/curves/{asset_to_test}/snapshot"
+        "?n_contracts=4&observation_date=2025-06-01"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["asset"] == asset_to_test
+    # observation_date in response must be on or before the requested date
+    # (builder returns nearest available date <= observation_date)
+    assert (
+        data["observation_date"] <= "2025-06-01"
+    ), f"Expected observation_date <= 2025-06-01, got {data['observation_date']}"
+    assert data["regime"] in ("contango", "backwardation", "flat")
+    assert "NaN" not in response.text
