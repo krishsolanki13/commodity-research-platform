@@ -180,4 +180,13 @@ describe('ResearchWorkbenchScreen', () => {
       { timeout: 5000 }
     )
   })
+
+  it('does not crash from regime chip presence after initial render', async () => {
+    render(<Wrapper />)
+    await waitFor(
+      () => expect(screen.queryAllByText(/EMA|Momentum|RSI|signal/i).length).toBeGreaterThan(0),
+      { timeout: 5000 }
+    )
+    expect(screen.queryByText(/crashed|Uncaught/i)).not.toBeInTheDocument()
+  })
 })

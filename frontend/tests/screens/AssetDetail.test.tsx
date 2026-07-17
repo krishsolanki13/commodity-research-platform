@@ -70,4 +70,13 @@ describe('AssetDetailScreen', () => {
     await waitFor(() => expect(screen.getByText('LAST')).toBeInTheDocument(), { timeout: 5000 })
     expect(screen.getByText('BARS')).toBeInTheDocument()
   })
+
+  it('renders without crash when regime chip data loads', async () => {
+    render(<Wrapper asset="gold" />)
+    await waitFor(
+      () => expect(screen.queryAllByText(/GC=F|gold/i).length).toBeGreaterThan(0),
+      { timeout: 5000 }
+    )
+    expect(screen.queryByText(/crashed|error thrown/i)).not.toBeInTheDocument()
+  })
 })

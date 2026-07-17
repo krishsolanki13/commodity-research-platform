@@ -4,6 +4,7 @@ import { useAssets } from '@/api/hooks/useAssets'
 import { useAssetOhlcv } from '@/api/hooks/useAssetOhlcv'
 import { useAssetSummary } from '@/api/hooks/useAssetSummary'
 import { useDataStatus } from '@/api/hooks/useDataStatus'
+import { useCurveAvailableAssets } from '@/api/hooks/useCurveAvailableAssets'
 import { AssetHeader } from '@/features/market/AssetHeader'
 import { AssetMetricsPanel } from '@/features/market/AssetMetricsPanel'
 import { AssetPricePanel } from '@/features/market/AssetPricePanel'
@@ -38,6 +39,8 @@ export default function AssetDetailScreen() {
     to_date: toDate,
     downsample: 'view',
   })
+  const { data: curveAvailable } = useCurveAvailableAssets()
+  const hasContractData = curveAvailable?.assets.includes(asset ?? '') ?? false
 
   // Sync asset to URL search params for ContextBar chip
   useEffect(() => {
@@ -81,7 +84,7 @@ export default function AssetDetailScreen() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <AssetHeader asset={asset} metadata={metadata} />
+      <AssetHeader asset={asset} metadata={metadata} hasContractData={hasContractData} />
       <AssetMetricsPanel
         asset={asset}
         summary={summary ?? null}

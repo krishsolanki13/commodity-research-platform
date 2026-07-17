@@ -8,6 +8,7 @@ import {
   intelligenceSchema,
   intelligenceDefaults,
 } from '@/features/intelligence/IntelligenceConfigRail'
+import { CurveDateControl } from '@/features/intelligence/CurveDateControl'
 import { CurveKPIRow } from '@/features/intelligence/CurveKPIRow'
 import { CurvePanel } from '@/features/intelligence/CurvePanel'
 import { BasisPanel } from '@/features/intelligence/BasisPanel'
@@ -16,7 +17,7 @@ import { ContractInventoryPanel } from '@/features/intelligence/ContractInventor
 
 export function FuturesCurve() {
   const [urlState] = useUrlState(intelligenceSchema, intelligenceDefaults)
-  const { asset, n_contracts, lookback } = urlState
+  const { asset, n_contracts, lookback, observation_date } = urlState
 
   const { data: available, isLoading: availableLoading } = useCurveAvailableAssets()
 
@@ -24,7 +25,7 @@ export function FuturesCurve() {
     data: snapshot,
     isLoading: snapshotLoading,
     error: snapshotError,
-  } = useCurveSnapshot(asset ?? '', n_contracts)
+  } = useCurveSnapshot(asset ?? '', n_contracts, observation_date)
 
   const dateParams = rangeToDateParams(lookback)
 
@@ -39,6 +40,8 @@ export function FuturesCurve() {
         availableAssets={available?.assets ?? []}
         loading={availableLoading}
       />
+
+      <CurveDateControl />
 
       {!asset && (
         <EmptyState
