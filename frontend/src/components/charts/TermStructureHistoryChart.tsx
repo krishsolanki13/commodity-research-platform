@@ -30,14 +30,74 @@ export interface TermStructureHistoryChartProps {
   error?: ApiClientError | Error | null
   syncGroup?: string
   onRetry?: () => void
+  showRegimeBands?: boolean // default: true
 }
 
 interface InnerProps {
   snapshots: TermStructureSnapshotSummary[]
   theme: EChartsTheme
+  showRegimeBands: boolean
 }
 
-function TermStructureHistoryChartInner({ snapshots, theme }: InnerProps) {
+function buildRegimeBands(
+  snapshots: TermStructureSnapshotSummary[],
+  amberHex: string,
+  gainHex: string,
+  gridIndex: number,
+) {
+  if (snapshots.length < 2) return []
+
+  const bands: Array<{ start: number; end: number; regime: string }> = []
+  let currentRegime = snapshots[0].regime
+  let startIdx = 0
+
+  for (let i = 1; i <= snapshots.length; i++) {
+    const snap = snapshots[i]
+    if (!snap || snap.regime !== currentRegime) {
+      bands.push({
+        start: new Date(snapshots[startIdx].observation_date).getTime(),
+        end: new Date(
+          snapshots[Math.min(i, snapshots.length - 1)].observation_date,
+        ).getTime(),
+        regime: currentRegime,
+      })
+      if (snap) {
+        currentRegime = snap.regime
+        startIdx = i
+      }
+    }
+  }
+
+  const toMarkAreaData = (bs: typeof bands) =>
+    bs.map((b) => [{ xAxis: b.start }, { xAxis: b.end }])
+
+  return [
+    {
+      type: 'line' as const,
+      data: [] as never[],
+      xAxisIndex: gridIndex,
+      yAxisIndex: gridIndex,
+      markArea: {
+        silent: true,
+        itemStyle: { color: amberHex + '26' }, // ~15% opacity — contango
+        data: toMarkAreaData(bands.filter((b) => b.regime === 'contango')),
+      },
+    },
+    {
+      type: 'line' as const,
+      data: [] as never[],
+      xAxisIndex: gridIndex,
+      yAxisIndex: gridIndex,
+      markArea: {
+        silent: true,
+        itemStyle: { color: gainHex + '1F' }, // ~12% opacity — backwardation
+        data: toMarkAreaData(bands.filter((b) => b.regime === 'backwardation')),
+      },
+    },
+  ]
+}
+
+function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: InnerProps) {
   const divRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<ECharts | null>(null)
   const ctx = useChartFrame()
@@ -168,6 +228,12 @@ function TermStructureHistoryChartInner({ snapshots, theme }: InnerProps) {
             lineStyle: { color: theme.secondaryText, type: 'solid', width: 1, opacity: 0.4 },
           },
         },
+        ...(showRegimeBands
+          ? [
+              ...buildRegimeBands(snapshots, theme.amber, theme.gain, 0),
+              ...buildRegimeBands(snapshots, theme.amber, theme.gain, 1),
+            ]
+          : []),
       ],
     })
 
@@ -178,7 +244,7 @@ function TermStructureHistoryChartInner({ snapshots, theme }: InnerProps) {
       window.removeEventListener('resize', handleResize)
       chart.dispose()
     }
-  }, [snapshots, theme, ctx])
+  }, [snapshots, theme, showRegimeBands, ctx])
 
   return <div ref={divRef} style={{ width: '100%', height: '100%' }} />
 }
@@ -191,21 +257,42 @@ export function TermStructureHistoryChart({
   error,
   syncGroup,
   onRetry,
+  showRegimeBands = true,
 }: TermStructureHistoryChartProps) {
   const theme = useChartTheme()
   const isEmpty = !loading && !error && snapshots.length === 0
 
   return (
-    <ChartFrame
-      height={height}
-      title={title}
-      loading={loading}
-      error={error}
-      empty={isEmpty ? { message: 'No history data available for this asset.' } : undefined}
-      syncGroup={syncGroup}
-      onRetry={onRetry}
-    >
-      {!isEmpty && <TermStructureHistoryChartInner snapshots={snapshots} theme={theme} />}
-    </ChartFrame>
+    <>
+      <ChartFrame
+        height={height}
+        title={title}
+        loading={loading}
+        error={error}
+        empty={isEmpty ? { message: 'No history data available for this asset.' } : undefined}
+        syncGroup={syncGroup}
+        onRetry={onRetry}
+      >
+        {!isEmpty && (
+          <TermStructureHistoryChartInner
+            snapshots={snapshots}
+            theme={theme}
+            showRegimeBands={showRegimeBands}
+          />
+        )}
+      </ChartFrame>
+      {showRegimeBands !== false && snapshots.length >= 2 && (
+        <div className="flex items-center gap-4 mt-2 text-xs text-text-secondary px-2">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-6 rounded-sm bg-accent-fill opacity-60" />
+            Contango
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-6 rounded-sm bg-gain-fill opacity-50" />
+            Backwardation
+          </span>
+        </div>
+      )}
+    </>
   )
 }
