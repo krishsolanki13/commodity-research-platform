@@ -23,6 +23,7 @@ export const intelligenceSchema = z.object({
   asset: z.string().optional(),
   n_contracts: z.coerce.number().int().min(1).max(6).default(6),
   lookback: z.enum(['1Y', '3Y', '5Y', 'MAX']).default('3Y'),
+  observation_date: z.string().optional(),
 })
 
 export type IntelligenceState = z.infer<typeof intelligenceSchema>
@@ -30,6 +31,7 @@ export type IntelligenceState = z.infer<typeof intelligenceSchema>
 export const intelligenceDefaults: IntelligenceState = {
   n_contracts: 6,
   lookback: '3Y',
+  observation_date: undefined,
 }
 
 const LOOKBACK_OPTIONS = ['1Y', '3Y', '5Y', 'MAX'] as const

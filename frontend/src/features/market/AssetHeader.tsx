@@ -1,14 +1,16 @@
 import { Link } from 'react-router-dom'
 import type { components } from '@/api/schema'
+import { RegimeContextChip } from '@/features/intelligence/RegimeContextChip'
 
 type AssetMetadata = components['schemas']['AssetMetadata']
 
 interface AssetHeaderProps {
   asset: string
   metadata: AssetMetadata | null
+  hasContractData?: boolean
 }
 
-export function AssetHeader({ asset, metadata }: AssetHeaderProps) {
+export function AssetHeader({ asset, metadata, hasContractData }: AssetHeaderProps) {
   return (
     <div className="flex items-start justify-between">
       <div>
@@ -32,7 +34,7 @@ export function AssetHeader({ asset, metadata }: AssetHeaderProps) {
               {metadata.ticker_continuous} · {metadata.exchange} · USD/{metadata.unit}
             </span>
           )}
-          {/* Phase 2 RegimeBadge placeholder — nothing rendered in F4 */}
+          {hasContractData && <RegimeContextChip asset={asset} compact={true} />}
         </div>
       </div>
       <Link

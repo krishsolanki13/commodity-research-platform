@@ -34,4 +34,18 @@ describe('useCurveSnapshot', () => {
     // enabled: !!asset evaluates to false for empty string
     expect(result.current.fetchStatus).toBe('idle')
   })
+
+  it('includes observationDate in query key when provided', async () => {
+    const { wrapper, queryClient: qc } = createWrapper()
+    const { result } = renderHook(
+      () => useCurveSnapshot('gold', 4, '2025-01-02'),
+      { wrapper }
+    )
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data?.asset).toBe('gold')
+    const key = qc.getQueryCache().find({
+      queryKey: ['curves', 'gold', 'snapshot', { nContracts: 4, observationDate: '2025-01-02' }],
+    })
+    expect(key).toBeDefined()
+  })
 })

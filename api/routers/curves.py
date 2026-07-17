@@ -70,6 +70,11 @@ async def get_available_assets() -> CurveAvailableResponse:
 async def get_curve_snapshot(
     asset: str,
     n_contracts: int = Query(default=6, ge=1, le=12),
+    observation_date: str | None = Query(
+        default=None,
+        description="ISO date for historical snapshot, e.g. 2025-01-01. "
+        "Defaults to today when absent.",
+    ),
     data_loader: DataLoader = Depends(get_data_loader),  # noqa: B008
 ) -> FuturesCurveResponse:
     """Construct the forward curve for {asset} as of the latest available date.
@@ -95,10 +100,23 @@ async def get_curve_snapshot(
             ),
         )
 
+    # Parse observation_date if provided; default to today (existing behavior)
+    if observation_date is not None:
+        try:
+            obs_date = date.fromisoformat(observation_date)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid observation_date format: {exc}. "
+                f"Expected ISO date, e.g. 2025-01-01.",
+            ) from exc
+    else:
+        obs_date = date.today()
+
     try:
         curve = builder.build(
             asset=asset,
-            observation_date=date.today(),
+            observation_date=obs_date,
             n_contracts=n_contracts,
         )
     except ValueError as exc:

@@ -36,4 +36,16 @@ describe('TermStructureHistoryChart', () => {
       ),
     ).not.toThrow()
   })
+
+  it('renders regime bands without throwing with mixed-regime history', () => {
+    expect(() =>
+      render(
+        <TermStructureHistoryChart
+          snapshots={goldCurveHistoryFixture.snapshots}
+          height={300}
+          showRegimeBands={true}
+        />,
+      ),
+    ).not.toThrow()
+  })
 })
