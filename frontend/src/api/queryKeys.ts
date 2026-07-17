@@ -57,4 +57,10 @@ export const qk = {
 
   dataStatus: (asset?: string) => ['system', 'data-status', { asset }] as const,
   config: () => ['system', 'config'] as const,
+
+  curveAvailable: () => ['curves', 'available'] as const,
+  curveSnapshot: (asset: string, nContracts: number) =>
+    ['curves', asset, 'snapshot', { nContracts }] as const,
+  curveHistory: (asset: string, from: string, to: string, nContracts: number) =>
+    ['curves', asset, 'history', { from, to, nContracts }] as const,
 } as const

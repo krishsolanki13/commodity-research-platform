@@ -28,7 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'research', label: 'Research', icon: FlaskConical, route: '/research', phase: null },
   { id: 'backtest', label: 'Backtest', icon: Zap, route: '/backtest/new', phase: null },
   { id: 'runs', label: 'Runs', icon: Layers, route: '/runs', phase: null },
-  { id: 'intel', label: 'Intelligence', icon: Globe, route: '/intelligence', phase: 'Phase 2' },
+  { id: 'intel', label: 'Intelligence', icon: Globe, route: '/intelligence', phase: null },
   { id: 'portfolio', label: 'Portfolio', icon: BarChart2, route: '/portfolio', phase: 'Phase 3' },
   { id: 'system', label: 'System', icon: Database, route: '/system/data', phase: null },
 ]
