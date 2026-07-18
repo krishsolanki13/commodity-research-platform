@@ -22,6 +22,11 @@ const RunExplorer = React.lazy(() => import('@/screens/runs/RunExplorer'))
 const RunComparison = React.lazy(() => import('@/screens/runs/RunComparison'))
 const RunDetail = React.lazy(() => import('@/screens/runs/RunDetail'))
 const FuturesCurve = React.lazy(() => import('@/screens/intelligence/FuturesCurve'))
+const CurveComparison = React.lazy(() =>
+  import('@/screens/intelligence/CurveComparison').then((module) => ({
+    default: module.CurveComparison,
+  }))
+)
 const DataManager = React.lazy(() => import('@/screens/system/DataManager'))
 const Configuration = React.lazy(() => import('@/screens/system/Configuration'))
 const NotFound = React.lazy(() => import('@/screens/NotFound'))
@@ -40,6 +45,7 @@ export const router = createBrowserRouter([
       { path: '/runs/compare', element: wrap(<RunComparison />) },
       { path: '/runs/:runId', element: wrap(<RunDetail />) },
       { path: '/intelligence', element: wrap(<FuturesCurve />) },
+      { path: '/intelligence/compare', element: wrap(<CurveComparison />) },
       { path: '/system/data', element: wrap(<DataManager />) },
       { path: '/system/config', element: wrap(<Configuration />) },
       { path: '*', element: wrap(<NotFound />) },

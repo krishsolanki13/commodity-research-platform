@@ -1,23 +1,12 @@
 import { z } from 'zod'
 import { cn } from '@/lib/cn'
+import { displayName } from '@/lib/commodity'
 import { useUrlState } from '@/lib/useUrlState'
 import { AssetSelector } from '@/components/inputs/AssetSelector'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/select'
 import type { components } from '@/api/schema'
 
 type AssetMetadata = components['schemas']['AssetMetadata']
-
-function displayName(name: string): string {
-  const map: Record<string, string> = {
-    gold: 'Gold',
-    silver: 'Silver',
-    copper: 'Copper',
-    wti: 'WTI Crude',
-    brent: 'Brent Crude',
-    natural_gas: 'Natural Gas',
-  }
-  return map[name] ?? name.charAt(0).toUpperCase() + name.slice(1)
-}
 
 export const intelligenceSchema = z.object({
   asset: z.string().optional(),

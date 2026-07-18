@@ -78,4 +78,22 @@ test.describe('Accessibility Audit (Axe)', () => {
     await page.waitForLoadState('networkidle')
     await auditPage(page)
   })
+
+  test('Curve Comparison screen has no critical/serious a11y violations', async ({ page }) => {
+    const check = await page.request.get('http://localhost:8000/api/curves/available')
+    if (!check.ok()) {
+      test.skip()
+      return
+    }
+    const { assets } = (await check.json()) as { assets?: string[] }
+    if (!assets || assets.length < 2) {
+      test.skip()
+      return
+    }
+
+    const [a1, a2] = assets
+    await page.goto(`/intelligence/compare?assets=${a1},${a2}&n_contracts=4`)
+    await page.waitForLoadState('networkidle')
+    await auditPage(page)
+  })
 })

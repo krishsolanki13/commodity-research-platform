@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { rangeToDateParams } from '@/lib/date-range'
 import { useUrlState } from '@/lib/useUrlState'
 import { useCurveAvailableAssets } from '@/api/hooks/useCurveAvailableAssets'
@@ -33,7 +34,17 @@ export function FuturesCurve() {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-text-emphasis">Futures Curve</h1>
-        <span className="text-xs text-text-secondary">Commodity Intelligence · Phase 2</span>
+        <div className="flex items-center gap-4">
+          {asset && (
+            <Link
+              to={`/intelligence/compare?assets=${asset}&n_contracts=${n_contracts}`}
+              className="font-mono text-xs text-text-accent hover:underline"
+            >
+              Compare assets →
+            </Link>
+          )}
+          <span className="text-xs text-text-secondary">Commodity Intelligence · Phase 2</span>
+        </div>
       </div>
 
       <IntelligenceConfigRail
