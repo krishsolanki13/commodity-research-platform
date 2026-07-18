@@ -17,8 +17,7 @@ export function DateScrubber({
   disabled = false,
   className,
 }: DateScrubberProps) {
-  const hideDateInput =
-    minDate !== undefined && maxDate !== undefined && minDate > maxDate
+  const hideDateInput = minDate !== undefined && maxDate !== undefined && minDate > maxDate
 
   return (
     <div className={cn('flex items-center gap-2', className)}>
@@ -29,11 +28,11 @@ export function DateScrubber({
         aria-pressed={value === null}
         disabled={disabled}
         className={cn(
-          'rounded-sm px-2 py-1 text-xs font-mono transition-colors duration-fast',
-          'disabled:opacity-50 disabled:cursor-not-allowed',
+          'rounded-sm px-2 py-1 font-mono text-xs transition-colors duration-fast',
+          'disabled:cursor-not-allowed disabled:opacity-50',
           value === null
-            ? 'bg-accent text-bg-app font-medium'
-            : 'bg-bg-app text-text-secondary border border-border-strong hover:bg-bg-hover',
+            ? 'bg-accent font-medium text-bg-app'
+            : 'border border-border-strong bg-bg-app text-text-secondary hover:bg-bg-hover'
         )}
       >
         Latest
@@ -43,16 +42,16 @@ export function DateScrubber({
         <input
           type="date"
           value={value ?? ''}
-          onChange={e => onChange(e.target.value || null)}
+          onChange={(e) => onChange(e.target.value || null)}
           min={minDate}
           max={maxDate}
           disabled={disabled || value === null}
           aria-label="Observation date"
           className={cn(
-            'rounded-sm border border-border-strong bg-bg-app px-2 py-1 text-xs font-mono',
-            'text-text-primary disabled:opacity-50 disabled:cursor-not-allowed',
+            'rounded-sm border border-border-strong bg-bg-app px-2 py-1 font-mono text-xs',
+            'text-text-primary disabled:cursor-not-allowed disabled:opacity-50',
             'focus:outline-none focus:ring-1 focus:ring-focus-ring',
-            '[color-scheme:dark]',
+            '[color-scheme:dark]'
           )}
         />
       )}

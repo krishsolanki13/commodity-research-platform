@@ -8,18 +8,13 @@ import type { components } from '@/api/schema'
 // Update the alias below if the actual schema name differs.
 type FuturesCurveResponse = components['schemas']['FuturesCurveResponse']
 
-export function useCurveSnapshot(
-  asset: string,
-  nContracts = 6,
-  observationDate?: string
-) {
+export function useCurveSnapshot(asset: string, nContracts = 6, observationDate?: string) {
   const qs = new URLSearchParams({ n_contracts: String(nContracts) })
   if (observationDate) qs.set('observation_date', observationDate)
 
   return useQuery({
     queryKey: qk.curveSnapshot(asset, nContracts, observationDate),
-    queryFn: () =>
-      client.get<FuturesCurveResponse>(`/api/curves/${asset}/snapshot?${qs}`),
+    queryFn: () => client.get<FuturesCurveResponse>(`/api/curves/${asset}/snapshot?${qs}`),
     staleTime: observationDate ? Infinity : 5 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
     enabled: !!asset,

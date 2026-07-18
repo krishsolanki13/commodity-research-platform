@@ -17,14 +17,14 @@ export default defineConfig({
     {
       command: 'cd .. && make dev',
       url: 'http://localhost:8000/api/health',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
       timeout: 60_000,
       stderr: 'ignore',
     },
     {
       command: 'npm run dev',
       url: 'http://localhost:5173',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
       timeout: 30_000,
     },
   ],

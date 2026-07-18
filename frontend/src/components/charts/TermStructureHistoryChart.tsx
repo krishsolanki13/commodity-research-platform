@@ -43,7 +43,7 @@ function buildRegimeBands(
   snapshots: TermStructureSnapshotSummary[],
   amberHex: string,
   gainHex: string,
-  gridIndex: number,
+  gridIndex: number
 ) {
   if (snapshots.length < 2) return []
 
@@ -56,9 +56,7 @@ function buildRegimeBands(
     if (!snap || snap.regime !== currentRegime) {
       bands.push({
         start: new Date(snapshots[startIdx].observation_date).getTime(),
-        end: new Date(
-          snapshots[Math.min(i, snapshots.length - 1)].observation_date,
-        ).getTime(),
+        end: new Date(snapshots[Math.min(i, snapshots.length - 1)].observation_date).getTime(),
         regime: currentRegime,
       })
       if (snap) {
@@ -68,8 +66,7 @@ function buildRegimeBands(
     }
   }
 
-  const toMarkAreaData = (bs: typeof bands) =>
-    bs.map((b) => [{ xAxis: b.start }, { xAxis: b.end }])
+  const toMarkAreaData = (bs: typeof bands) => bs.map((b) => [{ xAxis: b.start }, { xAxis: b.end }])
 
   return [
     {
@@ -282,12 +279,12 @@ export function TermStructureHistoryChart({
         )}
       </ChartFrame>
       {showRegimeBands !== false && snapshots.length >= 2 && (
-        <div className="flex items-center gap-4 mt-2 text-xs text-text-secondary px-2">
-          <span className="flex items-center gap-1.5">
+        <div className="mt-2 flex items-center gap-4 px-2 text-xs text-text-secondary">
+          <span className="gap-1.5 flex items-center">
             <span className="inline-block h-3 w-6 rounded-sm bg-accent-fill opacity-60" />
             Contango
           </span>
-          <span className="flex items-center gap-1.5">
+          <span className="gap-1.5 flex items-center">
             <span className="inline-block h-3 w-6 rounded-sm bg-gain-fill opacity-50" />
             Backwardation
           </span>

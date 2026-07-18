@@ -25,7 +25,7 @@ export function CurveDateControl() {
     asset ?? '',
     '2023-01-01',
     today,
-    2,
+    2
   )
 
   if (!asset) return null
@@ -35,7 +35,7 @@ export function CurveDateControl() {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs text-text-secondary font-mono">Observation date:</span>
+      <span className="font-mono text-xs text-text-secondary">Observation date:</span>
       <DateScrubber
         value={observation_date ?? null}
         onChange={(date) => setUrlState({ observation_date: date ?? undefined })}
@@ -44,7 +44,7 @@ export function CurveDateControl() {
         disabled={historyLoading}
       />
       {observation_date && (
-        <span className="text-xs text-text-disabled font-mono">{observation_date}</span>
+        <span className="font-mono text-xs text-text-disabled">{observation_date}</span>
       )}
     </div>
   )
