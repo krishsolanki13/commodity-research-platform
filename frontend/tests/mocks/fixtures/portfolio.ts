@@ -36,6 +36,67 @@ export const portfolioSummaryFixture = {
   },
 }
 
+export const portfolioAssetsFixture = {
+  run_id: MOCK_PORTFOLIO_RUN_ID,
+  assets: [
+    {
+      asset: 'gold',
+      total_return: 0.0425,
+      cagr: 0.0036,
+      sharpe: 0.301,
+      max_drawdown: -0.068,
+      n_trades: 19,
+      absolute_pnl: 42_500,
+    },
+    {
+      asset: 'silver',
+      total_return: -0.0082,
+      cagr: -0.0007,
+      sharpe: -0.082,
+      max_drawdown: -0.094,
+      n_trades: 22,
+      absolute_pnl: -8_200,
+    },
+    {
+      asset: 'copper',
+      total_return: 0.0121,
+      cagr: 0.001,
+      sharpe: 0.142,
+      max_drawdown: -0.071,
+      n_trades: 18,
+      absolute_pnl: 12_100,
+    },
+    {
+      asset: 'wti',
+      total_return: -0.0034,
+      cagr: -0.0003,
+      sharpe: -0.041,
+      max_drawdown: -0.088,
+      n_trades: 21,
+      absolute_pnl: -3_400,
+    },
+    {
+      asset: 'brent',
+      total_return: 0.0089,
+      cagr: 0.0007,
+      sharpe: 0.098,
+      max_drawdown: -0.079,
+      n_trades: 20,
+      absolute_pnl: 8_900,
+    },
+    {
+      asset: 'natural_gas',
+      total_return: -0.0169,
+      cagr: -0.0014,
+      sharpe: -0.178,
+      max_drawdown: -0.154,
+      n_trades: 27,
+      absolute_pnl: -16_900,
+    },
+  ],
+  skipped_assets: [],
+}
+
 export const portfolioStatusCompleteFixture = {
   run_id: MOCK_PORTFOLIO_RUN_ID,
   status: 'complete',
