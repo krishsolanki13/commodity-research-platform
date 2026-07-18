@@ -19,15 +19,16 @@ describe('SidebarNav', () => {
     expect(screen.getByRole('link', { name: /backtest/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /runs/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /intelligence/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /portfolio/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /system/i })).toBeInTheDocument()
-    // Phase-gated items render as divs, not links
-    expect(screen.getByText(/portfolio/i)).toBeInTheDocument()
   })
 
-  test('phase-gated items have aria-disabled="true"', () => {
-    renderNav()
-    const portfolio = screen.getByText(/portfolio/i).closest('[aria-disabled]')
-    expect(portfolio).toHaveAttribute('aria-disabled', 'true')
+  test('portfolio item links to the portfolio analytics screen', () => {
+    renderNav('/portfolio')
+    expect(screen.getByRole('link', { name: /portfolio/i })).toHaveAttribute(
+      'aria-current',
+      'page'
+    )
   })
 
   test('active route item has aria-current="page"', () => {

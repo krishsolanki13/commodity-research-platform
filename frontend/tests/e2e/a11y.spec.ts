@@ -96,4 +96,10 @@ test.describe('Accessibility Audit (Axe)', () => {
     await page.waitForLoadState('networkidle')
     await auditPage(page)
   })
+
+  test('Portfolio Analytics has no critical/serious a11y violations', async ({ page }) => {
+    await page.goto('/portfolio')
+    await page.waitForLoadState('networkidle')
+    await auditPage(page)
+  })
 })

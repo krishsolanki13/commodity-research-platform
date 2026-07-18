@@ -29,7 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'backtest', label: 'Backtest', icon: Zap, route: '/backtest/new', phase: null },
   { id: 'runs', label: 'Runs', icon: Layers, route: '/runs', phase: null },
   { id: 'intel', label: 'Intelligence', icon: Globe, route: '/intelligence', phase: null },
-  { id: 'portfolio', label: 'Portfolio', icon: BarChart2, route: '/portfolio', phase: 'Phase 3' },
+  { id: 'portfolio', label: 'Portfolio', icon: BarChart2, route: '/portfolio', phase: null },
   { id: 'system', label: 'System', icon: Database, route: '/system/data', phase: null },
 ]
 

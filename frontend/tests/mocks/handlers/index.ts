@@ -8,6 +8,7 @@ import { backtestHandlers } from './backtests'
 import { runsDetailHandlers } from './runs-detail'
 import { compareHandlers } from './compare'
 import { curveHandlers } from './curves'
+import { portfolioHandlers } from './portfolio'
 
 export const handlers = [
   ...assetHandlers,
@@ -20,4 +21,5 @@ export const handlers = [
   ...runsDetailHandlers,
   ...compareHandlers,
   ...curveHandlers,
+  ...portfolioHandlers,
 ]
