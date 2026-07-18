@@ -21,6 +21,7 @@ const StrategyBuilder = React.lazy(() => import('@/screens/backtest/StrategyBuil
 const RunExplorer = React.lazy(() => import('@/screens/runs/RunExplorer'))
 const RunComparison = React.lazy(() => import('@/screens/runs/RunComparison'))
 const RunDetail = React.lazy(() => import('@/screens/runs/RunDetail'))
+const PortfolioAnalytics = React.lazy(() => import('@/screens/portfolio/PortfolioAnalytics'))
 const FuturesCurve = React.lazy(() => import('@/screens/intelligence/FuturesCurve'))
 const CurveComparison = React.lazy(() =>
   import('@/screens/intelligence/CurveComparison').then((module) => ({
@@ -44,6 +45,7 @@ export const router = createBrowserRouter([
       { path: '/runs', element: wrap(<RunExplorer />) },
       { path: '/runs/compare', element: wrap(<RunComparison />) },
       { path: '/runs/:runId', element: wrap(<RunDetail />) },
+      { path: '/portfolio', element: wrap(<PortfolioAnalytics />) },
       { path: '/intelligence', element: wrap(<FuturesCurve />) },
       { path: '/intelligence/compare', element: wrap(<CurveComparison />) },
       { path: '/system/data', element: wrap(<DataManager />) },
