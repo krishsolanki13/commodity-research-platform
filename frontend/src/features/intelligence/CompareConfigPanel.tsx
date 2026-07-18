@@ -27,7 +27,7 @@ export function CompareConfigPanel() {
   }
 
   return (
-    <div className="flex w-64 shrink-0 flex-col gap-4 border-r border-border-default p-4">
+    <div className="w-64 flex shrink-0 flex-col gap-4 border-r border-border-default p-4">
       <h2 className="text-sm font-semibold text-text-emphasis">Select Assets (max 4)</h2>
 
       <div className="flex flex-col gap-2" aria-busy={isLoading}>
@@ -62,7 +62,7 @@ export function CompareConfigPanel() {
 
       <Separator />
 
-      <div className="flex flex-col gap-1.5">
+      <div className="gap-1.5 flex flex-col">
         <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           Contracts
         </span>

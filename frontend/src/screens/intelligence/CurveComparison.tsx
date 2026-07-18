@@ -3,10 +3,7 @@ import { useCurveSnapshots, type AssetSnapshotWithLabel } from '@/api/hooks'
 import { CurveComparisonChart } from '@/components/charts/CurveComparisonChart'
 import { RegimeComparisonTable } from '@/components/data/RegimeComparisonTable'
 import { EmptyState } from '@/components/layout/EmptyState'
-import {
-  CompareConfigPanel,
-  compareSchema,
-} from '@/features/intelligence/CompareConfigPanel'
+import { CompareConfigPanel, compareSchema } from '@/features/intelligence/CompareConfigPanel'
 import { displayName } from '@/lib/commodity'
 import { useUrlState } from '@/lib/useUrlState'
 import { Panel } from '@/ui/Panel'

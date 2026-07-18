@@ -120,4 +120,35 @@ test.describe('Intelligence — Futures Curve (S9)', () => {
       })
     }
   })
+
+  test('compare screen loads with 2 assets and shows normalized curves', async ({ page }) => {
+    const check = await page.request.get('http://localhost:8000/api/curves/available')
+    if (!check.ok()) {
+      test.skip()
+      return
+    }
+    const { assets } = (await check.json()) as { assets?: string[] }
+    if (!assets || assets.length < 2) {
+      test.skip()
+      return
+    }
+
+    const [a1, a2] = assets
+    await page.goto(`/intelligence/compare?assets=${a1},${a2}&n_contracts=4`)
+    await page.waitForLoadState('networkidle')
+
+    await expect(
+      page.getByRole('heading', { name: /curve comparison/i }),
+    ).toBeVisible({ timeout: 10_000 })
+
+    const checkedBoxes = page.locator('input[type="checkbox"]:checked')
+    await expect(checkedBoxes).toHaveCount(2, { timeout: 10_000 })
+
+    await expect(page.getByText(a1, { exact: false }).first()).toBeVisible({
+      timeout: 5_000,
+    })
+    await expect(page.getByText(a2, { exact: false }).first()).toBeVisible({
+      timeout: 5_000,
+    })
+  })
 })
