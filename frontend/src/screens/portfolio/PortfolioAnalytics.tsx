@@ -12,12 +12,7 @@ import { PortfolioRiskPanel } from '@/features/portfolio/PortfolioRiskPanel'
 import { PortfolioCorrelationPanel } from '@/features/portfolio/PortfolioCorrelationPanel'
 import { EmptyState } from '@/components/layout/EmptyState'
 
-const STRATEGIES = [
-  'ema_crossover',
-  'momentum',
-  'rsi_reversion',
-  'donchian_breakout',
-]
+const STRATEGIES = ['ema_crossover', 'momentum', 'rsi_reversion', 'donchian_breakout']
 
 const DEFAULT_PARAMS: Record<string, Record<string, unknown>> = {
   ema_crossover: { fast_period: 50, slow_period: 200 },
@@ -41,19 +36,13 @@ export function PortfolioAnalytics() {
   const risk = usePortfolioRisk(runId ?? '')
   const correlation = usePortfolioCorrelation(runId ?? '')
 
-  const isLoading =
-    summary.isLoading ||
-    equity.isLoading ||
-    risk.isLoading ||
-    correlation.isLoading
+  const isLoading = summary.isLoading || equity.isLoading || risk.isLoading || correlation.isLoading
 
   if (!runId) {
     return (
       <div className="flex gap-6 p-6">
-        <div className="w-80 shrink-0 flex flex-col gap-4">
-          <p className="text-sm font-mono text-text-secondary uppercase">
-            Portfolio Configuration
-          </p>
+        <div className="w-80 flex shrink-0 flex-col gap-4">
+          <p className="font-mono text-sm uppercase text-text-secondary">Portfolio Configuration</p>
           <PortfolioConfigPanel
             strategy={strategy}
             onStrategyChange={setStrategy}
@@ -64,7 +53,7 @@ export function PortfolioAnalytics() {
             strategies={STRATEGIES}
           />
         </div>
-        <div className="flex-1 flex flex-col gap-4">
+        <div className="flex flex-1 flex-col gap-4">
           <PortfolioLaunchPanel
             strategy={strategy}
             params={params}
@@ -86,14 +75,12 @@ export function PortfolioAnalytics() {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-base font-mono text-text-primary">
-            Portfolio Analytics
-          </h1>
-          <span className="text-xs font-mono text-text-secondary">{runId}</span>
+          <h1 className="font-mono text-base text-text-primary">Portfolio Analytics</h1>
+          <span className="font-mono text-xs text-text-secondary">{runId}</span>
         </div>
         <button
           onClick={() => setRunId(undefined)}
-          className="text-xs font-mono text-text-secondary hover:text-text-primary border border-border-default px-3 py-1 rounded"
+          className="rounded border border-border-default px-3 py-1 font-mono text-xs text-text-secondary hover:text-text-primary"
         >
           ← New run
         </button>
@@ -117,10 +104,7 @@ export function PortfolioAnalytics() {
         loading={isLoading}
       />
 
-      <PortfolioRiskPanel
-        risk={risk.data ?? null}
-        loading={risk.isLoading}
-      />
+      <PortfolioRiskPanel risk={risk.data ?? null} loading={risk.isLoading} />
 
       <PortfolioCorrelationPanel
         correlation={correlation.data ?? null}

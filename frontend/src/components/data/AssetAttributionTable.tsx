@@ -30,50 +30,28 @@ export function AssetAttributionTable({
     >
       <thead className="bg-bg-raised">
         <tr>
-          <th className="px-3 py-2 text-left text-xs uppercase text-text-secondary">
-            ASSET
-          </th>
-          <th className="px-3 py-2 text-right text-xs uppercase text-text-secondary">
-            P&L (USD)
-          </th>
-          <th className="px-3 py-2 text-right text-xs uppercase text-text-secondary">
-            P&L (%)
-          </th>
+          <th className="px-3 py-2 text-left text-xs uppercase text-text-secondary">ASSET</th>
+          <th className="px-3 py-2 text-right text-xs uppercase text-text-secondary">P&L (USD)</th>
+          <th className="px-3 py-2 text-right text-xs uppercase text-text-secondary">P&L (%)</th>
         </tr>
       </thead>
       <tbody>
         {assets.map((asset) => {
           const pnl = absolutePnlByAsset[asset] ?? 0
-          const pnlPct = initialCapitalPerAsset > 0
-            ? pnl / initialCapitalPerAsset
-            : 0
-          const color =
-            pnl >= 0 ? 'var(--text-gain)' : 'var(--text-loss)'
+          const pnlPct = initialCapitalPerAsset > 0 ? pnl / initialCapitalPerAsset : 0
+          const color = pnl >= 0 ? 'var(--text-gain)' : 'var(--text-loss)'
 
           return (
-            <tr
-              key={asset}
-              className="border-t border-border-default hover:bg-bg-hover"
-            >
+            <tr key={asset} className="border-t border-border-default hover:bg-bg-hover">
               <td className="px-3 py-2">
-                <div className="font-medium text-text-emphasis">
-                  {displayName(asset)}
-                </div>
-                <div className="text-xs font-mono text-text-secondary">
-                  {asset}
-                </div>
+                <div className="font-medium text-text-emphasis">{displayName(asset)}</div>
+                <div className="font-mono text-xs text-text-secondary">{asset}</div>
               </td>
-              <td
-                className="px-3 py-2 text-right font-mono"
-                style={{ color }}
-              >
+              <td className="px-3 py-2 text-right font-mono" style={{ color }}>
                 {pnl >= 0 ? '+' : ''}
                 {fmt.compactUsd(pnl)}
               </td>
-              <td
-                className="px-3 py-2 text-right font-mono text-xs"
-                style={{ color }}
-              >
+              <td className="px-3 py-2 text-right font-mono text-xs" style={{ color }}>
                 {pnl >= 0 ? '+' : ''}
                 {(pnlPct * 100).toFixed(2)}%
               </td>

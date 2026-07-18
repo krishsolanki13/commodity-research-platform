@@ -8,10 +8,7 @@ type CorrelationReportResponse = components['schemas']['CorrelationReportRespons
 export function usePortfolioCorrelation(runId: string) {
   return useQuery({
     queryKey: qk.portfolioCorrelation(runId),
-    queryFn: () =>
-      client.get<CorrelationReportResponse>(
-        `/api/portfolio/${runId}/correlation`
-      ),
+    queryFn: () => client.get<CorrelationReportResponse>(`/api/portfolio/${runId}/correlation`),
     staleTime: Infinity,
     gcTime: 60 * 60 * 1000,
     enabled: !!runId,

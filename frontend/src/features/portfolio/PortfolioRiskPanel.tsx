@@ -8,16 +8,11 @@ interface PortfolioRiskPanelProps {
   loading?: boolean
 }
 
-export function PortfolioRiskPanel({
-  risk,
-  loading,
-}: PortfolioRiskPanelProps) {
+export function PortfolioRiskPanel({ risk, loading }: PortfolioRiskPanelProps) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <p className="text-xs uppercase text-text-secondary mb-2 font-mono">
-          Risk Metrics
-        </p>
+        <p className="mb-2 font-mono text-xs uppercase text-text-secondary">Risk Metrics</p>
         <MetricGrid
           loading={loading}
           columns={4}
@@ -49,15 +44,13 @@ export function PortfolioRiskPanel({
             },
           ]}
         />
-        <p className="text-xs text-text-secondary mt-2 font-mono">
-          Historical simulation VaR — realized strategy P&L over 252 days.
-          Positive values = loss magnitudes.
+        <p className="mt-2 font-mono text-xs text-text-secondary">
+          Historical simulation VaR — realized strategy P&L over 252 days. Positive values = loss
+          magnitudes.
         </p>
       </div>
       <div>
-        <p className="text-xs uppercase text-text-secondary mb-2 font-mono">
-          Notional Exposure
-        </p>
+        <p className="mb-2 font-mono text-xs uppercase text-text-secondary">Notional Exposure</p>
         <MetricGrid
           loading={loading}
           columns={4}

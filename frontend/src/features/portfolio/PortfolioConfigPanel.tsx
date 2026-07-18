@@ -22,11 +22,15 @@ export function PortfolioConfigPanel({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <p className="text-xs uppercase text-text-secondary mb-1 font-mono">
+        <label
+          htmlFor="portfolio-strategy"
+          className="mb-1 block font-mono text-xs uppercase text-text-secondary"
+        >
           Strategy
-        </p>
+        </label>
         <select
-          className="w-full bg-bg-raised border border-border-default text-text-primary text-sm font-mono px-2 py-1 rounded"
+          id="portfolio-strategy"
+          className="w-full rounded border border-border-default bg-bg-raised px-2 py-1 font-mono text-sm text-text-primary"
           value={strategy}
           onChange={(e) => onStrategyChange(e.target.value)}
         >
@@ -39,18 +43,16 @@ export function PortfolioConfigPanel({
       </div>
 
       <div>
-        <p className="text-xs uppercase text-text-secondary mb-1 font-mono">
-          Sizing Method
-        </p>
+        <p className="mb-1 font-mono text-xs uppercase text-text-secondary">Sizing Method</p>
         <div className="flex gap-1">
           {(['fixed_notional', 'volatility_scaled'] as const).map((m) => (
             <button
               key={m}
               onClick={() => onSizingChange(m)}
-              className={`px-3 py-1 text-xs font-mono rounded border ${
+              className={`rounded border px-3 py-1 font-mono text-xs ${
                 sizingMethod === m
                   ? 'bg-bg-accent border-border-strong text-text-primary'
-                  : 'bg-bg-raised border-border-default text-text-secondary'
+                  : 'border-border-default bg-bg-raised text-text-secondary'
               }`}
             >
               {m === 'fixed_notional' ? 'Fixed Notional' : 'Vol Scaled'}
@@ -60,20 +62,23 @@ export function PortfolioConfigPanel({
       </div>
 
       <div>
-        <p className="text-xs uppercase text-text-secondary mb-1 font-mono">
+        <label
+          htmlFor="portfolio-initial-capital"
+          className="mb-1 block font-mono text-xs uppercase text-text-secondary"
+        >
           Initial Capital (per asset)
-        </p>
+        </label>
         <input
+          id="portfolio-initial-capital"
           type="number"
-          className="w-full bg-bg-raised border border-border-default text-text-primary text-sm font-mono px-2 py-1 rounded"
+          className="w-full rounded border border-border-default bg-bg-raised px-2 py-1 font-mono text-sm text-text-primary"
           value={initialCapital}
           onChange={(e) => onCapitalChange(Number(e.target.value))}
           step={100000}
           min={100000}
         />
-        <p className="text-xs text-text-secondary mt-1 font-mono">
-          Running on all 6 commodity assets ·{' '}
-          Total: {fmt.compactUsd(initialCapital * 6)}
+        <p className="mt-1 font-mono text-xs text-text-secondary">
+          Running on all 6 commodity assets · Total: {fmt.compactUsd(initialCapital * 6)}
         </p>
       </div>
     </div>

@@ -136,8 +136,7 @@ export function CorrelationHeatmapChart({
   error,
   empty,
 }: CorrelationHeatmapChartProps) {
-  const isEmpty =
-    !correlationMatrix || Object.keys(correlationMatrix).length === 0
+  const isEmpty = !correlationMatrix || Object.keys(correlationMatrix).length === 0
 
   return (
     <ChartFrame
@@ -147,10 +146,7 @@ export function CorrelationHeatmapChart({
       error={error}
       empty={isEmpty ? (empty ?? { message: 'No correlation data' }) : undefined}
     >
-      <CorrelationHeatmapInner
-        correlationMatrix={correlationMatrix}
-        assets={assets}
-      />
+      <CorrelationHeatmapInner correlationMatrix={correlationMatrix} assets={assets} />
     </ChartFrame>
   )
 }

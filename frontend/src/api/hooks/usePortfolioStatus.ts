@@ -8,8 +8,7 @@ type TaskStatusResponse = components['schemas']['TaskStatusResponse']
 export function usePortfolioStatus(runId: string | null) {
   return useQuery({
     queryKey: qk.portfolioStatus(runId ?? ''),
-    queryFn: () =>
-      client.get<TaskStatusResponse>(`/api/portfolio/${runId}/status`),
+    queryFn: () => client.get<TaskStatusResponse>(`/api/portfolio/${runId}/status`),
     enabled: !!runId,
     staleTime: 0,
     gcTime: 5 * 60 * 1000,

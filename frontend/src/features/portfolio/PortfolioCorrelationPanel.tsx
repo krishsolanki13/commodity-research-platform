@@ -124,14 +124,10 @@ export function PortfolioCorrelationPanel({
   correlation,
   loading,
 }: PortfolioCorrelationPanelProps) {
-  const assets = correlation
-    ? Object.keys(correlation.correlation_matrix).sort()
-    : []
+  const assets = correlation ? Object.keys(correlation.correlation_matrix).sort() : []
   const pairs = generatePairs(assets)
 
-  const [selectedPair, setSelectedPair] = useState<[string, string]>(
-    ['brent', 'wti']
-  )
+  const [selectedPair, setSelectedPair] = useState<[string, string]>(['brent', 'wti'])
   const [window, setWindow] = useState<63 | 126>(63)
 
   const [lo, hi] = [...selectedPair].sort() as [string, string]
@@ -149,7 +145,7 @@ export function PortfolioCorrelationPanel({
         loading={loading}
       />
 
-      <div className="flex gap-6 text-xs font-mono text-text-secondary">
+      <div className="flex gap-6 font-mono text-xs text-text-secondary">
         <span>
           Avg Correlation:{' '}
           <span className="text-text-primary">
@@ -160,8 +156,7 @@ export function PortfolioCorrelationPanel({
           <span>
             Most:{' '}
             <span className="text-text-primary">
-              {correlation.most_correlated_pair[0]} /{' '}
-              {correlation.most_correlated_pair[1]} (
+              {correlation.most_correlated_pair[0]} / {correlation.most_correlated_pair[1]} (
               {correlation.most_correlated_pair[2].toFixed(2)})
             </span>
           </span>
@@ -170,8 +165,7 @@ export function PortfolioCorrelationPanel({
           <span>
             Least:{' '}
             <span className="text-text-primary">
-              {correlation.least_correlated_pair[0]} /{' '}
-              {correlation.least_correlated_pair[1]} (
+              {correlation.least_correlated_pair[0]} / {correlation.least_correlated_pair[1]} (
               {correlation.least_correlated_pair[2].toFixed(2)})
             </span>
           </span>
@@ -181,7 +175,8 @@ export function PortfolioCorrelationPanel({
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-4">
           <select
-            className="bg-bg-raised border border-border-default text-text-primary text-xs font-mono px-2 py-1 rounded"
+            aria-label="Asset pair"
+            className="rounded border border-border-default bg-bg-raised px-2 py-1 font-mono text-xs text-text-primary"
             value={`${selectedPair[0]},${selectedPair[1]}`}
             onChange={(e) => {
               const [a, b] = e.target.value.split(',') as [string, string]
@@ -199,10 +194,10 @@ export function PortfolioCorrelationPanel({
               <button
                 key={w}
                 onClick={() => setWindow(w)}
-                className={`px-3 py-1 text-xs font-mono rounded border ${
+                className={`rounded border px-3 py-1 font-mono text-xs ${
                   window === w
                     ? 'bg-bg-accent border-border-strong text-text-primary'
-                    : 'bg-bg-raised border-border-default text-text-secondary'
+                    : 'border-border-default bg-bg-raised text-text-secondary'
                 }`}
               >
                 {w}-day
@@ -211,7 +206,7 @@ export function PortfolioCorrelationPanel({
           </div>
         </div>
 
-        <div className="text-xs font-mono text-text-secondary mb-1">
+        <div className="mb-1 font-mono text-xs text-text-secondary">
           {lo} / {hi} — Rolling {window}-day Correlation
         </div>
 

@@ -95,7 +95,7 @@ export function PortfolioLaunchPanel({
         </div>
       )}
 
-      <p className="text-xs text-text-secondary font-mono">
+      <p className="font-mono text-xs text-text-secondary">
         Runs all 6 assets with {strategy} strategy. ~30–60s typical.
       </p>
     </div>

@@ -32,13 +32,13 @@ export function PortfolioEquityPanel({
         title="Portfolio Equity Curve"
       />
       {summary && (
-        <p className="text-xs font-mono text-text-secondary mt-1">
+        <p className="mt-1 font-mono text-xs text-text-secondary">
           Inner-join alignment: {summary.portfolio_date_range_from} →{' '}
           {summary.portfolio_date_range_to} · {summary.portfolio_date_range_bars} trading days
         </p>
       )}
       {(summary?.skipped_assets?.length ?? 0) > 0 && (
-        <p className="text-xs text-warn mt-1">
+        <p className="mt-1 text-xs text-warn">
           ⚠ {summary!.skipped_assets.join(', ')} skipped (pipeline failure)
         </p>
       )}

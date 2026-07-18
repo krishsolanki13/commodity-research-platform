@@ -37,7 +37,7 @@ export function PortfolioAttributionPanel({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <p className="text-xs uppercase text-text-secondary mb-2 font-mono">
+        <p className="mb-2 font-mono text-xs uppercase text-text-secondary">
           Asset P&L Attribution (USD)
         </p>
         <AssetAttributionTable
@@ -48,11 +48,11 @@ export function PortfolioAttributionPanel({
         />
       </div>
       <div>
-        <p className="text-xs uppercase text-text-secondary mb-2 font-mono">
+        <p className="mb-2 font-mono text-xs uppercase text-text-secondary">
           Strategy Realized Vol (%)
         </p>
         <MetricGrid loading={loading} metrics={volMetrics} columns={6} />
-        <p className="text-xs text-text-secondary mt-2 font-mono italic">
+        <p className="mt-2 font-mono text-xs italic text-text-secondary">
           Strategy P&L volatility — not commodity price volatility
         </p>
       </div>
