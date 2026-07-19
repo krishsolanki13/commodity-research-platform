@@ -12,8 +12,8 @@ const MAX_HISTORY = 10
 export interface PortfolioRunRecord {
   run_id: string
   strategy: string
-  executed_at: string         // ISO datetime
-  n_assets: number            // number of assets in the run
+  executed_at: string // ISO datetime
+  n_assets: number // number of assets in the run
   total_return: number | null // from summary (for display in selector)
 }
 

@@ -8,8 +8,7 @@ type PortfolioAssetsResponse = components['schemas']['PortfolioAssetsResponse']
 export function usePortfolioAssets(runId: string) {
   return useQuery({
     queryKey: qk.portfolioAssets(runId),
-    queryFn: () =>
-      client.get<PortfolioAssetsResponse>(`/api/portfolio/${runId}/assets`),
+    queryFn: () => client.get<PortfolioAssetsResponse>(`/api/portfolio/${runId}/assets`),
     staleTime: Infinity,
     gcTime: 60 * 60 * 1000,
     enabled: !!runId,

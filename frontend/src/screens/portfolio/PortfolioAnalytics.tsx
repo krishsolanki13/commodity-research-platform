@@ -16,10 +16,7 @@ import { PortfolioPerAssetPanel } from '@/features/portfolio/PortfolioPerAssetPa
 import { PortfolioRiskPanel } from '@/features/portfolio/PortfolioRiskPanel'
 import { PortfolioCorrelationPanel } from '@/features/portfolio/PortfolioCorrelationPanel'
 import { PortfolioRunSelector } from '@/features/portfolio/PortfolioRunSelector'
-import {
-  portfolioUrlDefaults,
-  portfolioUrlSchema,
-} from '@/features/portfolio/portfolioUrlState'
+import { portfolioUrlDefaults, portfolioUrlSchema } from '@/features/portfolio/portfolioUrlState'
 import { EmptyState } from '@/components/layout/EmptyState'
 import {
   AlertDialog,
@@ -42,10 +39,7 @@ const DEFAULT_PARAMS: Record<string, Record<string, unknown>> = {
 }
 
 export function PortfolioAnalytics() {
-  const [{ run_id }, setUrlState] = useUrlState(
-    portfolioUrlSchema,
-    portfolioUrlDefaults
-  )
+  const [{ run_id }, setUrlState] = useUrlState(portfolioUrlSchema, portfolioUrlDefaults)
   const [strategy, setStrategy] = useState('ema_crossover')
   const [sizingMethod, setSizingMethod] = useState<'fixed_notional' | 'volatility_scaled'>(
     'fixed_notional'
@@ -192,9 +186,7 @@ export function PortfolioAnalytics() {
             <AlertDialogTitle>Delete this portfolio run?</AlertDialogTitle>
             <AlertDialogDescription>
               Run{' '}
-              <span className="font-mono text-text-emphasis">
-                {deleteConfirmId?.slice(-20)}
-              </span>{' '}
+              <span className="font-mono text-text-emphasis">{deleteConfirmId?.slice(-20)}</span>{' '}
               will be permanently deleted. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -1,17 +1,8 @@
 import { fmt } from '@/lib/fmt'
 import { useUrlState } from '@/lib/useUrlState'
 import { usePortfolioHistory } from '@/stores/portfolioHistory'
-import {
-  portfolioUrlDefaults,
-  portfolioUrlSchema,
-} from '@/features/portfolio/portfolioUrlState'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/ui/select'
+import { portfolioUrlDefaults, portfolioUrlSchema } from '@/features/portfolio/portfolioUrlState'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/select'
 
 function truncateRunId(runId: string): string {
   return runId.length > 18 ? `…${runId.slice(-18)}` : runId
@@ -19,10 +10,7 @@ function truncateRunId(runId: string): string {
 
 export function PortfolioRunSelector() {
   const runs = usePortfolioHistory((state) => state.runs)
-  const [{ run_id: runId }, setUrlState] = useUrlState(
-    portfolioUrlSchema,
-    portfolioUrlDefaults
-  )
+  const [{ run_id: runId }, setUrlState] = useUrlState(portfolioUrlSchema, portfolioUrlDefaults)
 
   if (runs.length === 0) return null
 

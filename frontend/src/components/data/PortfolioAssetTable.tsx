@@ -60,7 +60,7 @@ export function PortfolioAssetTable({
           const trades = metrics.avg_trade_duration_bars ?? metrics.turnover
 
           return (
-            <tr key={asset} className="border-b border-border-subtle">
+            <tr key={asset} className="border-border-subtle border-b">
               <td className="px-3 py-2 text-left font-medium text-text-primary">
                 {displayName(asset)}
               </td>
@@ -80,8 +80,7 @@ export function PortfolioAssetTable({
               <td
                 className="px-3 py-2"
                 style={{
-                  color:
-                    maxDrawdown == null ? 'var(--text-secondary)' : 'var(--text-loss)',
+                  color: maxDrawdown == null ? 'var(--text-secondary)' : 'var(--text-loss)',
                 }}
               >
                 {metric(metrics, 'max_drawdown', fmt.drawdown)}
