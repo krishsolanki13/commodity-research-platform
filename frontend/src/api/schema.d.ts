@@ -296,7 +296,12 @@ export interface paths {
     }
     /**
      * Get Portfolio Assets
-     * @description Per-asset headline metrics for a portfolio run.
+     * @description Return per-asset performance metrics for a completed portfolio run.
+     *
+     *     Reads from portfolio_summary.json (written by save_portfolio_summary).
+     *     The per_asset_metrics field is populated since the fix to
+     *     save_portfolio_summary() — runs completed before this fix will return
+     *     a 404 with a clear re-run message.
      */
     get: operations['get_portfolio_assets_api_portfolio__run_id__assets_get']
     put?: never
@@ -1127,9 +1132,13 @@ export interface components {
       /** Run Id */
       run_id: string
       /** Assets */
-      assets: components['schemas']['PortfolioAssetHeadline'][]
-      /** Skipped Assets */
-      skipped_assets: string[]
+      assets: string[]
+      /** Asset Metrics */
+      asset_metrics: {
+        [key: string]: {
+          [key: string]: number | null
+        }
+      }
     }
     /** PortfolioEquityResponse */
     PortfolioEquityResponse: {
@@ -2481,6 +2490,8 @@ export interface operations {
     parameters: {
       query?: {
         n_contracts?: number
+        /** @description ISO date for historical snapshot, e.g. 2025-01-01. Defaults to today when absent. */
+        observation_date?: string | null
       }
       header?: never
       path: {

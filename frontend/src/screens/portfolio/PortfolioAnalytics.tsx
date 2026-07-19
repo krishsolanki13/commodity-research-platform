@@ -3,6 +3,7 @@ import { usePortfolioSummary } from '@/api/hooks/usePortfolioSummary'
 import { usePortfolioEquity } from '@/api/hooks/usePortfolioEquity'
 import { usePortfolioRisk } from '@/api/hooks/usePortfolioRisk'
 import { usePortfolioCorrelation } from '@/api/hooks/usePortfolioCorrelation'
+import { useUrlState } from '@/lib/useUrlState'
 import { PortfolioConfigPanel } from '@/features/portfolio/PortfolioConfigPanel'
 import { PortfolioLaunchPanel } from '@/features/portfolio/PortfolioLaunchPanel'
 import { PortfolioKPIRow } from '@/features/portfolio/PortfolioKPIRow'
@@ -10,6 +11,10 @@ import { PortfolioEquityPanel } from '@/features/portfolio/PortfolioEquityPanel'
 import { PortfolioAttributionPanel } from '@/features/portfolio/PortfolioAttributionPanel'
 import { PortfolioRiskPanel } from '@/features/portfolio/PortfolioRiskPanel'
 import { PortfolioCorrelationPanel } from '@/features/portfolio/PortfolioCorrelationPanel'
+import {
+  portfolioUrlDefaults,
+  portfolioUrlSchema,
+} from '@/features/portfolio/portfolioUrlState'
 import { EmptyState } from '@/components/layout/EmptyState'
 
 const STRATEGIES = ['ema_crossover', 'momentum', 'rsi_reversion', 'donchian_breakout']
@@ -22,7 +27,10 @@ const DEFAULT_PARAMS: Record<string, Record<string, unknown>> = {
 }
 
 export function PortfolioAnalytics() {
-  const [runId, setRunId] = useState<string | undefined>(undefined)
+  const [{ run_id: runId }, setUrlState] = useUrlState(
+    portfolioUrlSchema,
+    portfolioUrlDefaults
+  )
   const [strategy, setStrategy] = useState('ema_crossover')
   const [sizingMethod, setSizingMethod] = useState<'fixed_notional' | 'volatility_scaled'>(
     'fixed_notional'
@@ -59,7 +67,7 @@ export function PortfolioAnalytics() {
             params={params}
             sizingMethod={sizingMethod}
             initialCapital={initialCapital}
-            onLaunched={(id) => setRunId(id)}
+            onLaunched={(id) => setUrlState({ run_id: id })}
           />
           <EmptyState
             title="No portfolio run selected"
@@ -79,7 +87,7 @@ export function PortfolioAnalytics() {
           <span className="font-mono text-xs text-text-secondary">{runId}</span>
         </div>
         <button
-          onClick={() => setRunId(undefined)}
+          onClick={() => setUrlState({ run_id: undefined })}
           className="rounded border border-border-default px-3 py-1 font-mono text-xs text-text-secondary hover:text-text-primary"
         >
           ← New run

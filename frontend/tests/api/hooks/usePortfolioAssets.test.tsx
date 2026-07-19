@@ -12,10 +12,8 @@ describe('usePortfolioAssets', () => {
     )
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data?.assets).toHaveLength(6)
-    expect(
-      result.current.data?.assets.find((asset) => asset.asset === 'gold')?.sharpe
-    ).toBeCloseTo(0.301)
+    expect(Object.keys(result.current.data?.asset_metrics ?? {})).toHaveLength(6)
+    expect(result.current.data?.asset_metrics?.gold?.sharpe).toBeCloseTo(0.301)
   })
 
   it('is disabled when runId is an empty string', () => {
