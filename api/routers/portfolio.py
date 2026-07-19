@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import json
 import traceback
 from pathlib import Path
 from typing import Any, cast
 
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from api import state
 from api.exceptions import ApiError
@@ -77,6 +78,9 @@ def _portfolio_runs_dir() -> Path:
 
     cfg = Config.load()
     return Path(cfg.paths["runs"])
+
+
+RUNS_DIR = _portfolio_runs_dir()
 
 
 def _load_portfolio_summary(run_dir: Path) -> dict[str, Any]:
@@ -371,40 +375,43 @@ def get_portfolio_equity(run_id: str) -> PortfolioEquityResponse:
 
 
 @router.get("/{run_id}/assets", response_model=PortfolioAssetsResponse)
-def get_portfolio_assets(run_id: str) -> PortfolioAssetsResponse:
-    """Per-asset headline metrics for a portfolio run."""
-    task = _get_task_or_404(run_id)
-    port_report = task.get("port_report")
-    if port_report is None:
-        raise ApiError(
-            code="REPORT_NOT_FOUND",
-            message="Portfolio report not available.",
-            status=404,
+async def get_portfolio_assets(run_id: str) -> PortfolioAssetsResponse:
+    """Return per-asset performance metrics for a completed portfolio run.
+
+    Reads from portfolio_summary.json (written by save_portfolio_summary).
+    The per_asset_metrics field is populated since the fix to
+    save_portfolio_summary() — runs completed before this fix will return
+    a 404 with a clear re-run message.
+    """
+    summary_path = RUNS_DIR / run_id / "portfolio_summary.json"
+    if not summary_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "RUN_NOT_FOUND",
+                "message": f"Portfolio run '{run_id}' not found.",
+            },
         )
 
-    headlines = []
-    per_asset = getattr(port_report, "per_asset_reports", {})
-    for asset, rep in per_asset.items():
-        sm = rep.scalar_metrics if hasattr(rep, "scalar_metrics") else {}
-        ts = rep.trade_statistics if hasattr(rep, "trade_statistics") else {}
-        headlines.append(
-            PortfolioAssetHeadline(
-                asset=asset,
-                sharpe=sm.get("sharpe"),
-                max_drawdown=sm.get("max_drawdown"),
-                total_return=sm.get("total_return"),
-                cagr=sm.get("cagr"),
-                n_trades=int(ts["n_trades"])
-                if ts.get("n_trades") is not None
-                else None,
-                absolute_pnl=port_report.absolute_pnl_by_asset.get(asset),
-            )
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    per_asset_metrics = summary.get("per_asset_metrics")
+
+    if per_asset_metrics is None:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "RUN_NOT_FOUND",
+                "message": (
+                    f"Portfolio run '{run_id}' pre-dates per-asset metrics. "
+                    "Re-run the portfolio analysis to populate this field."
+                ),
+            },
         )
 
     return PortfolioAssetsResponse(
         run_id=run_id,
-        assets=headlines,
-        skipped_assets=port_report.skipped_assets,
+        assets=summary["assets"],
+        asset_metrics=per_asset_metrics,
     )
 
 

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -161,3 +164,88 @@ def test_risk_var_is_positive(client: TestClient) -> None:
         data["portfolio_var_99"] > 0
     ), f"VaR must be positive, got {data['portfolio_var_99']}"
     assert data["methodology"] == "historical_simulation"
+
+
+def test_portfolio_assets_returns_200_with_asset_metrics(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GET /api/portfolio/{run_id}/assets → 200 with asset_metrics dict."""
+    run_id = "20260101_000000_portfolio_ema_crossover"
+    run_dir = tmp_path / run_id
+    run_dir.mkdir(parents=True)
+
+    summary = {
+        "run_id": run_id,
+        "strategy_name": "ema_crossover",
+        "assets": ["gold", "silver"],
+        "skipped_assets": [],
+        "initial_capital_per_asset": 1_000_000.0,
+        "initial_capital_total": 2_000_000.0,
+        "portfolio_date_range": ["2020-01-01", "2026-07-01"],
+        "portfolio_metrics": {"sharpe": 0.42, "max_drawdown": -0.05},
+        "asset_contributions": {"gold": 0.6, "silver": 0.4},
+        "absolute_pnl_by_asset": {"gold": 12000.0, "silver": 8000.0},
+        "per_asset_metrics": {
+            "gold": {
+                "sharpe": 0.55,
+                "max_drawdown": -0.04,
+                "total_return": 0.012,
+            },
+            "silver": {
+                "sharpe": 0.31,
+                "max_drawdown": -0.06,
+                "total_return": 0.008,
+            },
+        },
+    }
+    (run_dir / "portfolio_summary.json").write_text(
+        json.dumps(summary), encoding="utf-8"
+    )
+
+    import api.routers.portfolio as portfolio_router
+
+    monkeypatch.setattr(portfolio_router, "RUNS_DIR", tmp_path)
+    response = client.get(f"/api/portfolio/{run_id}/assets")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["run_id"] == run_id
+    assert set(data["assets"]) == {"gold", "silver"}
+    assert "asset_metrics" in data
+    assert "gold" in data["asset_metrics"]
+    assert data["asset_metrics"]["gold"]["sharpe"] == pytest.approx(0.55)
+
+
+def test_portfolio_assets_pre_fix_run_returns_404_with_rerun_message(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GET /api/portfolio/{run_id}/assets → 404 when per_asset_metrics absent."""
+    run_id = "20200101_000000_portfolio_ema_crossover"
+    run_dir = tmp_path / run_id
+    run_dir.mkdir(parents=True)
+
+    summary = {
+        "run_id": run_id,
+        "strategy_name": "ema_crossover",
+        "assets": ["gold"],
+        "portfolio_metrics": {"sharpe": 0.1},
+        "asset_contributions": {"gold": 1.0},
+        "absolute_pnl_by_asset": {"gold": 5000.0},
+    }
+    (run_dir / "portfolio_summary.json").write_text(
+        json.dumps(summary), encoding="utf-8"
+    )
+
+    import api.routers.portfolio as portfolio_router
+
+    monkeypatch.setattr(portfolio_router, "RUNS_DIR", tmp_path)
+    response = client.get(f"/api/portfolio/{run_id}/assets")
+
+    assert response.status_code == 404
+    detail = response.json()["detail"]
+    assert detail["code"] == "RUN_NOT_FOUND"
+    assert "Re-run" in detail["message"] or "re-run" in detail["message"].lower()
