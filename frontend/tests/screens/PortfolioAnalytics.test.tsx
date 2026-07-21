@@ -1,8 +1,11 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { PortfolioAnalytics } from '@/screens/portfolio/PortfolioAnalytics'
+import { usePortfolioHistory } from '@/stores/portfolioHistory'
+import { MOCK_PORTFOLIO_RUN_ID } from '../mocks/fixtures/portfolio'
 
 function createTestQueryClient() {
   return new QueryClient({
@@ -23,6 +26,11 @@ function Wrapper({ initialPath = '/portfolio' }: { initialPath?: string }) {
 }
 
 describe('PortfolioAnalytics screen', () => {
+  beforeEach(() => {
+    usePortfolioHistory.setState({ runs: [] })
+    localStorage.clear()
+  })
+
   it('renders launch panel and empty state when no run active', () => {
     render(<Wrapper />)
     expect(
@@ -49,5 +57,34 @@ describe('PortfolioAnalytics screen', () => {
     expect(
       screen.getByRole('button', { name: /launch portfolio backtest/i })
     ).toBeInTheDocument()
+  })
+
+  it('shows PortfolioRunSelector when history is populated', async () => {
+    usePortfolioHistory.setState({
+      runs: [
+        {
+          run_id: MOCK_PORTFOLIO_RUN_ID,
+          strategy: 'ema_crossover',
+          executed_at: '2026-07-19T12:00:00Z',
+          n_assets: 6,
+          total_return: 0.0125,
+        },
+      ],
+    })
+    render(<Wrapper initialPath={`/portfolio?run_id=${MOCK_PORTFOLIO_RUN_ID}`} />)
+    await waitFor(() =>
+      screen.getByRole('combobox', { name: /select a recent portfolio run/i })
+    )
+    expect(
+      screen.getByRole('combobox', { name: /select a recent portfolio run/i })
+    ).toBeInTheDocument()
+  })
+
+  it('shows delete button when run is active; AlertDialog opens on click', async () => {
+    render(<Wrapper initialPath={`/portfolio?run_id=${MOCK_PORTFOLIO_RUN_ID}`} />)
+    await waitFor(() => screen.getByLabelText(/delete this portfolio run/i))
+    const deleteBtn = screen.getByLabelText(/delete this portfolio run/i)
+    await userEvent.click(deleteBtn)
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
   })
 })

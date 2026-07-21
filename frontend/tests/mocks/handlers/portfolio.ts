@@ -5,6 +5,7 @@ import {
   portfolioEquityFixture,
   portfolioRiskFixture,
   portfolioCorrelationFixture,
+  portfolioAssetsFixture,
   MOCK_PORTFOLIO_RUN_ID,
 } from '../fixtures/portfolio'
 
@@ -34,6 +35,10 @@ export const portfolioHandlers = [
   http.get(
     `http://localhost:8000/api/portfolio/${MOCK_PORTFOLIO_RUN_ID}/correlation`,
     () => HttpResponse.json(portfolioCorrelationFixture)
+  ),
+  http.get(
+    `http://localhost:8000/api/portfolio/${MOCK_PORTFOLIO_RUN_ID}/assets`,
+    () => HttpResponse.json(portfolioAssetsFixture)
   ),
   http.delete(
     `http://localhost:8000/api/portfolio/${MOCK_PORTFOLIO_RUN_ID}`,

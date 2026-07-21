@@ -470,8 +470,8 @@ class PortfolioEquityResponse(BaseModel):
 
 class PortfolioAssetsResponse(BaseModel):
     run_id: str
-    assets: list[PortfolioAssetHeadline]
-    skipped_assets: list[str]
+    assets: list[str]
+    asset_metrics: dict[str, dict[str, float | None]]
 
 
 # ── System ────────────────────────────────────────────────────────────────────

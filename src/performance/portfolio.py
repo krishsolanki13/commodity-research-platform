@@ -319,49 +319,46 @@ def save_portfolio_summary(
     report: PortfolioPerformanceReport,
     run_dir: Path,
 ) -> Path:
-    """Save portfolio-level performance summary to a JSON file.
+    """Save portfolio-level performance summary to portfolio_summary.json.
 
-    Writes portfolio_summary.json alongside per-asset run artifacts in
-    data/runs/{run_id}/. This fulfills the portfolio persistence commitment
-    from ADR-009 Phase 3 (portfolio run tracking).
+    Includes per_asset_metrics (scalar_metrics per asset) so the
+    /api/portfolio/{run_id}/assets route can serve per-asset data
+    without requiring RunManager.save() per asset.
 
-    Args:
-        report: PortfolioPerformanceReport from PortfolioPerformanceEngine.compute().
-        run_dir: Directory to write the summary file. Typically:
-            Path(config.paths["runs"]) / report.run_id
-
-    Returns:
-        Path to the written portfolio_summary.json file.
-
-    Raises:
-        OSError: If run_dir does not exist or is not writable.
+    NaN values in scalar_metrics are serialized as JSON null.
     """
-    run_dir.mkdir(parents=True, exist_ok=True)
+
+    def _nan_safe(v: object) -> object:
+        """Convert math.nan to None for JSON null; str() for other non-serializable."""
+        if isinstance(v, float) and math.isnan(v):
+            return None
+        return str(v)
 
     summary: dict = {
         "run_id": report.run_id,
         "strategy_name": report.strategy_name,
         "assets": report.assets,
         "skipped_assets": report.skipped_assets,
-        "portfolio_date_range": [
-            str(report.portfolio_date_range[0]),
-            str(report.portfolio_date_range[1]),
-        ],
         "initial_capital_per_asset": report.initial_capital_per_asset,
         "initial_capital_total": report.initial_capital_total,
+        "portfolio_date_range": [str(d) for d in report.portfolio_date_range],
         "portfolio_metrics": {
-            k: v if not math.isnan(v) else None
-            for k, v in report.portfolio_metrics.items()
+            k: _nan_safe(v) for k, v in report.portfolio_metrics.items()
         },
         "asset_contributions": {
-            k: (v if not math.isnan(v) else None)
-            for k, v in report.asset_contributions.items()
+            k: _nan_safe(v) for k, v in report.asset_contributions.items()
         },
         "absolute_pnl_by_asset": report.absolute_pnl_by_asset,
+        # Per-asset scalar metrics for /api/portfolio/{run_id}/assets
+        # Contains full PerformanceReport.scalar_metrics per asset:
+        # sharpe, sortino, calmar, max_drawdown, total_return, etc.
+        "per_asset_metrics": {
+            asset: {k: _nan_safe(v) for k, v in per_rpt.scalar_metrics.items()}
+            for asset, per_rpt in report.per_asset_reports.items()
+        },
     }
 
+    run_dir.mkdir(parents=True, exist_ok=True)
     out_path = run_dir / "portfolio_summary.json"
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(summary, f, indent=2, default=str)
-
+    out_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return out_path
