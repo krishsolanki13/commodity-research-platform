@@ -1139,6 +1139,13 @@ export interface components {
           [key: string]: number | null
         }
       }
+      /**
+       * Asset Run Ids
+       * @default {}
+       */
+      asset_run_ids: {
+        [key: string]: string | null
+      }
     }
     /** PortfolioEquityResponse */
     PortfolioEquityResponse: {

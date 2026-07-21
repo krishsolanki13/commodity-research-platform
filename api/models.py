@@ -472,6 +472,7 @@ class PortfolioAssetsResponse(BaseModel):
     run_id: str
     assets: list[str]
     asset_metrics: dict[str, dict[str, float | None]]
+    asset_run_ids: dict[str, str | None] = {}
 
 
 # ── System ────────────────────────────────────────────────────────────────────

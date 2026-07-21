@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import traceback
 from pathlib import Path
 from typing import Any, cast
@@ -25,6 +26,8 @@ from api.models import (
 )
 
 router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
+
+logger = logging.getLogger(__name__)
 
 _DEFAULT_ASSETS = [
     "gold",
@@ -83,6 +86,21 @@ def _portfolio_runs_dir() -> Path:
 RUNS_DIR = _portfolio_runs_dir()
 
 
+def resolve_artifact_id(run_id: str) -> str:
+    """Strip the poll_ prefix used by the frontend polling lifecycle.
+
+    The frontend prefixes run IDs with 'poll_' during active polling.
+    Portfolio run artifacts are always written to disk without this prefix.
+
+    Example:
+        resolve_artifact_id("poll_20260722_120000_portfolio_ema")
+        → "20260722_120000_portfolio_ema"
+        resolve_artifact_id("20260722_120000_portfolio_ema")
+        → "20260722_120000_portfolio_ema"  (no-op for direct IDs)
+    """
+    return run_id.removeprefix("poll_")
+
+
 def _load_portfolio_summary(run_dir: Path) -> dict[str, Any]:
     """Load portfolio_summary.json artifact."""
     p = run_dir / "portfolio_summary.json"
@@ -92,9 +110,13 @@ def _load_portfolio_summary(run_dir: Path) -> dict[str, Any]:
             message="Portfolio summary not found. Run may still be in progress.",
             status=404,
         )
-    import json  # noqa: PLC0415
+    return cast(dict[str, Any], json.loads(p.read_text(encoding="utf-8")))
 
-    return cast(dict[str, Any], json.loads(p.read_text()))
+
+def _artifact_dir(run_id: str) -> Path:
+    """Resolve on-disk run directory for a poll_ or bare run_id."""
+    artifact_run_id = state.get_artifact_id(run_id) or resolve_artifact_id(run_id)
+    return RUNS_DIR / artifact_run_id
 
 
 # ── Background task ────────────────────────────────────────────────────────────
@@ -139,6 +161,29 @@ def _run_portfolio_task(
             signal_threshold=request.signal_threshold,
         )
 
+        # Save individual per-asset run artifacts so /api/runs/{assetRunId}
+        # is resolvable. Non-fatal — portfolio result is not affected if
+        # an individual asset save fails.
+        try:
+            from src.backtesting.run_manager import RunManager  # noqa: PLC0415
+            from src.performance.report import PerformanceEngine  # noqa: PLC0415
+
+            _manager = RunManager(cfg)
+            _perf_engine = PerformanceEngine()
+            for _asset, _br in multi_result.asset_results.items():
+                try:
+                    _manager.save(_br)
+                    _asset_report = _perf_engine.compute(_br)
+                    _manager.save_metrics(_br.run_id, _asset_report)
+                except Exception as _asset_exc:
+                    logger.warning(
+                        "Could not save per-asset run for %s: %s",
+                        _asset,
+                        _asset_exc,
+                    )
+        except Exception as _save_exc:
+            logger.warning("Per-asset artifact save block failed: %s", _save_exc)
+
         port_engine = PortfolioPerformanceEngine()
         port_report = port_engine.compute(multi_result)
 
@@ -159,11 +204,15 @@ def _run_portfolio_task(
             _state_module._store[polling_run_id]["corr_report"] = corr_report
             _state_module._store[polling_run_id]["port_report"] = port_report
             _state_module._store[polling_run_id]["multi_result"] = multi_result
+            # Alias under bare artifact id so clients that strip poll_ still
+            # resolve in-memory reports (same dict — shared status/reports).
+            _state_module._store[run_id] = _state_module._store[polling_run_id]
 
         import datetime as dt  # noqa: PLC0415
 
         executed_at = dt.datetime.now(dt.UTC).isoformat().replace("+00:00", "Z")
         state.update(polling_run_id, "complete", executed_at=executed_at)
+        # Bare-id alias shares the same dict — status is already complete.
 
     except Exception as e:
         state.update(
@@ -210,22 +259,107 @@ def get_portfolio_status(run_id: str) -> TaskStatusResponse:
 
 
 def _get_task_or_404(run_id: str) -> dict[str, Any]:
-    task = state.get(run_id)
-    if task is None or task["status"] != "complete":
-        raise ApiError(
-            code="RUN_NOT_FOUND",
-            message=f"Portfolio run '{run_id}' not found or not yet complete.",
-            status=404,
+    """Load a completed in-memory portfolio task.
+
+    Tries the request id, then the poll_-stripped artifact id, then reverse
+    lookup via the polling→artifact map so both poll_* and bare ids work.
+    """
+    candidates = [run_id]
+    bare = resolve_artifact_id(run_id)
+    if bare not in candidates:
+        candidates.append(bare)
+
+    import api.state as _state_module  # noqa: PLC0415
+
+    with _state_module._lock:
+        for poll_id, art_id in _state_module._artifact_map.items():
+            if art_id in (run_id, bare) and poll_id not in candidates:
+                candidates.append(poll_id)
+
+    for key in candidates:
+        task = state.get(key)
+        if task is not None and task["status"] == "complete":
+            return task
+
+    raise ApiError(
+        code="RUN_NOT_FOUND",
+        message=f"Portfolio run '{run_id}' not found or not yet complete.",
+        status=404,
+    )
+
+
+def _summary_from_disk(run_id: str) -> PortfolioSummaryResponse | None:
+    """Build PortfolioSummaryResponse from portfolio_summary.json if present."""
+    run_dir = _artifact_dir(run_id)
+    summary_path = run_dir / "portfolio_summary.json"
+    if not summary_path.exists():
+        return None
+
+    summary = cast(dict[str, Any], json.loads(summary_path.read_text(encoding="utf-8")))
+    metrics_raw = summary.get("portfolio_metrics") or {}
+    metrics = {k: (float(v) if v is not None else None) for k, v in metrics_raw.items()}
+    date_range = summary.get("portfolio_date_range") or ["", ""]
+    per_asset = summary.get("per_asset_metrics") or {}
+    abs_pnl = summary.get("absolute_pnl_by_asset") or {}
+    headlines = [
+        PortfolioAssetHeadline(
+            asset=asset,
+            sharpe=(m or {}).get("sharpe"),
+            max_drawdown=(m or {}).get("max_drawdown"),
+            total_return=(m or {}).get("total_return"),
+            cagr=(m or {}).get("cagr"),
+            n_trades=None,
+            absolute_pnl=abs_pnl.get(asset),
         )
-    return task
+        for asset, m in per_asset.items()
+    ]
+
+    total_pnl = sum(float(v) for v in abs_pnl.values()) if abs_pnl else 0.0
+    capital = float(summary.get("initial_capital_total") or 0.0)
+    contributions = summary.get("asset_contributions")
+    if capital > 0 and abs(total_pnl) / capital < 0.01:
+        contributions = None
+
+    n_days = metrics.get("n_trading_days")
+    return PortfolioSummaryResponse(
+        run_id=run_id,
+        strategy=summary.get("strategy_name") or summary.get("strategy") or "",
+        assets=list(summary.get("assets") or []),
+        skipped_assets=list(summary.get("skipped_assets") or []),
+        portfolio_date_range_from=str(date_range[0]) if date_range else "",
+        portfolio_date_range_to=str(date_range[1]) if len(date_range) > 1 else "",
+        portfolio_date_range_bars=int(n_days) if n_days is not None else 0,
+        initial_capital_per_asset=float(
+            summary.get("initial_capital_per_asset") or 0.0
+        ),
+        initial_capital_total=capital,
+        portfolio_metrics=metrics,
+        absolute_pnl_by_asset={k: float(v) for k, v in abs_pnl.items()},
+        asset_contributions=(
+            {k: float(v) for k, v in contributions.items()}
+            if isinstance(contributions, dict)
+            else None
+        ),
+        per_asset_headlines=headlines,
+    )
 
 
 @router.get("/{run_id}/summary", response_model=PortfolioSummaryResponse)
 def get_portfolio_summary(run_id: str) -> PortfolioSummaryResponse:
     """Portfolio performance summary."""
-    task = _get_task_or_404(run_id)
+    try:
+        task = _get_task_or_404(run_id)
+    except ApiError:
+        disk = _summary_from_disk(run_id)
+        if disk is not None:
+            return disk
+        raise
+
     port_report = task.get("port_report")
     if port_report is None:
+        disk = _summary_from_disk(run_id)
+        if disk is not None:
+            return disk
         raise ApiError(
             code="REPORT_NOT_FOUND",
             message="Portfolio report not available.",
@@ -383,7 +517,9 @@ async def get_portfolio_assets(run_id: str) -> PortfolioAssetsResponse:
     save_portfolio_summary() — runs completed before this fix will return
     a 404 with a clear re-run message.
     """
-    summary_path = RUNS_DIR / run_id / "portfolio_summary.json"
+    # Launch returns a poll_* id; artifacts are stored under the real run_id.
+    artifact_run_id = state.get_artifact_id(run_id) or resolve_artifact_id(run_id)
+    summary_path = RUNS_DIR / artifact_run_id / "portfolio_summary.json"
     if not summary_path.exists():
         raise HTTPException(
             status_code=404,
@@ -409,9 +545,10 @@ async def get_portfolio_assets(run_id: str) -> PortfolioAssetsResponse:
         )
 
     return PortfolioAssetsResponse(
-        run_id=run_id,
+        run_id=artifact_run_id,
         assets=summary["assets"],
         asset_metrics=per_asset_metrics,
+        asset_run_ids=summary.get("asset_run_ids", {}),
     )
 
 

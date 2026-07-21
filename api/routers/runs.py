@@ -20,6 +20,7 @@ from api.models import (
     RunListItem,
     RunListResponse,
     SeriesResponse,
+    SignalEvaluationData,
     TradeRecord,
     TradesPageResponse,
     TradeStats,
@@ -212,6 +213,13 @@ def get_run_detail(run_id: str) -> RunDetailResponse:
     metrics = _load_metrics(run_dir)
     provenance = _build_provenance(params)
 
+    raw_se = params.get("signal_evaluation")
+    signal_evaluation: SignalEvaluationData | None
+    if raw_se is None:
+        signal_evaluation = None
+    else:
+        signal_evaluation = SignalEvaluationData.model_validate(raw_se)
+
     return RunDetailResponse(
         run_id=artifact_id,
         asset=params.get("asset", ""),
@@ -222,7 +230,7 @@ def get_run_detail(run_id: str) -> RunDetailResponse:
         params=params,
         metrics=metrics,
         provenance=provenance,
-        signal_evaluation=None,
+        signal_evaluation=signal_evaluation,
     )
 
 

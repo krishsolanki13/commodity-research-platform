@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton'
 import { cn } from '@/lib/cn'
 import { displayName } from '@/lib/commodity'
@@ -6,6 +7,8 @@ import { fmt } from '@/lib/fmt'
 export interface PortfolioAssetTableProps {
   assetMetrics: Record<string, Record<string, number | null>>
   assets: string[]
+  /** Corresponds to schema type { [key: string]: string | null } */
+  assetRunIds?: Record<string, string | null>
   loading?: boolean
   className?: string
 }
@@ -24,6 +27,7 @@ function metric(
 export function PortfolioAssetTable({
   assetMetrics,
   assets,
+  assetRunIds,
   loading = false,
   className,
 }: PortfolioAssetTableProps) {
@@ -48,6 +52,11 @@ export function PortfolioAssetTable({
               {heading}
             </th>
           ))}
+          {assetRunIds !== undefined ? (
+            <th className="px-3 py-2 text-right text-xs uppercase tracking-wider text-text-secondary">
+              VIEW
+            </th>
+          ) : null}
         </tr>
       </thead>
       <tbody>
@@ -58,6 +67,7 @@ export function PortfolioAssetTable({
           const totalReturn = metrics.total_return
           const winRate = metrics.win_rate
           const trades = metrics.avg_trade_duration_bars ?? metrics.turnover
+          const runId = assetRunIds?.[asset]
 
           return (
             <tr key={asset} className="border-border-subtle border-b">
@@ -104,6 +114,22 @@ export function PortfolioAssetTable({
               <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>
                 {trades == null ? missingValue : trades.toFixed(0)}
               </td>
+              {assetRunIds !== undefined ? (
+                <td className="px-3 py-2 text-right">
+                  {runId ? (
+                    <Link
+                      to={`/runs/${runId}`}
+                      className="font-mono text-xs text-text-accent hover:underline"
+                      title={`View ${displayName(asset)} run detail`}
+                      aria-label={`View ${displayName(asset)} run detail`}
+                    >
+                      View →
+                    </Link>
+                  ) : (
+                    <span className="font-mono text-xs text-text-disabled">—</span>
+                  )}
+                </td>
+              ) : null}
             </tr>
           )
         })}

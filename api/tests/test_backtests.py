@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
+import pytest
 from fastapi.testclient import TestClient
 
 from api import state
@@ -114,3 +115,90 @@ def test_backtest_lifecycle_mocked(client: TestClient) -> None:
 
     status_resp = client.get(f"/api/backtests/{polling_id}/status")
     assert status_resp.json()["status"] in ("queued", "running", "complete")
+
+
+def test_backtest_launch_request_accepts_signal_evaluation() -> None:
+    """BacktestLaunchRequest with signal_evaluation field round-trips correctly."""
+    from api.models import (  # noqa: PLC0415
+        BacktestLaunchRequest,
+        DecayEntry,
+        SignalEvaluationData,
+    )
+
+    se = SignalEvaluationData(
+        ic=0.143,
+        icir=3.815,
+        turnover=0.04,
+        decay=[
+            DecayEntry(horizon=1, ic=0.143),
+            DecayEntry(horizon=5, ic=0.089),
+            DecayEntry(horizon=20, ic=0.031),
+        ],
+        evaluation_window=63,
+        computed_at="2024-01-01T12:00:00.000Z",
+        ic_band="strong",
+    )
+    req = BacktestLaunchRequest(
+        asset="gold",
+        strategy="ema_crossover",
+        params={"fast_period": 50, "slow_period": 200},
+        signal_evaluation=se,
+    )
+    assert req.signal_evaluation is not None
+    assert req.signal_evaluation.ic == pytest.approx(0.143)
+    assert req.signal_evaluation.ic_band == "strong"
+    assert req.signal_evaluation.decay[0].horizon == 1
+
+
+def test_backtest_launch_request_accepts_null_signal_evaluation() -> None:
+    """BacktestLaunchRequest with signal_evaluation=None (IC Gate override)."""
+    from api.models import BacktestLaunchRequest  # noqa: PLC0415
+
+    req = BacktestLaunchRequest(
+        asset="gold",
+        strategy="ema_crossover",
+        params={"fast_period": 50, "slow_period": 200},
+        signal_evaluation=None,
+    )
+    assert req.signal_evaluation is None
+
+    # Absent field (old client behaviour) also defaults to None
+    req2 = BacktestLaunchRequest(
+        asset="gold",
+        strategy="ema_crossover",
+        params={"fast_period": 50, "slow_period": 200},
+    )
+    assert req2.signal_evaluation is None
+
+
+def test_api_eval_to_core_maps_decay_and_window() -> None:
+    """SignalEvaluationData → SignalEvaluation maps decay list and window."""
+    import datetime  # noqa: PLC0415
+
+    from api.models import DecayEntry, SignalEvaluationData  # noqa: PLC0415
+    from api.routers.backtests import _api_eval_to_core  # noqa: PLC0415
+
+    se = SignalEvaluationData(
+        ic=0.143,
+        icir=3.815,
+        turnover=0.04,
+        decay=[
+            DecayEntry(horizon=1, ic=0.143),
+            DecayEntry(horizon=5, ic=None),
+            DecayEntry(horizon=20, ic=0.031),
+        ],
+        evaluation_window=63,
+        computed_at="2024-01-01T12:00:00.000Z",
+        ic_band="strong",
+    )
+    core = _api_eval_to_core(
+        se,
+        signal_name="ema_crossover_50_200",
+        asset="gold",
+        evaluation_start=datetime.date(2020, 1, 1),
+        evaluation_end=datetime.date(2024, 1, 1),
+    )
+    assert core.ic == pytest.approx(0.143)
+    assert core.ic_rolling_window == 63
+    assert core.ic_decay == {1: 0.143, 20: 0.031}
+    assert 5 not in core.ic_decay  # None ic dropped
