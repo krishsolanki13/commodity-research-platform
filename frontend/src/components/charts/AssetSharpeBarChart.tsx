@@ -112,7 +112,9 @@ function AssetSharpeBarChartInner({ assetMetrics, assets, theme }: AssetSharpeBa
           markLine: {
             silent: true,
             symbol: 'none',
-            data: [{ xAxis: 0, lineStyle: { type: 'dashed' as const, color: theme.secondaryText } }],
+            data: [
+              { xAxis: 0, lineStyle: { type: 'dashed' as const, color: theme.secondaryText } },
+            ],
             label: { show: false },
           },
         },
