@@ -143,10 +143,10 @@ function ReturnHistogramInner({ values, bins, markers, theme }: ReturnHistogramI
     }
 
     const handleResize = () => chart.resize()
-    window.addEventListener('resize', handleResize)
+    globalThis.addEventListener('resize', handleResize)
 
     return () => {
-      window.removeEventListener('resize', handleResize)
+      globalThis.removeEventListener('resize', handleResize)
       chart.dispose()
     }
   }, [binData, markers, meanVal, medianVal, theme, bins, ctx])

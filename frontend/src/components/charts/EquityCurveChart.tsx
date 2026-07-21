@@ -299,10 +299,10 @@ function EquityCurveChartInner({
     })
 
     const handleResize = () => chart.resize()
-    window.addEventListener('resize', handleResize)
+    globalThis.addEventListener('resize', handleResize)
 
     return () => {
-      window.removeEventListener('resize', handleResize)
+      globalThis.removeEventListener('resize', handleResize)
       chart.dispose()
     }
   }, [equity, drawdown, baseline, compare, theme, ctx])

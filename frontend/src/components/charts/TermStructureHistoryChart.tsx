@@ -235,10 +235,10 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
     })
 
     const handleResize = () => chart.resize()
-    window.addEventListener('resize', handleResize)
+    globalThis.addEventListener('resize', handleResize)
 
     return () => {
-      window.removeEventListener('resize', handleResize)
+      globalThis.removeEventListener('resize', handleResize)
       chart.dispose()
     }
   }, [snapshots, theme, showRegimeBands, ctx])
