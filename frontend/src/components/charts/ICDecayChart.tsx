@@ -154,10 +154,10 @@ function ICDecayChartInner({ decay, theme }: ICDecayChartInnerProps) {
     })
 
     const handleResize = () => chart.resize()
-    window.addEventListener('resize', handleResize)
+    globalThis.addEventListener('resize', handleResize)
 
     return () => {
-      window.removeEventListener('resize', handleResize)
+      globalThis.removeEventListener('resize', handleResize)
       chart.dispose()
     }
   }, [decay, theme, ctx])

@@ -228,10 +228,10 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
     })
 
     const handleResize = () => chart.resize()
-    window.addEventListener('resize', handleResize)
+    globalThis.addEventListener('resize', handleResize)
 
     return () => {
-      window.removeEventListener('resize', handleResize)
+      globalThis.removeEventListener('resize', handleResize)
       chart.dispose()
     }
   }, [ohlcv, raw, position, theme, ctx])

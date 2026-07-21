@@ -292,10 +292,10 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
     })
 
     const handleResize = () => chart.resize()
-    window.addEventListener('resize', handleResize)
+    globalThis.addEventListener('resize', handleResize)
 
     return () => {
-      window.removeEventListener('resize', handleResize)
+      globalThis.removeEventListener('resize', handleResize)
       chart.dispose()
     }
   }, [ohlcv, overlays, markers, volume, style, theme, ctx])
