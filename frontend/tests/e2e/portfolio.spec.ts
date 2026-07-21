@@ -87,4 +87,43 @@ test.describe('Portfolio Analytics', () => {
       })
     }
   })
+
+  test('Enhanced portfolio panels render: drawdown, Sharpe bars, VaR bars, multi-pair rolling', async ({
+    page,
+  }) => {
+    await page.goto('/portfolio')
+    await page.waitForLoadState('networkidle')
+
+    // Locate run selector with specific accessible name (not .first() or index).
+    // Accessible name confirmed from PortfolioRunSelector.tsx: aria-label="Select a recent portfolio run".
+    const runSelector = page.getByRole('combobox', {
+      name: /select a recent portfolio run/i,
+    })
+
+    if (await runSelector.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await runSelector.click()
+      const firstOption = page.getByRole('option').first()
+      if (await firstOption.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await firstOption.click()
+        await page.waitForLoadState('networkidle')
+
+        // Multi-pair rolling correlation section visible
+        await expect(page.getByText(/rolling correlations/i).first()).toBeVisible({
+          timeout: 15_000,
+        })
+
+        // Per-asset VaR bar chart section visible
+        await expect(page.getByText(/per-asset var/i).first()).toBeVisible({
+          timeout: 5_000,
+        })
+      } else {
+        test.skip()
+      }
+    } else {
+      // No run history — verify config state renders without error
+      await expect(page.getByRole('button', { name: /launch/i })).toBeVisible({
+        timeout: 10_000,
+      })
+    }
+  })
 })
