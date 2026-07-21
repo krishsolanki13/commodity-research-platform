@@ -249,3 +249,110 @@ def test_portfolio_assets_pre_fix_run_returns_404_with_rerun_message(
     detail = response.json()["detail"]
     assert detail["code"] == "RUN_NOT_FOUND"
     assert "Re-run" in detail["message"] or "re-run" in detail["message"].lower()
+
+
+def test_portfolio_assets_returns_asset_run_ids(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GET /api/portfolio/{run_id}/assets → asset_run_ids present and
+    values match expected run_id format YYYYMMDD_HHMMSS_{strategy}_{asset}."""
+    import re
+
+    run_id = "20260722_120000_portfolio_ema_crossover"
+    gold_run_id = "20260722_120000_ema_crossover_gold"
+    silver_run_id = "20260722_120001_ema_crossover_silver"
+
+    summary = {
+        "run_id": run_id,
+        "strategy_name": "ema_crossover",
+        "assets": ["gold", "silver"],
+        "skipped_assets": [],
+        "initial_capital_per_asset": 1_000_000.0,
+        "initial_capital_total": 2_000_000.0,
+        "portfolio_date_range": ["2020-01-01", "2026-07-01"],
+        "portfolio_metrics": {"sharpe": 0.42},
+        "asset_contributions": {"gold": 0.6, "silver": 0.4},
+        "absolute_pnl_by_asset": {"gold": 12000.0, "silver": 8000.0},
+        "per_asset_metrics": {
+            "gold": {"sharpe": 0.55, "max_drawdown": -0.04},
+            "silver": {"sharpe": 0.31, "max_drawdown": -0.06},
+        },
+        "asset_run_ids": {
+            "gold": gold_run_id,
+            "silver": silver_run_id,
+        },
+    }
+
+    run_dir = tmp_path / run_id
+    run_dir.mkdir(parents=True)
+    (run_dir / "portfolio_summary.json").write_text(
+        json.dumps(summary), encoding="utf-8"
+    )
+
+    import api.routers.portfolio as portfolio_router
+
+    monkeypatch.setattr(portfolio_router, "RUNS_DIR", tmp_path)
+    response = client.get(f"/api/portfolio/{run_id}/assets")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "asset_run_ids" in data, "asset_run_ids missing from /assets response"
+    assert data["asset_run_ids"].get("gold") == gold_run_id
+    assert data["asset_run_ids"].get("silver") == silver_run_id
+
+    # Run IDs must match expected format
+    run_id_pattern = re.compile(r"^\d{8}_\d{6}_\w+_\w+$")
+    for asset, rid in data["asset_run_ids"].items():
+        if rid is not None:
+            assert run_id_pattern.match(rid), (
+                f"asset_run_ids[{asset}] = '{rid}' does not match "
+                f"YYYYMMDD_HHMMSS_strategy_asset format"
+            )
+
+
+def test_portfolio_assets_pre_fix_run_returns_empty_asset_run_ids(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GET /api/portfolio/{run_id}/assets with a pre-fix portfolio_summary.json
+    that lacks asset_run_ids returns 200 with asset_run_ids == {} not a 404."""
+    run_id = "20200101_000000_portfolio_ema_crossover"
+
+    # Pre-fix summary: has per_asset_metrics but no asset_run_ids
+    summary = {
+        "run_id": run_id,
+        "strategy_name": "ema_crossover",
+        "assets": ["gold"],
+        "skipped_assets": [],
+        "initial_capital_total": 1_000_000.0,
+        "portfolio_metrics": {"sharpe": 0.1},
+        "asset_contributions": {"gold": 1.0},
+        "absolute_pnl_by_asset": {"gold": 5000.0},
+        "per_asset_metrics": {"gold": {"sharpe": 0.15}},
+        # asset_run_ids deliberately absent (pre-fix run)
+    }
+
+    run_dir = tmp_path / run_id
+    run_dir.mkdir(parents=True)
+    (run_dir / "portfolio_summary.json").write_text(
+        json.dumps(summary), encoding="utf-8"
+    )
+
+    import api.routers.portfolio as portfolio_router
+
+    monkeypatch.setattr(portfolio_router, "RUNS_DIR", tmp_path)
+    response = client.get(f"/api/portfolio/{run_id}/assets")
+
+    assert response.status_code == 200, (
+        f"Pre-fix run must return 200, not 404. Got {response.status_code}: "
+        f"{response.json()}"
+    )
+    data = response.json()
+    # asset_run_ids absent in JSON → default {} in response (graceful)
+    asset_run_ids = data.get("asset_run_ids", {})
+    assert (
+        asset_run_ids == {} or asset_run_ids is None
+    ), f"Pre-fix run should return empty asset_run_ids, got: {asset_run_ids}"

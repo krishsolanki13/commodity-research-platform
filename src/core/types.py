@@ -566,6 +566,13 @@ class PortfolioPerformanceReport:
     Computed over the inner-join date range (same as portfolio_pnl_series index)."""
     per_asset_reports: dict[str, PerformanceReport]
 
+    asset_run_ids: dict[str, str | None] = field(default_factory=dict)
+    """Maps asset identifier → individual BacktestResult.run_id.
+    Populated by PortfolioPerformanceEngine.compute() from
+    multi_result.asset_results. Used by the frontend to link portfolio
+    asset rows to individual /runs/{id} detail pages.
+    Empty dict for portfolio runs created before this fix was shipped."""
+
     @property
     def n_assets(self) -> int:
         """Number of successfully backtested assets."""

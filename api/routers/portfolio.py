@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import traceback
 from pathlib import Path
 from typing import Any, cast
@@ -25,6 +26,8 @@ from api.models import (
 )
 
 router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
+
+logger = logging.getLogger(__name__)
 
 _DEFAULT_ASSETS = [
     "gold",
@@ -138,6 +141,29 @@ def _run_portfolio_task(
             sizer=sizer,
             signal_threshold=request.signal_threshold,
         )
+
+        # Save individual per-asset run artifacts so /api/runs/{assetRunId}
+        # is resolvable. Non-fatal — portfolio result is not affected if
+        # an individual asset save fails.
+        try:
+            from src.backtesting.run_manager import RunManager  # noqa: PLC0415
+            from src.performance.report import PerformanceEngine  # noqa: PLC0415
+
+            _manager = RunManager(cfg)
+            _perf_engine = PerformanceEngine()
+            for _asset, _br in multi_result.asset_results.items():
+                try:
+                    _manager.save(_br)
+                    _asset_report = _perf_engine.compute(_br)
+                    _manager.save_metrics(_br.run_id, _asset_report)
+                except Exception as _asset_exc:
+                    logger.warning(
+                        "Could not save per-asset run for %s: %s",
+                        _asset,
+                        _asset_exc,
+                    )
+        except Exception as _save_exc:
+            logger.warning("Per-asset artifact save block failed: %s", _save_exc)
 
         port_engine = PortfolioPerformanceEngine()
         port_report = port_engine.compute(multi_result)
@@ -412,6 +438,7 @@ async def get_portfolio_assets(run_id: str) -> PortfolioAssetsResponse:
         run_id=run_id,
         assets=summary["assets"],
         asset_metrics=per_asset_metrics,
+        asset_run_ids=summary.get("asset_run_ids", {}),
     )
 
 

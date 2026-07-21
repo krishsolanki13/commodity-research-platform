@@ -169,6 +169,10 @@ class PortfolioPerformanceEngine:
             asset_contributions=asset_contributions,
             absolute_pnl_by_asset=absolute_pnl_by_asset,
             per_asset_reports=per_asset_reports,
+            asset_run_ids={
+                asset: result.run_id
+                for asset, result in multi_result.asset_results.items()
+            },
         )
 
     def _compute_portfolio_metrics(
@@ -356,6 +360,7 @@ def save_portfolio_summary(
             asset: {k: _nan_safe(v) for k, v in per_rpt.scalar_metrics.items()}
             for asset, per_rpt in report.per_asset_reports.items()
         },
+        "asset_run_ids": report.asset_run_ids,
     }
 
     run_dir.mkdir(parents=True, exist_ok=True)
