@@ -1,20 +1,26 @@
 import { AssetAttributionTable } from '@/components/data/AssetAttributionTable'
+import { AssetSharpeBarChart } from '@/components/charts/AssetSharpeBarChart'
 import { MetricGrid } from '@/components/data/MetricGrid'
 import type { MetricStatProps } from '@/components/data/MetricStat'
 import type { components } from '@/api/schema'
 
 type PortfolioSummaryResponse = components['schemas']['PortfolioSummaryResponse']
 type CorrelationReportResponse = components['schemas']['CorrelationReportResponse']
+type PortfolioAssetsResponse = components['schemas']['PortfolioAssetsResponse']
 
 interface PortfolioAttributionPanelProps {
   summary: PortfolioSummaryResponse | null
   correlation: CorrelationReportResponse | null
+  assetsData?: PortfolioAssetsResponse | null
+  assetsLoading?: boolean
   loading?: boolean
 }
 
 export function PortfolioAttributionPanel({
   summary,
   correlation,
+  assetsData,
+  assetsLoading = false,
   loading,
 }: PortfolioAttributionPanelProps) {
   const assets = summary?.assets ?? []
@@ -47,6 +53,16 @@ export function PortfolioAttributionPanel({
           loading={loading}
         />
       </div>
+      {assetsData?.asset_metrics && assets.length > 0 && (
+        <AssetSharpeBarChart
+          assetMetrics={assetsData.asset_metrics}
+          assets={assets}
+          title="Per-Asset Sharpe Ratio"
+          height={220}
+          loading={assetsLoading}
+          empty={{ message: 'Per-asset metrics not available. Re-run portfolio to generate.' }}
+        />
+      )}
       <div>
         <p className="mb-2 font-mono text-xs uppercase text-text-secondary">
           Strategy Realized Vol (%)

@@ -4,6 +4,7 @@ import { usePortfolioSummary } from '@/api/hooks/usePortfolioSummary'
 import { usePortfolioEquity } from '@/api/hooks/usePortfolioEquity'
 import { usePortfolioRisk } from '@/api/hooks/usePortfolioRisk'
 import { usePortfolioCorrelation } from '@/api/hooks/usePortfolioCorrelation'
+import { usePortfolioAssets } from '@/api/hooks/usePortfolioAssets'
 import { usePortfolioDelete } from '@/api/hooks'
 import { useUrlState } from '@/lib/useUrlState'
 import { usePortfolioHistory } from '@/stores/portfolioHistory'
@@ -15,6 +16,7 @@ import { PortfolioAttributionPanel } from '@/features/portfolio/PortfolioAttribu
 import { PortfolioPerAssetPanel } from '@/features/portfolio/PortfolioPerAssetPanel'
 import { PortfolioRiskPanel } from '@/features/portfolio/PortfolioRiskPanel'
 import { PortfolioCorrelationPanel } from '@/features/portfolio/PortfolioCorrelationPanel'
+import { PortfolioRollingCorrelationPanel } from '@/features/portfolio/PortfolioRollingCorrelationPanel'
 import { PortfolioRunSelector } from '@/features/portfolio/PortfolioRunSelector'
 import { portfolioUrlDefaults, portfolioUrlSchema } from '@/features/portfolio/portfolioUrlState'
 import { EmptyState } from '@/components/layout/EmptyState'
@@ -56,6 +58,7 @@ export function PortfolioAnalytics() {
   const equity = usePortfolioEquity(run_id ?? '')
   const risk = usePortfolioRisk(run_id ?? '')
   const correlation = usePortfolioCorrelation(run_id ?? '')
+  const assetsQuery = usePortfolioAssets(run_id ?? '')
 
   const isLoading =
     summaryQuery.isLoading || equity.isLoading || risk.isLoading || correlation.isLoading
@@ -165,6 +168,8 @@ export function PortfolioAnalytics() {
       <PortfolioAttributionPanel
         summary={summary ?? null}
         correlation={correlation.data ?? null}
+        assetsData={assetsQuery.data ?? null}
+        assetsLoading={assetsQuery.isLoading}
         loading={isLoading}
       />
 
@@ -176,6 +181,13 @@ export function PortfolioAnalytics() {
         correlation={correlation.data ?? null}
         loading={correlation.isLoading}
       />
+
+      {correlation.data && (
+        <PortfolioRollingCorrelationPanel
+          correlation={correlation.data}
+          loading={correlation.isLoading}
+        />
+      )}
 
       <AlertDialog
         open={deleteConfirmId !== null}

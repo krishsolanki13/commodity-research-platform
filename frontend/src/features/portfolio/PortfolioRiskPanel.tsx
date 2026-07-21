@@ -1,4 +1,5 @@
 import { MetricGrid } from '@/components/data/MetricGrid'
+import { AssetRiskBarChart } from '@/components/charts/AssetRiskBarChart'
 import type { components } from '@/api/schema'
 
 type RiskReportResponse = components['schemas']['RiskReportResponse']
@@ -49,6 +50,15 @@ export function PortfolioRiskPanel({ risk, loading }: PortfolioRiskPanelProps) {
           magnitudes.
         </p>
       </div>
+      {risk?.asset_var_99 && Object.keys(risk.asset_var_99).length > 0 && (
+        <AssetRiskBarChart
+          assetVar99={risk.asset_var_99}
+          assets={Object.keys(risk.asset_var_99).sort()}
+          title="Per-Asset VaR 99% (Strategy P&L)"
+          height={220}
+          loading={loading}
+        />
+      )}
       <div>
         <p className="mb-2 font-mono text-xs uppercase text-text-secondary">Notional Exposure</p>
         <MetricGrid
