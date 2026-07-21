@@ -23,7 +23,7 @@ import { fmt } from '@/lib/fmt'
 import type { ApiClientError } from '@/api/client'
 
 interface AssetRiskBarChartProps {
-  assetVar99: Record<string, number>
+  assetVar99: Record<string, number | null>
   assets: string[]
   title?: string
   height?: number | string
@@ -36,7 +36,7 @@ interface AssetRiskBarChartProps {
 // ---------------------------------------------------------------------------
 
 interface AssetRiskBarChartInnerProps {
-  assetVar99: Record<string, number>
+  assetVar99: Record<string, number | null>
   assets: string[]
   theme: EChartsTheme
 }

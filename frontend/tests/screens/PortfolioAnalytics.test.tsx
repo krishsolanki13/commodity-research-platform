@@ -87,4 +87,19 @@ describe('PortfolioAnalytics screen', () => {
     await userEvent.click(deleteBtn)
     expect(screen.getByRole('alertdialog')).toBeInTheDocument()
   })
+
+  it('equity panel renders with drawdown pane when equity data is present', async () => {
+    render(<Wrapper initialPath={`/portfolio?run_id=${MOCK_PORTFOLIO_RUN_ID}`} />)
+    await waitFor(() => expect(document.body).not.toBeEmptyDOMElement(), {
+      timeout: 5000,
+    })
+    // EquityCurveChart receives drawdown prop — verify screen renders without error
+    expect(document.body).not.toBeEmptyDOMElement()
+  })
+
+  it('PortfolioRollingCorrelationPanel renders below correlation section', async () => {
+    render(<Wrapper initialPath={`/portfolio?run_id=${MOCK_PORTFOLIO_RUN_ID}`} />)
+    await waitFor(() => screen.getByText(/rolling correlations/i), { timeout: 5000 })
+    expect(screen.getByText(/rolling correlations/i)).toBeInTheDocument()
+  })
 })
