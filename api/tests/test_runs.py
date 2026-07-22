@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -111,6 +112,40 @@ def test_get_run_detail_happy_path(client: TestClient) -> None:
     assert data["provenance"]["git_sha"] == "abcd1234"
     assert "pandas" in data["provenance"]["package_versions"]
     assert data["asset"] == "gold"
+    assert data["signal_evaluation"] is None
+
+
+def test_get_run_detail_returns_persisted_signal_evaluation(
+    client: TestClient,
+) -> None:
+    """signal_evaluation written into params.json is returned by run detail."""
+    with tempfile.TemporaryDirectory() as tmp:
+        base = Path(tmp)
+        run_id = "20240101_120000_ema_crossover_gold"
+        run_dir = _write_fake_run(base, run_id)
+        params = json.loads((run_dir / "params.json").read_text())
+        params["signal_evaluation"] = {
+            "ic": 0.143,
+            "icir": 3.815,
+            "turnover": 0.04,
+            "decay": [
+                {"horizon": 1, "ic": 0.143},
+                {"horizon": 5, "ic": 0.089},
+                {"horizon": 20, "ic": 0.031},
+            ],
+            "evaluation_window": 63,
+            "computed_at": "2024-01-01T12:00:00.000Z",
+            "ic_band": "strong",
+        }
+        (run_dir / "params.json").write_text(json.dumps(params))
+        with _patch_runs_dir(base):
+            response = client.get(f"/api/runs/{run_id}")
+    assert response.status_code == 200
+    se = response.json()["signal_evaluation"]
+    assert se is not None
+    assert se["ic"] == pytest.approx(0.143)
+    assert se["ic_band"] == "strong"
+    assert se["decay"][0]["horizon"] == 1
 
 
 def test_get_run_series_equity_curve(client: TestClient) -> None:

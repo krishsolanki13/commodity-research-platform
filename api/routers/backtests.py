@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import datetime
+import json
+import math
 import traceback
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks
@@ -10,6 +13,7 @@ from api import state
 from api.exceptions import ApiError
 from api.models import (
     BacktestLaunchRequest,
+    SignalEvaluationData,
     TaskLaunchResponse,
     TaskStatusResponse,
 )
@@ -68,6 +72,61 @@ def _build_full_pipeline(
     return indicators, gen
 
 
+def _api_eval_to_core(
+    se: SignalEvaluationData,
+    *,
+    signal_name: str,
+    asset: str,
+    evaluation_start: datetime.date,
+    evaluation_end: datetime.date,
+) -> Any:
+    """Convert API SignalEvaluationData → core SignalEvaluation dataclass.
+
+    evaluation_window maps to ic_rolling_window. ic_band and computed_at are
+    API-only fields and are not stored on the dataclass (they remain in
+    params.json via _persist_signal_evaluation).
+    """
+    from src.core.types import SignalEvaluation  # noqa: PLC0415
+
+    def _f(v: float | None) -> float:
+        return float("nan") if v is None else v
+
+    ic_decay: dict[int, float] = {}
+    for e in se.decay:
+        if e.ic is None or (isinstance(e.ic, float) and math.isnan(e.ic)):
+            continue
+        ic_decay[e.horizon] = e.ic
+
+    return SignalEvaluation(
+        signal_name=signal_name,
+        asset=asset,
+        ic=_f(se.ic),
+        icir=_f(se.icir),
+        ic_decay=ic_decay,
+        turnover=_f(se.turnover),
+        ic_rolling_window=se.evaluation_window,
+        evaluation_start=evaluation_start,
+        evaluation_end=evaluation_end,
+    )
+
+
+def _persist_signal_evaluation(
+    cfg: Any,
+    run_id: str,
+    se_data: SignalEvaluationData | None,
+) -> None:
+    """Write signal_evaluation into params.json after RunManager.save().
+
+    RunManager only serialises BacktestMetadata — signal_evaluation lives on
+    BacktestResult and is not written by save(). The API layer patches
+    params.json so GET /api/runs/{id} can return the IC Gate payload.
+    """
+    params_path = Path(cfg.paths["runs"]) / run_id / "params.json"
+    params = json.loads(params_path.read_text(encoding="utf-8"))
+    params["signal_evaluation"] = se_data.model_dump() if se_data is not None else None
+    params_path.write_text(json.dumps(params, indent=2), encoding="utf-8")
+
+
 def _run_backtest_task(polling_run_id: str, request: BacktestLaunchRequest) -> None:
     """Background task: full research pipeline for one asset."""
     try:
@@ -84,7 +143,6 @@ def _run_backtest_task(polling_run_id: str, request: BacktestLaunchRequest) -> N
         from src.performance.report import PerformanceEngine  # noqa: PLC0415
         from src.research.feature_frame import FeatureFrame  # noqa: PLC0415
         from src.research.pipeline import FeaturePipeline  # noqa: PLC0415
-        from src.signal.evaluation import SignalEvaluator  # noqa: PLC0415
         from src.signal.position import PositionSignalConstructor  # noqa: PLC0415
 
         cfg = Config.load()
@@ -114,11 +172,21 @@ def _run_backtest_task(polling_run_id: str, request: BacktestLaunchRequest) -> N
 
         raw_signal = signal_gen.generate(feature_frame)
 
-        try:
-            signal_evaluation = SignalEvaluator(asset=request.asset).evaluate(
-                raw_signal, ohlcv
+        # Prefer client-provided IC Gate evaluation. None = IC Gate override
+        # (or absent field) — persist null and skip recompute so override is
+        # visible on the Signal Quality tab.
+        se_data = request.signal_evaluation
+        if se_data is not None:
+            eval_start = ohlcv.index[0].date()
+            eval_end = ohlcv.index[-1].date()
+            signal_evaluation = _api_eval_to_core(
+                se_data,
+                signal_name=signal_gen.name,
+                asset=request.asset,
+                evaluation_start=eval_start,
+                evaluation_end=eval_end,
             )
-        except ValueError:
+        else:
             signal_evaluation = None
 
         threshold = request.params.get("signal_threshold", request.signal_threshold)
@@ -150,6 +218,7 @@ def _run_backtest_task(polling_run_id: str, request: BacktestLaunchRequest) -> N
         run_manager = RunManager(cfg)
         run_manager.save(backtest_result)
         run_manager.save_metrics(backtest_result.run_id, perf_report)
+        _persist_signal_evaluation(cfg, backtest_result.run_id, se_data)
 
         state.set_artifact_id(polling_run_id, backtest_result.run_id)
 
