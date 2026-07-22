@@ -43,7 +43,7 @@ function CorrelationHeatmapInner({
     })
 
     const option: EChartsOption = {
-      grid: { left: 80, right: 20, bottom: 60, top: '5%' },
+      grid: { left: 80, right: 80, bottom: 60, top: '5%' },
       xAxis: {
         type: 'category',
         data: axisLabels,
@@ -69,9 +69,9 @@ function CorrelationHeatmapInner({
         min: -1,
         max: 1,
         calculable: true,
-        orient: 'horizontal',
-        left: 'center',
-        bottom: 0,
+        orient: 'vertical',
+        right: 0,
+        top: 'center',
         inRange: {
           // Resolve at option-build time (browser): ECharts rejects var(--x) strings.
           color: [

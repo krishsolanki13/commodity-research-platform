@@ -175,11 +175,18 @@ export function PortfolioAnalytics() {
 
       <PortfolioPerAssetPanel runId={run_id} assets={summary?.assets ?? []} />
 
-      <PortfolioRiskPanel risk={risk.data ?? null} loading={risk.isLoading} />
+      <PortfolioRiskPanel
+        risk={risk.data ?? null}
+        summary={summary ?? null}
+        loading={risk.isLoading}
+        error={risk.error}
+      />
 
       <PortfolioCorrelationPanel
         correlation={correlation.data ?? null}
+        summary={summary ?? null}
         loading={correlation.isLoading}
+        error={correlation.error}
       />
 
       {correlation.data && (

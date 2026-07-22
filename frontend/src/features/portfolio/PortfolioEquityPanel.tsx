@@ -17,6 +17,15 @@ function computePortfolioDrawdown(equity: (number | null)[]): (number | null)[] 
   })
 }
 
+function isApiError(error: unknown): error is ApiClientError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'apiError' in error &&
+    typeof (error as ApiClientError).apiError?.status === 'number'
+  )
+}
+
 interface PortfolioEquityPanelProps {
   equityData: PortfolioEquityResponse | null
   summary: PortfolioSummaryResponse | null
@@ -30,6 +39,18 @@ export function PortfolioEquityPanel({
   loading,
   error,
 }: PortfolioEquityPanelProps) {
+  const isServerRestartLoss =
+    !!error && isApiError(error) && error.apiError.status === 404 && !!summary
+
+  if (isServerRestartLoss) {
+    return (
+      <div className="flex items-center gap-2 p-4 text-xs text-text-secondary">
+        <span>Detailed analytics unavailable after server restart.</span>
+        <span className="ml-1 text-text-disabled">Re-run the portfolio analysis to restore.</span>
+      </div>
+    )
+  }
+
   const equityValues = equityData?.portfolio_equity?.columns?.value ?? []
   const equityIndex = equityData?.portfolio_equity?.index ?? []
   const drawdownValues = computePortfolioDrawdown(equityValues)

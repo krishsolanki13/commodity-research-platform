@@ -1,7 +1,10 @@
-import { useParams, Link, Navigate } from 'react-router-dom'
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Trash2 } from 'lucide-react'
 import { TabsUrlSync } from '@/ui/TabsUrlSync'
-import { useRunDetail } from '@/api/hooks'
+import { useRunDetail, useRunDelete } from '@/api/hooks'
 import { ApiClientError } from '@/api/client'
+import { useComparisonBasket } from '@/stores/comparisonBasket'
 import { RunStatusBadge } from '@/components/data/RunStatusBadge'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton'
@@ -10,11 +13,25 @@ import { RunSignalQualityTab } from '@/features/runs/RunSignalQualityTab'
 import { RunTradesTab } from '@/features/runs/RunTradesTab'
 import { RunArtifactsTab } from '@/features/runs/RunArtifactsTab'
 import { fmt } from '@/lib/fmt'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/ui/alert-dialog'
 
 export default function RunDetail() {
   const { runId } = useParams<{ runId: string }>()
+  const navigate = useNavigate()
   const { data: run, isLoading, error } = useRunDetail(runId ?? '')
   const displayId = runId?.replace(/^poll_/, '') ?? ''
+  const basket = useComparisonBasket()
+  const deleteRun = useRunDelete()
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   if (!runId) return <Navigate to="/runs" replace />
 
@@ -31,6 +48,26 @@ export default function RunDetail() {
         </Link>
       </div>
     )
+  }
+
+  function handleAddToCompare() {
+    if (!runId) return
+    if (!basket.has(runId)) {
+      basket.add(runId)
+    }
+    void navigate('/runs/compare')
+  }
+
+  function handleConfirmDelete() {
+    if (!runId) return
+    deleteRun.mutate(runId, {
+      onSuccess: () => {
+        basket.remove(runId)
+        setShowDeleteDialog(false)
+        void navigate('/runs')
+      },
+      onError: () => setShowDeleteDialog(false),
+    })
   }
 
   return (
@@ -63,14 +100,25 @@ export default function RunDetail() {
             )}
           </div>
 
-          {/* Compare — disabled placeholder for F7 */}
-          <button
-            disabled
-            title="Compare runs — coming in F7"
-            className="cursor-not-allowed rounded-sm border border-border-default px-2 py-1 text-xs text-text-disabled"
-          >
-            Compare →
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowDeleteDialog(true)}
+              disabled={deleteRun.isPending}
+              className="text-text-secondary transition-colors hover:text-text-loss"
+              title="Delete run"
+              aria-label="Delete run"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleAddToCompare}
+              className="rounded-sm border border-border-default px-2 py-1 text-xs text-text-accent transition-colors hover:bg-bg-hover"
+            >
+              Compare →
+            </button>
+          </div>
         </div>
       </div>
 
@@ -110,6 +158,28 @@ export default function RunDetail() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete run?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove{' '}
+              <span className="font-mono text-text-emphasis">{displayId}</span> and all its
+              artifacts.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              style={{ backgroundColor: 'var(--loss-500)', color: 'white' }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

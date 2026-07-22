@@ -35,4 +35,13 @@ describe('DateScrubber', () => {
     fireEvent.change(input, { target: { value: '2025-01-15' } })
     expect(onChange).toHaveBeenCalledWith('2025-01-15')
   })
+
+  it('date input is enabled in Latest mode and click switches to today', () => {
+    const onChange = vi.fn()
+    render(<DateScrubber value={null} onChange={onChange} />)
+    const input = screen.getByLabelText('Observation date')
+    expect(input).not.toBeDisabled()
+    fireEvent.click(input)
+    expect(onChange).toHaveBeenCalledWith(new Date().toISOString().slice(0, 10))
+  })
 })

@@ -17,6 +17,7 @@ export function DateScrubber({
   disabled = false,
   className,
 }: DateScrubberProps) {
+  const today = new Date().toISOString().slice(0, 10)
   const hideDateInput = minDate !== undefined && maxDate !== undefined && minDate > maxDate
 
   return (
@@ -41,11 +42,15 @@ export function DateScrubber({
       {!hideDateInput && (
         <input
           type="date"
-          value={value ?? ''}
+          value={value ?? today}
           onChange={(e) => onChange(e.target.value || null)}
+          onClick={() => {
+            // Clicking the date input exits Latest mode into Custom
+            if (value === null) onChange(today)
+          }}
           min={minDate}
           max={maxDate}
-          disabled={disabled || value === null}
+          disabled={disabled}
           aria-label="Observation date"
           className={cn(
             'rounded-sm border border-border-strong bg-bg-app px-2 py-1 font-mono text-xs',
