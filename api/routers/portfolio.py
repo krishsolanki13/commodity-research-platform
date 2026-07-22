@@ -409,7 +409,9 @@ async def get_portfolio_assets(run_id: str) -> PortfolioAssetsResponse:
     save_portfolio_summary() — runs completed before this fix will return
     a 404 with a clear re-run message.
     """
-    summary_path = RUNS_DIR / run_id / "portfolio_summary.json"
+    # Launch returns a poll_* id; artifacts are stored under the real run_id.
+    artifact_id = state.get_artifact_id(run_id) or run_id
+    summary_path = RUNS_DIR / artifact_id / "portfolio_summary.json"
     if not summary_path.exists():
         raise HTTPException(
             status_code=404,
@@ -435,7 +437,7 @@ async def get_portfolio_assets(run_id: str) -> PortfolioAssetsResponse:
         )
 
     return PortfolioAssetsResponse(
-        run_id=run_id,
+        run_id=artifact_id,
         assets=summary["assets"],
         asset_metrics=per_asset_metrics,
         asset_run_ids=summary.get("asset_run_ids", {}),
