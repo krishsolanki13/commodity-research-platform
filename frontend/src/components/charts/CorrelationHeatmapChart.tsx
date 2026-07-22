@@ -3,7 +3,7 @@ import type { EChartsOption } from 'echarts'
 import type { ApiClientError } from '@/api/client'
 import { ChartFrame, useChartFrame } from '@/components/charts/ChartFrame'
 import { echarts, type ECharts } from '@/lib/echarts-setup'
-import { useChartTheme } from '@/lib/chart-theme'
+import { resolveCssVar, useChartTheme } from '@/lib/chart-theme'
 import { displayName } from '@/lib/commodity'
 
 interface CorrelationHeatmapChartProps {
@@ -73,7 +73,15 @@ function CorrelationHeatmapInner({
         left: 'center',
         bottom: 0,
         inRange: {
-          color: ['var(--text-loss)', 'var(--bg-raised)', 'var(--text-gain)'],
+          // Resolve at option-build time (browser): ECharts rejects var(--x) strings.
+          color: [
+            // eslint-disable-next-line no-restricted-syntax -- ECharts needs resolved hex; fallback only if CSS token missing
+            resolveCssVar('--text-loss', '#ef4444'),
+            // eslint-disable-next-line no-restricted-syntax -- ECharts needs resolved hex; fallback only if CSS token missing
+            resolveCssVar('--bg-raised', '#1e2a3a'),
+            // eslint-disable-next-line no-restricted-syntax -- ECharts needs resolved hex; fallback only if CSS token missing
+            resolveCssVar('--text-gain', '#22c55e'),
+          ],
         },
         textStyle: { color: theme.secondaryText, fontSize: 10 },
         text: ['1.0', '-1.0'],

@@ -20,6 +20,7 @@ import {
   MarkAreaComponent,
   AxisPointerComponent,
   VisualMapComponent,
+  TitleComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 
@@ -37,6 +38,7 @@ echarts.use([
   MarkAreaComponent,
   AxisPointerComponent,
   VisualMapComponent,
+  TitleComponent,
   CanvasRenderer,
 ])
 
