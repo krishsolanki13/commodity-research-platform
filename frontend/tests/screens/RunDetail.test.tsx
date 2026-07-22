@@ -58,7 +58,7 @@ describe('RunDetail', () => {
 
   it('renders ErrorState for an unknown runId (RUN_NOT_FOUND)', async () => {
     renderRunDetail('completely-unknown-run-id-xyz')
-    await waitFor(() => expect(screen.getByText(/all runs/i)).toBeInTheDocument(), {
+    await waitFor(() => expect(screen.getByText(/run explorer/i)).toBeInTheDocument(), {
       timeout: 3000,
     })
   })

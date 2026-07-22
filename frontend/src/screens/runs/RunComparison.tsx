@@ -3,6 +3,7 @@ import { X, AlertTriangle } from 'lucide-react'
 import { useRunCompare } from '@/api/hooks'
 import { AlignedCurvesChart } from '@/components/charts/AlignedCurvesChart'
 import { MetricDeltaTable } from '@/components/data/MetricDeltaTable'
+import { EmptyState } from '@/components/layout/EmptyState'
 import { Panel } from '@/ui/Panel'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { fmt } from '@/lib/fmt'
@@ -26,7 +27,21 @@ export function RunComparison() {
   const { data, isLoading, error } = useRunCompare(ids)
 
   if (ids.length === 0) {
-    return <Navigate to="/runs" replace />
+    return (
+      <div className="flex flex-col gap-6 p-6">
+        <div className="flex items-center justify-between">
+          <h1 className="font-mono text-lg font-semibold text-text-emphasis">Run Comparison</h1>
+          <Link to="/runs" className="font-mono text-xs text-text-accent hover:text-accent-hover">
+            ← Run Explorer
+          </Link>
+        </div>
+        <EmptyState
+          title="No runs selected"
+          body="Add at least two runs from the Run Explorer comparison tray to compare them side by side."
+          action={{ label: 'Open Run Explorer →', href: '/runs' }}
+        />
+      </div>
+    )
   }
   if (ids.length === 1) {
     return <Navigate to={`/runs/${ids[0]}`} replace />

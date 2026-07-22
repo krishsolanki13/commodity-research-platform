@@ -49,11 +49,13 @@ describe('RunComparison', () => {
     )
   })
 
-  it('zero IDs in URL redirects to run explorer', async () => {
+  it('zero IDs in URL shows empty comparison state', async () => {
     render(<Wrapper url="/runs/compare" />)
     await waitFor(() =>
-      expect(screen.getByTestId('run-explorer')).toBeInTheDocument()
+      expect(screen.getByText(/no runs selected/i)).toBeInTheDocument()
     )
+    expect(screen.queryByTestId('run-explorer')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /run comparison/i })).toBeInTheDocument()
   })
 
   it('mixed_assets=true shows cross-asset notice', async () => {

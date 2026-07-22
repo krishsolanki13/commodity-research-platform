@@ -198,7 +198,10 @@ export function PortfolioAnalytics() {
             <AlertDialogTitle>Delete this portfolio run?</AlertDialogTitle>
             <AlertDialogDescription>
               Run{' '}
-              <span className="font-mono text-text-emphasis">{deleteConfirmId?.slice(-20)}</span>{' '}
+              <span className="font-mono text-text-emphasis">
+                {deleteConfirmId?.replace(/^(?:poll_)?\d{8}_\d{6}_portfolio_/, '') ??
+                  deleteConfirmId}
+              </span>{' '}
               will be permanently deleted. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

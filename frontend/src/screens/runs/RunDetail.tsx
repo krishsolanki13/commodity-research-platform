@@ -14,6 +14,7 @@ import { fmt } from '@/lib/fmt'
 export default function RunDetail() {
   const { runId } = useParams<{ runId: string }>()
   const { data: run, isLoading, error } = useRunDetail(runId ?? '')
+  const displayId = runId?.replace(/^poll_/, '') ?? ''
 
   if (!runId) return <Navigate to="/runs" replace />
 
@@ -26,7 +27,7 @@ export default function RunDetail() {
       <div className="flex flex-col gap-4 p-6">
         <ErrorState error={new Error('Run not found')} />
         <Link to="/runs" className="text-xs text-text-accent hover:underline">
-          ← All runs
+          ← Run Explorer
         </Link>
       </div>
     )
@@ -35,31 +36,42 @@ export default function RunDetail() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border-default px-6 py-3">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-3">
-            {run && <RunStatusBadge status={run.status} />}
-            <span className="max-w-xs truncate font-mono text-xs text-text-secondary" title={runId}>
-              {runId}
-            </span>
-          </div>
-          {run && (
-            <span className="text-xs text-text-secondary">
-              {run.asset.toUpperCase()} · {run.strategy}
-              {' · '}
-              {fmt.isoDate(run.from_date)} → {fmt.isoDate(run.to_date)}
-            </span>
-          )}
-        </div>
-
-        {/* Compare — disabled placeholder for F7 */}
-        <button
-          disabled
-          title="Compare runs — coming in F7"
-          className="cursor-not-allowed rounded-sm border border-border-default px-2 py-1 text-xs text-text-disabled"
+      <div className="flex shrink-0 flex-col gap-1 border-b border-border-default px-6 py-3">
+        <Link
+          to="/runs"
+          className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary"
         >
-          Compare →
-        </button>
+          ← Run Explorer
+        </Link>
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3">
+              {run && <RunStatusBadge status={run.status} />}
+              <span
+                className="max-w-xs truncate font-mono text-xs text-text-secondary"
+                title={displayId}
+              >
+                {displayId}
+              </span>
+            </div>
+            {run && (
+              <span className="text-xs text-text-secondary">
+                {run.asset.toUpperCase()} · {run.strategy}
+                {' · '}
+                {fmt.isoDate(run.from_date)} → {fmt.isoDate(run.to_date)}
+              </span>
+            )}
+          </div>
+
+          {/* Compare — disabled placeholder for F7 */}
+          <button
+            disabled
+            title="Compare runs — coming in F7"
+            className="cursor-not-allowed rounded-sm border border-border-default px-2 py-1 text-xs text-text-disabled"
+          >
+            Compare →
+          </button>
+        </div>
       </div>
 
       {/* Tab body */}
