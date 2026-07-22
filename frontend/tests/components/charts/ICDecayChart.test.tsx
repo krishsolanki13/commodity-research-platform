@@ -33,16 +33,13 @@ describe('ICDecayChart', () => {
       { horizon: 10, ic: 0.004 },
       { horizon: 20, ic: 0.002 },
     ]
-    expect(() =>
-      render(<ICDecayChart decay={decayWithNull} />, { wrapper: Wrapper })
-    ).not.toThrow()
+    expect(() => render(<ICDecayChart decay={decayWithNull} />, { wrapper: Wrapper })).not.toThrow()
   })
 
   it('passes loading state through to ChartFrame', () => {
-    render(
-      <ICDecayChart decay={goldEmaEvalFixture.evaluation.decay} loading={true} />,
-      { wrapper: Wrapper }
-    )
+    render(<ICDecayChart decay={goldEmaEvalFixture.evaluation.decay} loading={true} />, {
+      wrapper: Wrapper,
+    })
     expect(document.querySelector('.animate-shimmer')).toBeTruthy()
   })
 })

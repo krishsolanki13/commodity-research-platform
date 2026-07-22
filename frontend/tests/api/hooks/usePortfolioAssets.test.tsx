@@ -6,10 +6,9 @@ import { createWrapper } from '../../test-utils'
 
 describe('usePortfolioAssets', () => {
   it('returns asset metrics for all 6 assets', async () => {
-    const { result } = renderHook(
-      () => usePortfolioAssets(MOCK_PORTFOLIO_RUN_ID),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => usePortfolioAssets(MOCK_PORTFOLIO_RUN_ID), {
+      wrapper: createWrapper(),
+    })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(Object.keys(result.current.data?.asset_metrics ?? {})).toHaveLength(6)

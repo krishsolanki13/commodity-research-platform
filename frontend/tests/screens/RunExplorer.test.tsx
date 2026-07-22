@@ -33,26 +33,20 @@ describe('RunExplorer', () => {
   it('renders run table with 2 runs from runListFixture', async () => {
     render(<Wrapper />)
     await waitFor(() => {
-      const bodyRows = screen
-        .getAllByRole('row')
-        .filter((r) => r.closest('tbody') !== null)
+      const bodyRows = screen.getAllByRole('row').filter((r) => r.closest('tbody') !== null)
       expect(bodyRows).toHaveLength(2)
     })
   })
 
   it('strategy filter dropdown is present', async () => {
     render(<Wrapper />)
-    await waitFor(() =>
-      expect(screen.getAllByRole('combobox').length).toBeGreaterThan(0)
-    )
+    await waitFor(() => expect(screen.getAllByRole('combobox').length).toBeGreaterThan(0))
   })
 
   it('checking a run row checkbox adds to comparison basket', async () => {
     render(<Wrapper />)
     await waitFor(() => {
-      const bodyRows = screen
-        .getAllByRole('row')
-        .filter((r) => r.closest('tbody') !== null)
+      const bodyRows = screen.getAllByRole('row').filter((r) => r.closest('tbody') !== null)
       expect(bodyRows).toHaveLength(2)
     })
     const checkboxes = screen.getAllByRole('checkbox')
@@ -85,9 +79,7 @@ describe('RunExplorer', () => {
         </MemoryRouter>
       </QueryClientProvider>
     )
-    await waitFor(() =>
-      expect(screen.getByText(/no runs yet/i)).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByText(/no runs yet/i)).toBeInTheDocument())
   })
 
   it('shows delete run action in row actions menu', async () => {

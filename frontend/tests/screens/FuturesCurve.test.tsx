@@ -63,8 +63,6 @@ describe('FuturesCurve screen (S9)', () => {
   it('renders CurveDateControl when asset is in URL', async () => {
     renderScreen('/intelligence?asset=gold&n_contracts=6&lookback=3Y')
     await waitFor(() => screen.getByText(/gold/i), { timeout: 5000 })
-    expect(
-      screen.queryByRole('button', { name: /use latest available date/i })
-    ).not.toBeNull()
+    expect(screen.queryByRole('button', { name: /use latest available date/i })).not.toBeNull()
   })
 })

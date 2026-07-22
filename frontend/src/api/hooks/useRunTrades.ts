@@ -5,6 +5,18 @@ import type { components } from '@/api/schema'
 
 type TradesPageResponse = components['schemas']['TradesPageResponse']
 
+/** Build query params for GET /api/runs/{id}/trades — server-side filters only. */
+export function buildTradeQueryParams(
+  page: number,
+  direction?: 'long' | 'short',
+  forceClosed?: boolean
+): URLSearchParams {
+  const params = new URLSearchParams({ page: String(page), page_size: '100' })
+  if (direction) params.set('direction', direction)
+  if (forceClosed !== undefined) params.set('force_closed', String(forceClosed))
+  return params
+}
+
 export function useRunTrades(
   runId: string,
   page = 1,
@@ -16,9 +28,7 @@ export function useRunTrades(
     ...(forceClosed !== undefined && { forceClosed }),
   }
 
-  const qs = new URLSearchParams({ page: String(page), page_size: '100' })
-  if (direction) qs.set('direction', direction)
-  if (forceClosed !== undefined) qs.set('force_closed', String(forceClosed))
+  const qs = buildTradeQueryParams(page, direction, forceClosed)
 
   return useQuery({
     queryKey: qk.runTrades(runId, page, filters),

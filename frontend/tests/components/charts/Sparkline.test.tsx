@@ -9,18 +9,14 @@ describe('Sparkline', () => {
   })
 
   it('null values produce multiple polyline segments — gap policy', () => {
-    const { container } = render(
-      <Sparkline values={[1, 2, null, 4, 5]} />
-    )
+    const { container } = render(<Sparkline values={[1, 2, null, 4, 5]} />)
     // [1,2] → segment 1, [4,5] → segment 2 — two polylines, not one connected line
     const polylines = container.querySelectorAll('polyline')
     expect(polylines.length).toBeGreaterThanOrEqual(2)
   })
 
   it('rising series uses gain color with auto tone', () => {
-    const { container } = render(
-      <Sparkline values={[100, 110, 120, 130]} tone="auto" />
-    )
+    const { container } = render(<Sparkline values={[100, 110, 120, 130]} tone="auto" />)
     const svg = container.querySelector('svg')
     expect(svg).toBeTruthy()
     // Color is applied via style={{ color: 'var(--gain-500)' }} on the SVG element

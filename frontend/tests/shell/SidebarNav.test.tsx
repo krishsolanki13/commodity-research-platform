@@ -25,10 +25,7 @@ describe('SidebarNav', () => {
 
   test('portfolio item links to the portfolio analytics screen', () => {
     renderNav('/portfolio')
-    expect(screen.getByRole('link', { name: /portfolio/i })).toHaveAttribute(
-      'aria-current',
-      'page'
-    )
+    expect(screen.getByRole('link', { name: /portfolio/i })).toHaveAttribute('aria-current', 'page')
   })
 
   test('active route item has aria-current="page"', () => {

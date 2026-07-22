@@ -28,10 +28,10 @@ const wtiSnapshot: AssetSnapshotWithLabel = {
   snapshot: {
     ...goldCurveSnapshotFixture,
     asset: 'wti',
-    front_price: 78.20,
+    front_price: 78.2,
     points: [
-      { ticker: 'CLQ26', close: 78.20, days_to_delivery: 30, data_date: '2026-07-17' },
-      { ticker: 'CLU26', close: 79.10, days_to_delivery: 61, data_date: '2026-07-17' },
+      { ticker: 'CLQ26', close: 78.2, days_to_delivery: 30, data_date: '2026-07-17' },
+      { ticker: 'CLU26', close: 79.1, days_to_delivery: 61, data_date: '2026-07-17' },
     ],
   },
 }
@@ -39,18 +39,16 @@ const wtiSnapshot: AssetSnapshotWithLabel = {
 describe('CurveComparisonChart', () => {
   it('renders ChartFrame without errors with 2-asset fixture', () => {
     expect(() =>
-      render(
-        <CurveComparisonChart snapshots={[goldSnapshot, wtiSnapshot]} height={320} />,
-        { wrapper: Wrapper }
-      )
+      render(<CurveComparisonChart snapshots={[goldSnapshot, wtiSnapshot]} height={320} />, {
+        wrapper: Wrapper,
+      })
     ).not.toThrow()
   })
 
   it('loading=true → ChartFrame loading state', () => {
-    render(
-      <CurveComparisonChart snapshots={[]} height={320} loading={true} />,
-      { wrapper: Wrapper }
-    )
+    render(<CurveComparisonChart snapshots={[]} height={320} loading={true} />, {
+      wrapper: Wrapper,
+    })
     expect(document.querySelector('.animate-shimmer')).toBeTruthy()
   })
 

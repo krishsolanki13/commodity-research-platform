@@ -110,6 +110,7 @@ export function WorkbenchEvidenceCanvas({
             ohlcv={priceSeries}
             raw={evaluationResult.signal.raw_signal}
             position={evaluationResult.signal.position_signal}
+            title={`Signal — ${asset} · ${strategy}`}
             syncGroup="workbench"
             height="45vh"
             loading={ohlcvLoading}

@@ -17,10 +17,9 @@ function createWrapper() {
 describe('useCurveHistory', () => {
   it('returns CurveHistoryResponse with 10 snapshots for Gold', async () => {
     const { wrapper } = createWrapper()
-    const { result } = renderHook(
-      () => useCurveHistory('gold', '2025-07-15', '2026-07-15', 6),
-      { wrapper }
-    )
+    const { result } = renderHook(() => useCurveHistory('gold', '2025-07-15', '2026-07-15', 6), {
+      wrapper,
+    })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
@@ -32,10 +31,9 @@ describe('useCurveHistory', () => {
 
   it('is disabled (fetchStatus: idle) when asset is empty string', () => {
     const { wrapper } = createWrapper()
-    const { result } = renderHook(
-      () => useCurveHistory('', '2025-07-15', '2026-07-15', 6),
-      { wrapper }
-    )
+    const { result } = renderHook(() => useCurveHistory('', '2025-07-15', '2026-07-15', 6), {
+      wrapper,
+    })
 
     // enabled: !!asset && !!fromDate && !!toDate → false when asset is ''
     expect(result.current.fetchStatus).toBe('idle')

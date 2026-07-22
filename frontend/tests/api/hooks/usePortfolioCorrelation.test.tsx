@@ -6,10 +6,9 @@ import { MOCK_PORTFOLIO_RUN_ID } from '../../mocks/fixtures/portfolio'
 
 describe('usePortfolioCorrelation', () => {
   it('returns correlation report with WTI-Brent correlation = 0.62', async () => {
-    const { result } = renderHook(
-      () => usePortfolioCorrelation(MOCK_PORTFOLIO_RUN_ID),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => usePortfolioCorrelation(MOCK_PORTFOLIO_RUN_ID), {
+      wrapper: createWrapper(),
+    })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     const matrix = result.current.data?.correlation_matrix
     expect(matrix?.wti?.brent).toBe(0.62)

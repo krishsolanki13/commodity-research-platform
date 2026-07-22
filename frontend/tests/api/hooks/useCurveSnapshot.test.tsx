@@ -37,10 +37,7 @@ describe('useCurveSnapshot', () => {
 
   it('includes observationDate in query key when provided', async () => {
     const { wrapper, queryClient: qc } = createWrapper()
-    const { result } = renderHook(
-      () => useCurveSnapshot('gold', 4, '2025-01-02'),
-      { wrapper }
-    )
+    const { result } = renderHook(() => useCurveSnapshot('gold', 4, '2025-01-02'), { wrapper })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.asset).toBe('gold')
     const key = qc.getQueryCache().find({

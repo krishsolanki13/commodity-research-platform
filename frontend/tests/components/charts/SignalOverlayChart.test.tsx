@@ -39,11 +39,7 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 describe('SignalOverlayChart', () => {
   it('renders ChartFrame wrapper without errors with fixture data', () => {
     render(
-      <SignalOverlayChart
-        ohlcv={ohlcvFixture}
-        raw={rawFixture}
-        position={positionFixture}
-      />,
+      <SignalOverlayChart ohlcv={ohlcvFixture} raw={rawFixture} position={positionFixture} />,
       { wrapper: Wrapper }
     )
     expect(document.body).not.toBeEmptyDOMElement()
@@ -65,11 +61,7 @@ describe('SignalOverlayChart', () => {
   it('does not throw when raw signal contains null values', () => {
     expect(() =>
       render(
-        <SignalOverlayChart
-          ohlcv={ohlcvFixture}
-          raw={rawFixture}
-          position={positionFixture}
-        />,
+        <SignalOverlayChart ohlcv={ohlcvFixture} raw={rawFixture} position={positionFixture} />,
         { wrapper: Wrapper }
       )
     ).not.toThrow()

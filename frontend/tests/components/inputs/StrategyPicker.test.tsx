@@ -16,9 +16,7 @@ describe('StrategyPicker', () => {
   })
 
   test('active strategy card has active visual state', () => {
-    render(
-      <StrategyPicker strategies={strategies} value="ema_crossover" onChange={vi.fn()} />
-    )
+    render(<StrategyPicker strategies={strategies} value="ema_crossover" onChange={vi.fn()} />)
     const activeCard = screen.getByText('EMA Crossover').closest('button')
     expect(activeCard).toHaveAttribute('data-active', 'true')
     expect(activeCard).toHaveAttribute('aria-pressed', 'true')

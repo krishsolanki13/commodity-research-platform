@@ -489,3 +489,75 @@ def test_assets_still_resolves_poll_prefix_regression(
         r.status_code == 200
     ), f"Regression — 141f6e8 fix broken: {r.status_code} {r.json()}"
     assert "asset_metrics" in r.json()
+
+
+def test_portfolio_runs_returns_200_with_list(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GET /api/portfolio/runs → 200 with runs list from disk."""
+    run_id = "20260722_120000_portfolio_ema_crossover"
+    run_dir = tmp_path / run_id
+    run_dir.mkdir(parents=True)
+
+    summary = {
+        "run_id": run_id,
+        "strategy_name": "ema_crossover",
+        "assets": ["gold", "silver"],
+        "skipped_assets": [],
+        "initial_capital_total": 2_000_000.0,
+        "portfolio_date_range": ["2020-01-01", "2026-07-01"],
+        "portfolio_metrics": {
+            "sharpe": 0.42,
+            "max_drawdown": -0.05,
+            "total_return": 0.02,
+            "cagr": 0.001,
+            "portfolio_vol": 0.025,
+            "n_trading_days": 1500,
+        },
+        "asset_contributions": {"gold": 0.6, "silver": 0.4},
+        "absolute_pnl_by_asset": {"gold": 12000.0, "silver": 8000.0},
+        "per_asset_metrics": {"gold": {"sharpe": 0.55}},
+        "asset_run_ids": {},
+    }
+    (run_dir / "portfolio_summary.json").write_text(
+        json.dumps(summary), encoding="utf-8"
+    )
+
+    import api.routers.portfolio as pr
+
+    monkeypatch.setattr(pr, "RUNS_DIR", tmp_path)
+
+    response = client.get("/api/portfolio/runs")
+    assert (
+        response.status_code == 200
+    ), f"GET /api/portfolio/runs → {response.status_code}: {response.json()}"
+    data = response.json()
+    assert "runs" in data, "Response must have 'runs' key"
+    assert "total" in data, "Response must have 'total' key"
+    assert isinstance(data["runs"], list)
+    assert data["total"] >= 1
+
+    run_item = next((r for r in data["runs"] if r["run_id"] == run_id), None)
+    assert run_item is not None, f"Expected run_id {run_id} in response"
+    assert run_item["strategy_name"] == "ema_crossover"
+    assert "gold" in run_item["assets"]
+    assert run_item["sharpe"] == pytest.approx(0.42)
+
+
+def test_portfolio_runs_returns_empty_list_when_no_runs(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GET /api/portfolio/runs → 200 with empty list when no runs on disk."""
+    import api.routers.portfolio as pr
+
+    monkeypatch.setattr(pr, "RUNS_DIR", tmp_path)
+
+    response = client.get("/api/portfolio/runs")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["runs"] == []
+    assert data["total"] == 0

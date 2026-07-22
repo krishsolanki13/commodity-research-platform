@@ -17,10 +17,7 @@ function createWrapper() {
 describe('useRunSeries', () => {
   it('returns equity_curve series with index and value arrays', async () => {
     const wrapper = createWrapper()
-    const { result } = renderHook(
-      () => useRunSeries(MOCK_RUN_ID, 'equity_curve'),
-      { wrapper }
-    )
+    const { result } = renderHook(() => useRunSeries(MOCK_RUN_ID, 'equity_curve'), { wrapper })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.name).toBe('equity_curve')
@@ -35,10 +32,7 @@ describe('useRunSeries', () => {
 
   it('is disabled and returns no data when runId is empty string', () => {
     const wrapper = createWrapper()
-    const { result } = renderHook(
-      () => useRunSeries('', 'equity_curve'),
-      { wrapper }
-    )
+    const { result } = renderHook(() => useRunSeries('', 'equity_curve'), { wrapper })
 
     expect(result.current.isLoading).toBe(false)
     expect(result.current.data).toBeUndefined()

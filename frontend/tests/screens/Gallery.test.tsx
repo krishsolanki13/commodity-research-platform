@@ -12,8 +12,6 @@ describe('Gallery', () => {
 
   test('ICGateStrip null state renders in gallery', () => {
     render(<Gallery />)
-    expect(
-      screen.getByText(/EVALUATE THIS SIGNAL TO UNLOCK BACKTESTING/i)
-    ).toBeInTheDocument()
+    expect(screen.getByText(/EVALUATE THIS SIGNAL TO UNLOCK BACKTESTING/i)).toBeInTheDocument()
   })
 })

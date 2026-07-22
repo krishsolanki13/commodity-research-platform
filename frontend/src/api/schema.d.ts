@@ -187,6 +187,33 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/portfolio/runs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Portfolio Runs
+     * @description List recent portfolio runs from disk.
+     *
+     *     Scans RUNS_DIR for directories containing portfolio_summary.json.
+     *     Returns runs sorted newest-first by directory name (which encodes
+     *     execution timestamp: YYYYMMDD_HHMMSS_portfolio_{strategy}).
+     *
+     *     Replaces the frontend portfolioHistory Zustand+localStorage store
+     *     with a proper server-side run list.
+     */
+    get: operations['list_portfolio_runs_api_portfolio_runs_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/portfolio/{run_id}/status': {
     parameters: {
       query?: never
@@ -1200,6 +1227,51 @@ export interface components {
        */
       signal_threshold: number
     }
+    /**
+     * PortfolioRunListItem
+     * @description Summary of a single portfolio run for the run list endpoint.
+     *
+     *     Read from portfolio_summary.json on disk. Provides enough data
+     *     for the frontend portfolioHistory store and run selector UI.
+     */
+    PortfolioRunListItem: {
+      /** Run Id */
+      run_id: string
+      /** Strategy Name */
+      strategy_name: string
+      /** Assets */
+      assets: string[]
+      /**
+       * Skipped Assets
+       * @default []
+       */
+      skipped_assets: string[]
+      /** Total Return */
+      total_return?: number | null
+      /** Sharpe */
+      sharpe?: number | null
+      /** Max Drawdown */
+      max_drawdown?: number | null
+      /** Portfolio Vol */
+      portfolio_vol?: number | null
+      /** Initial Capital Total */
+      initial_capital_total?: number | null
+      /**
+       * Portfolio Date Range
+       * @default []
+       */
+      portfolio_date_range: string[]
+    }
+    /**
+     * PortfolioRunListResponse
+     * @description Response for GET /api/portfolio/runs.
+     */
+    PortfolioRunListResponse: {
+      /** Runs */
+      runs: components['schemas']['PortfolioRunListItem'][]
+      /** Total */
+      total: number
+    }
     /** PortfolioSummaryResponse */
     PortfolioSummaryResponse: {
       /** Run Id */
@@ -1874,6 +1946,37 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['TaskLaunchResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_portfolio_runs_api_portfolio_runs_get: {
+    parameters: {
+      query?: {
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PortfolioRunListResponse']
         }
       }
       /** @description Validation Error */

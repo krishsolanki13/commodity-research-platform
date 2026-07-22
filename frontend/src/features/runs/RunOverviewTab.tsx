@@ -82,7 +82,7 @@ export function RunOverviewTab({ runId }: RunOverviewTabProps) {
           drawdown={equityQuery.data ? drawdownSeries : undefined}
           baseline={runQuery.data?.metrics['initial_capital'] ?? 1_000_000}
           height={380}
-          title={`${runQuery.data?.asset ?? ''} · ${runQuery.data?.strategy ?? ''}`}
+          title="Equity Curve + Drawdown"
           syncGroup="run-detail"
           loading={equityQuery.isLoading}
           error={equityQuery.error ?? null}

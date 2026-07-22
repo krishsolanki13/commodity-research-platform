@@ -22,7 +22,9 @@ test.describe('Market Overview (S1)', () => {
     await expect(page.locator('text=GC=F').first()).toBeVisible({ timeout: 5_000 })
   })
 
-  test('"Open in Workbench" link on Asset Detail carries context to Research Workbench', async ({ page }) => {
+  test('"Open in Workbench" link on Asset Detail carries context to Research Workbench', async ({
+    page,
+  }) => {
     test.setTimeout(60_000)
     await page.goto('/market/gold')
     await page.waitForLoadState('networkidle')

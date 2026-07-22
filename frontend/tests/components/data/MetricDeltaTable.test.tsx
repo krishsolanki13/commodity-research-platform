@@ -6,14 +6,17 @@ import { compareFixture } from '../../mocks/fixtures/compare'
 describe('MetricDeltaTable', () => {
   it('renders 8 metric rows by default', () => {
     render(
-      <MetricDeltaTable
-        runs={compareFixture.runs}
-        baseRunId={compareFixture.runs[0].run_id}
-      />
+      <MetricDeltaTable runs={compareFixture.runs} baseRunId={compareFixture.runs[0].run_id} />
     )
     const expectedLabels = [
-      'Sharpe', 'Sortino', 'Calmar', 'Total Return',
-      'CAGR', 'Max Drawdown', 'Win Rate', 'Profit Factor',
+      'Sharpe',
+      'Sortino',
+      'Calmar',
+      'Total Return',
+      'CAGR',
+      'Max Drawdown',
+      'Win Rate',
+      'Profit Factor',
     ]
     for (const label of expectedLabels) {
       expect(screen.getByText(label)).toBeInTheDocument()
@@ -22,10 +25,7 @@ describe('MetricDeltaTable', () => {
 
   it('non-base run shows a delta value; base run shows no delta', () => {
     render(
-      <MetricDeltaTable
-        runs={compareFixture.runs}
-        baseRunId={compareFixture.runs[0].run_id}
-      />
+      <MetricDeltaTable runs={compareFixture.runs} baseRunId={compareFixture.runs[0].run_id} />
     )
     // Non-base run deltas are prefixed with + or -
     const deltaValues = screen.getAllByText(/^[+-]/)
@@ -34,10 +34,7 @@ describe('MetricDeltaTable', () => {
 
   it('base run has ★ marker in column header', () => {
     render(
-      <MetricDeltaTable
-        runs={compareFixture.runs}
-        baseRunId={compareFixture.runs[0].run_id}
-      />
+      <MetricDeltaTable runs={compareFixture.runs} baseRunId={compareFixture.runs[0].run_id} />
     )
     expect(screen.getByText(/★/)).toBeInTheDocument()
   })

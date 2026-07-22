@@ -12,11 +12,11 @@ type ColumnarSeries = components['schemas']['ColumnarSeries']
 const goldOhlcv: ColumnarSeries = {
   index: [1609459200000, 1609545600000, 1609632000000, 1609718400000, 1609804800000],
   columns: {
-    open:   [1898.0, 1902.5, 1910.0, 1905.0, 1915.0],
-    high:   [1908.0, 1915.0, 1918.0, 1912.0, 1925.0],
-    low:    [1892.0, 1898.0, 1903.0, 1900.0, 1908.0],
-    close:  [1902.5, 1910.0, 1905.0, 1910.0, 1920.0],
-    volume: [12000,  14500,  11000,  13200,  15800],
+    open: [1898.0, 1902.5, 1910.0, 1905.0, 1915.0],
+    high: [1908.0, 1915.0, 1918.0, 1912.0, 1925.0],
+    low: [1892.0, 1898.0, 1903.0, 1900.0, 1908.0],
+    close: [1902.5, 1910.0, 1905.0, 1910.0, 1920.0],
+    volume: [12000, 14500, 11000, 13200, 15800],
   },
 }
 
@@ -24,11 +24,11 @@ const goldOhlcv: ColumnarSeries = {
 const ohlcvWithNull: ColumnarSeries = {
   index: [1609459200000, 1609545600000, 1609632000000],
   columns: {
-    open:   [1898.0, null, 1910.0],
-    high:   [1908.0, null, 1918.0],
-    low:    [1892.0, null, 1903.0],
-    close:  [1902.5, null, 1905.0],
-    volume: [12000,  null, 11000],
+    open: [1898.0, null, 1910.0],
+    high: [1908.0, null, 1918.0],
+    low: [1892.0, null, 1903.0],
+    close: [1902.5, null, 1905.0],
+    volume: [12000, null, 11000],
   },
 }
 
@@ -53,10 +53,7 @@ describe('PriceChart', () => {
   })
 
   it('passes loading state through to ChartFrame', () => {
-    render(
-      <PriceChart ohlcv={goldOhlcv} height={300} loading={true} />,
-      { wrapper: Wrapper }
-    )
+    render(<PriceChart ohlcv={goldOhlcv} height={300} loading={true} />, { wrapper: Wrapper })
     expect(document.querySelector('.animate-shimmer')).toBeTruthy()
   })
 
@@ -72,10 +69,9 @@ describe('PriceChart', () => {
       values: [1900.0, 1905.0, 1908.0, 1910.0, 1915.0],
     }
     expect(() =>
-      render(
-        <PriceChart ohlcv={goldOhlcv} overlays={[overlay]} height={300} />,
-        { wrapper: Wrapper }
-      )
+      render(<PriceChart ohlcv={goldOhlcv} overlays={[overlay]} height={300} />, {
+        wrapper: Wrapper,
+      })
     ).not.toThrow()
   })
 })

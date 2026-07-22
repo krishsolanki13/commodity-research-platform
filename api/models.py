@@ -468,6 +468,32 @@ class PortfolioEquityResponse(BaseModel):
     portfolio_pnl: ColumnarSeries  # daily PnL series
 
 
+class PortfolioRunListItem(BaseModel):
+    """Summary of a single portfolio run for the run list endpoint.
+
+    Read from portfolio_summary.json on disk. Provides enough data
+    for the frontend portfolioHistory store and run selector UI.
+    """
+
+    run_id: str
+    strategy_name: str
+    assets: list[str]
+    skipped_assets: list[str] = []
+    total_return: float | None = None
+    sharpe: float | None = None
+    max_drawdown: float | None = None
+    portfolio_vol: float | None = None
+    initial_capital_total: float | None = None
+    portfolio_date_range: list[str] = []
+
+
+class PortfolioRunListResponse(BaseModel):
+    """Response for GET /api/portfolio/runs."""
+
+    runs: list[PortfolioRunListItem]
+    total: int
+
+
 class PortfolioAssetsResponse(BaseModel):
     run_id: str
     assets: list[str]

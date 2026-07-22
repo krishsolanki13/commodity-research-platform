@@ -75,6 +75,7 @@ export function FuturesCurve() {
           </div>
 
           <HistoryPanel
+            key={`${asset}-${dateParams.from_date}-${dateParams.to_date}-${n_contracts}`}
             asset={asset}
             fromDate={dateParams.from_date}
             toDate={dateParams.to_date}

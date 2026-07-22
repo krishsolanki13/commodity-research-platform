@@ -29,27 +29,24 @@ describe('CurveComparison', () => {
   it('renders CurveComparisonChart when 2 assets in URL', async () => {
     render(<Wrapper url="/intelligence/compare?assets=gold,silver&n_contracts=4" />)
     await waitFor(
-      () => { expect(document.body).not.toBeEmptyDOMElement() },
+      () => {
+        expect(document.body).not.toBeEmptyDOMElement()
+      },
       { timeout: 5000 }
     )
     const checkboxes = screen.getAllByRole('checkbox')
-    const goldCheckbox = checkboxes.find(cb =>
+    const goldCheckbox = checkboxes.find((cb) =>
       cb.getAttribute('aria-label')?.toLowerCase().includes('gold')
     )
     expect(goldCheckbox).toBeDefined()
   })
 
   it('max 4 assets: 5th checkbox disabled', async () => {
-    render(
-      <Wrapper url="/intelligence/compare?assets=gold,silver,copper,wti&n_contracts=4" />
-    )
-    await waitFor(
-      () => screen.getAllByRole('checkbox').length >= 4,
-      { timeout: 5000 }
-    )
+    render(<Wrapper url="/intelligence/compare?assets=gold,silver,copper,wti&n_contracts=4" />)
+    await waitFor(() => screen.getAllByRole('checkbox').length >= 4, { timeout: 5000 })
     const checkboxes = screen.getAllByRole('checkbox')
     const uncheckedDisabled = checkboxes.find(
-      cb => !(cb as HTMLInputElement).checked && (cb as HTMLInputElement).disabled
+      (cb) => !(cb as HTMLInputElement).checked && (cb as HTMLInputElement).disabled
     )
     expect(uncheckedDisabled).toBeDefined()
   })

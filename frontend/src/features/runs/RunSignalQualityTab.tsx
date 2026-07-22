@@ -4,7 +4,6 @@
  * Rolling IC chart deferred — no rolling IC series endpoint available yet.
  * When backend adds /api/signals/rolling-ic, wire the rolling IC chart here.
  */
-import { ShieldOff } from 'lucide-react'
 import { useRunDetail } from '@/api/hooks'
 import { ICDecayChart } from '@/components/charts/ICDecayChart'
 import { ICBandBadge } from '@/components/data/ICBandBadge'
@@ -32,19 +31,25 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
 
   const evaluation = run?.signal_evaluation
 
-  // STATE A — IC Gate override (signal_evaluation is null)
+  // STATE A — IC Gate override / no evaluation recorded (backend gap: POST
+  // /api/backtest/run does not yet persist signal_evaluation for all launches)
   if (evaluation === null || evaluation === undefined) {
     return (
       <Panel title="Signal Quality">
-        <EmptyState
-          icon={ShieldOff}
-          title="IC Gate override — no evaluation recorded"
-          body="This backtest launched without signal evaluation. Evaluate the signal in the Workbench first."
-          action={{
-            label: 'Open Workbench →',
-            href: `/research?asset=${run?.asset ?? ''}&strategy=${run?.strategy ?? ''}`,
-          }}
-        />
+        <div className="h-48 flex flex-col items-center justify-center gap-2 px-6 text-center text-sm text-text-secondary">
+          <span className="text-2xl text-text-disabled">~</span>
+          <span className="font-medium">No signal evaluation recorded</span>
+          <span className="text-xs leading-relaxed text-text-disabled">
+            Launch this backtest from the Research Workbench after evaluating the signal to record
+            IC quality here.
+          </span>
+          <a
+            href={`/research?asset=${run?.asset ?? ''}&strategy=${run?.strategy ?? ''}`}
+            className="mt-2 text-xs text-text-accent hover:underline"
+          >
+            Open Workbench →
+          </a>
+        </div>
       </Panel>
     )
   }

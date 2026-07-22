@@ -16,9 +16,7 @@ describe('RunTable', () => {
         selection={{ ids: new Set(), onChange: noopSet }}
       />
     )
-    const bodyRows = screen
-      .getAllByRole('row')
-      .filter((r) => r.closest('tbody') !== null)
+    const bodyRows = screen.getAllByRole('row').filter((r) => r.closest('tbody') !== null)
     expect(bodyRows).toHaveLength(runListFixture.runs.length)
   })
 

@@ -291,6 +291,12 @@ def get_run_trades(
 
     df = pd.read_parquet(trades_path)
 
+    # Parquet stores direction as int64 (1/-1/0); normalize before filter + response.
+    if "direction" in df.columns:
+        mapped = df["direction"].map({1: "long", -1: "short", 0: "flat"})
+        df = df.copy()
+        df["direction"] = mapped.where(mapped.notna(), df["direction"])
+
     if direction is not None and "direction" in df.columns:
         df = df[df["direction"] == direction]
     if force_closed is not None and "force_closed" in df.columns:

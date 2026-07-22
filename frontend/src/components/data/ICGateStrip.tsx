@@ -95,7 +95,7 @@ export function ICGateStrip({
       <div className="flex gap-8">
         <div className="gap-0.5 flex flex-col items-center">
           <span className="text-xs text-text-secondary">IC</span>
-          <span style={{ color: bandColor }} className="font-mono text-metric-lg">
+          <span style={{ color: bandColor }} className="font-mono text-metric">
             {evaluation?.ic != null ? fmt.ic(evaluation.ic) : '—'}
           </span>
         </div>

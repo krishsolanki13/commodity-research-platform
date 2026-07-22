@@ -19,7 +19,7 @@ export const goldOhlcvFixture: OhlcvResponse = {
       high: Array.from({ length: 20 }, (_, i) => 1910 + i * 1.5),
       low: Array.from({ length: 20 }, (_, i) => 1890 + i * 1.5),
       close: Array.from({ length: 20 }, (_, i) => 1905 + i * 1.5),
-      volume: Array.from({ length: 20 }, (_, i) => 12000 + (i * 137) % 3000),
+      volume: Array.from({ length: 20 }, (_, i) => 12000 + ((i * 137) % 3000)),
     },
   },
 }
