@@ -281,6 +281,7 @@ export function DataGrid<T>({
     : rows.map((_, i) => ({ index: i, start: i * rowHeight, size: rowHeight }))
 
   const totalHeight = shouldVirtualize ? virtualizer.getTotalSize() : rows.length * rowHeight
+  const totalColWidth = table.getAllLeafColumns().reduce((sum, col) => sum + col.getSize(), 0)
 
   // ---------------------------------------------------------------------------
   // Render
@@ -347,8 +348,14 @@ export function DataGrid<T>({
       >
         <table
           role="grid"
-          className="w-full border-collapse text-sm"
-          style={{ tableLayout: 'fixed' }}
+          className="border-collapse text-sm"
+          style={{
+            tableLayout: 'fixed',
+            // Absolute-positioned body rows are independent tables — keep thead
+            // and body row widths identical so columns stay aligned.
+            width: totalColWidth,
+            minWidth: totalColWidth,
+          }}
         >
           <thead className="sticky top-0 z-10 bg-bg-raised">
             {table.getHeaderGroups().map((hg) => (
@@ -357,7 +364,8 @@ export function DataGrid<T>({
                   <th
                     key={header.id}
                     style={{
-                      width: header.getSize() !== 150 ? header.getSize() : undefined,
+                      width: header.getSize(),
+                      minWidth: header.getSize(),
                     }}
                     className={cn(
                       'border-b border-border-default px-3 py-2 text-left',
@@ -435,14 +443,19 @@ export function DataGrid<T>({
                       transform: `translateY(${virtualRow.start}px)`,
                       display: 'table',
                       tableLayout: 'fixed',
-                      width: '100%',
+                      width: totalColWidth,
                     }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}
                         className="overflow-hidden text-ellipsis whitespace-nowrap px-3 py-0 text-text-primary"
-                        style={{ verticalAlign: 'middle', height: rowHeight }}
+                        style={{
+                          verticalAlign: 'middle',
+                          height: rowHeight,
+                          width: cell.column.getSize(),
+                          minWidth: cell.column.getSize(),
+                        }}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>

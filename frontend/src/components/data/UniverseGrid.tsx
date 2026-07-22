@@ -45,6 +45,7 @@ const healthColorMap: Record<AssetRow['dataHealth'], string> = {
 const columns = [
   colHelper.accessor('displayName', {
     header: 'ASSET',
+    size: 140,
     cell: (info) => (
       <div className="gap-0.5 flex flex-col">
         <span className="font-medium text-text-emphasis">{info.getValue()}</span>
@@ -54,20 +55,22 @@ const columns = [
   }),
   colHelper.accessor('lastPrice', {
     header: 'LAST',
+    size: 110,
     cell: (info) => {
       const v = info.getValue()
       return v !== null ? (
         <span className="block text-right font-mono">{fmt.price(v, info.row.original.name)}</span>
       ) : (
-        <span className="text-text-secondary">â€”</span>
+        <span className="text-text-secondary">—</span>
       )
     },
   }),
   colHelper.accessor('return1d', {
     header: '1D%',
+    size: 100,
     cell: (info) => {
       const v = info.getValue()
-      if (v === null) return <span className="text-text-secondary">â€”</span>
+      if (v === null) return <span className="text-text-secondary">—</span>
       return (
         <span style={{ color: tone.pnl(v) }} className="font-mono">
           {fmt.percent(v)}
@@ -77,9 +80,10 @@ const columns = [
   }),
   colHelper.accessor('return1w', {
     header: '1W%',
+    size: 100,
     cell: (info) => {
       const v = info.getValue()
-      if (v === null) return <span className="text-text-secondary">â€”</span>
+      if (v === null) return <span className="text-text-secondary">—</span>
       return (
         <span style={{ color: tone.pnl(v) }} className="font-mono">
           {fmt.percent(v)}
@@ -89,9 +93,10 @@ const columns = [
   }),
   colHelper.accessor('return1m', {
     header: '1M%',
+    size: 100,
     cell: (info) => {
       const v = info.getValue()
-      if (v === null) return <span className="text-text-secondary">â€”</span>
+      if (v === null) return <span className="text-text-secondary">—</span>
       return (
         <span style={{ color: tone.pnl(v) }} className="font-mono">
           {fmt.percent(v)}
@@ -101,9 +106,10 @@ const columns = [
   }),
   colHelper.accessor('realizedVol63d', {
     header: 'VOL 63D',
+    size: 100,
     cell: (info) => {
       const v = info.getValue()
-      if (v === null) return <span className="text-text-secondary">â€”</span>
+      if (v === null) return <span className="text-text-secondary">—</span>
       return (
         <Tooltip>
           <TooltipTrigger asChild>
@@ -120,6 +126,7 @@ const columns = [
     id: 'sparkline',
     header: '20D',
     enableSorting: false,
+    size: 100,
     cell: (info) => (
       <Sparkline values={info.row.original.sparklineValues} tone="auto" width={80} height={24} />
     ),
@@ -127,6 +134,7 @@ const columns = [
   colHelper.accessor('dataHealth', {
     header: 'HEALTH',
     enableSorting: false,
+    size: 80,
     cell: (info) => {
       const health = info.getValue()
       const flags = info.row.original.flaggedAnomalies
@@ -152,6 +160,7 @@ const columns = [
   }),
   colHelper.accessor('lastDate', {
     header: 'UPDATED',
+    size: 110,
     cell: (info) => {
       const d = info.getValue()
       if (!d) return <span className="font-mono text-xs text-text-secondary">never</span>
