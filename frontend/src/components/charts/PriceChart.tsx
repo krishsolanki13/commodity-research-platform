@@ -18,6 +18,7 @@ import type { ECharts } from '@/lib/echarts-setup'
 import { echarts } from '@/lib/echarts-setup'
 import { ChartFrame, useChartFrame } from '@/components/charts/ChartFrame'
 import { useChartTheme, type EChartsTheme } from '@/lib/chart-theme'
+import { fmtDate } from '@/lib/fmt'
 import type { ApiClientError } from '@/api/client'
 import type { components } from '@/api/schema'
 
@@ -131,6 +132,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
               color: theme.secondaryText,
               fontFamily: theme.monoFont,
               fontSize: 11,
+              formatter: (value: number) => fmtDate(value),
             },
             splitLine: { show: false },
           },
@@ -143,6 +145,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
               color: theme.secondaryText,
               fontFamily: theme.monoFont,
               fontSize: 11,
+              formatter: (value: number) => fmtDate(value),
             },
           },
         ]
@@ -285,6 +288,48 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
           color: theme.tooltip.textStyle.color,
           fontFamily: theme.monoFont,
           fontSize: 12,
+        },
+        formatter: (params: unknown) => {
+          const items = (Array.isArray(params) ? params : [params]) as Array<{
+            seriesType?: string
+            seriesName?: string
+            name?: string | number
+            axisValue?: string | number
+            value?: unknown
+            data?: unknown
+            marker?: string
+          }>
+          const axisRaw = items[0]?.axisValue ?? items[0]?.name
+          const axisMs = typeof axisRaw === 'number' ? axisRaw : Number(axisRaw)
+          const dateLabel = Number.isFinite(axisMs) ? fmtDate(axisMs) : String(axisRaw ?? '')
+          const lines = items.map((p) => {
+            const marker = p.marker ?? ''
+            if (p.seriesType === 'candlestick') {
+              // ECharts candlestick value: [open, close, low, high] (or [idx, open, close, low, high])
+              const raw = (Array.isArray(p.value) ? p.value : p.data) as number[] | undefined
+              if (!raw || raw.length < 4) return `${marker}—`
+              const prices = raw.length >= 5 ? raw.slice(1, 5) : raw.slice(0, 4)
+              const [open, close, low, high] = prices
+              return [
+                `${marker}O: ${Number(open).toFixed(2)}`,
+                `C: ${Number(close).toFixed(2)}`,
+                `L: ${Number(low).toFixed(2)}`,
+                `H: ${Number(high).toFixed(2)}`,
+              ].join('<br/>')
+            }
+            let v: unknown = p.value
+            if (Array.isArray(p.value)) {
+              const arr = p.value as unknown[]
+              v = arr[arr.length - 1]
+            }
+            if (typeof v !== 'number' && typeof v !== 'string') {
+              return `${marker}${p.seriesName ?? ''}: —`
+            }
+            const num = Number(v)
+            const formatted = Number.isFinite(num) ? num.toFixed(2) : v
+            return `${marker}${p.seriesName ?? ''}: ${formatted}`
+          })
+          return [dateLabel, ...lines].join('<br/>')
         },
       },
       dataZoom,
