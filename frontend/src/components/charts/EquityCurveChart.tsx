@@ -14,6 +14,7 @@ import type { ECharts } from '@/lib/echarts-setup'
 import { echarts } from '@/lib/echarts-setup'
 import { ChartFrame, useChartFrame } from '@/components/charts/ChartFrame'
 import { useChartTheme, type EChartsTheme } from '@/lib/chart-theme'
+import { fmtDate } from '@/lib/fmt'
 import type { ApiClientError } from '@/api/client'
 import type { components } from '@/api/schema'
 
@@ -83,8 +84,9 @@ function EquityCurveChartInner({
     // ---------------------------------------------------------------------------
     const grids = showDrawdown
       ? [
-          { left: 70, right: 16, top: '5%', height: '65%' },
-          { left: 70, right: 16, bottom: '8%', height: '20%' },
+          // Increase gap between panes so $0 / 0.0% labels do not overlap at the seam.
+          { left: 70, right: 16, top: '5%', height: '60%' },
+          { left: 70, right: 16, bottom: '8%', height: '18%' },
         ]
       : [{ left: 70, right: 16, top: '5%', bottom: '8%' }]
 
@@ -110,6 +112,7 @@ function EquityCurveChartInner({
               color: theme.secondaryText,
               fontFamily: theme.monoFont,
               fontSize: 11,
+              formatter: (value: number) => fmtDate(value),
             },
             splitLine: { show: false },
           },
@@ -122,6 +125,7 @@ function EquityCurveChartInner({
               color: theme.secondaryText,
               fontFamily: theme.monoFont,
               fontSize: 11,
+              formatter: (value: number) => fmtDate(value),
             },
           },
         ]
@@ -131,6 +135,8 @@ function EquityCurveChartInner({
     // ---------------------------------------------------------------------------
     const equityYAxis = {
       gridIndex: 0,
+      // Autoscale to data range so small equity moves are visible (not flat at $1M).
+      min: isCompare ? undefined : ('dataMin' as const),
       axisLabel: {
         color: theme.secondaryText,
         fontFamily: theme.monoFont,
@@ -156,7 +162,7 @@ function EquityCurveChartInner({
         color: theme.secondaryText,
         fontFamily: theme.monoFont,
         fontSize: 11,
-        formatter: (v: number) => `${(v * 100).toFixed(1)}%`,
+        formatter: (value: number) => (value * 100).toFixed(1) + '%',
       },
       splitLine: { lineStyle: { color: theme.gridlineColor } },
     }
@@ -286,6 +292,40 @@ function EquityCurveChartInner({
           color: theme.tooltip.textStyle.color,
           fontFamily: theme.monoFont,
           fontSize: 12,
+        },
+        formatter: (params: unknown) => {
+          const items = (Array.isArray(params) ? params : [params]) as Array<{
+            seriesName?: string
+            axisValue?: string | number
+            name?: string | number
+            value?: number | [number, number] | null
+            marker?: string
+          }>
+          const axisRaw = items[0]?.axisValue ?? items[0]?.name
+          const axisMs = typeof axisRaw === 'number' ? axisRaw : Number(axisRaw)
+          const date = Number.isFinite(axisMs) ? fmtDate(axisMs) : String(axisRaw ?? '')
+
+          return items
+            .map((p) => {
+              const raw = Array.isArray(p.value) ? p.value[1] : p.value
+              const num = Number(raw ?? 0)
+              if (p.seriesName === 'Drawdown') {
+                const pct = (num * 100).toFixed(2)
+                return `${date} · ${pct}%`
+              }
+              const marker = p.marker ?? ''
+              if (isCompare) {
+                return `${marker}${p.seriesName}: ${num.toFixed(2)}%`
+              }
+              const formatted =
+                Math.abs(num) >= 1_000_000
+                  ? `$${(num / 1_000_000).toFixed(2)}M`
+                  : Math.abs(num) >= 1_000
+                    ? `$${(num / 1_000).toFixed(1)}k`
+                    : `$${num.toFixed(0)}`
+              return `${marker}${p.seriesName}: ${formatted}`
+            })
+            .join('<br/>')
         },
       },
       legend: isCompare

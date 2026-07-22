@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fmt, MINUS } from '@/lib/fmt'
+import { fmt, fmtDate, MINUS } from '@/lib/fmt'
 
 describe('fmt.price', () => {
   it('formats gold with 2 decimal places', () => {
@@ -43,5 +43,20 @@ describe('fmt.compactUsd', () => {
 describe('fmt.isoDate', () => {
   it('returns YYYY-MM-DD from ISO string', () => {
     expect(fmt.isoDate('2026-07-06T14:22:33Z')).toBe('2026-07-06')
+  })
+})
+
+describe('fmtDate', () => {
+  it('formats epoch ms as YYYY-MM-DD', () => {
+    expect(fmtDate(1262563200000)).toBe('2010-01-04')
+  })
+  it('coerces numeric strings from category axes', () => {
+    expect(fmtDate('1262563200000' as unknown as number)).toBe('2010-01-04')
+  })
+})
+
+describe('fmt.tradeBars', () => {
+  it('rounds to whole bars', () => {
+    expect(fmt.tradeBars(8.850107066381156)).toBe('9 bars')
   })
 })
