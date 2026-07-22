@@ -356,3 +356,136 @@ def test_portfolio_assets_pre_fix_run_returns_empty_asset_run_ids(
     assert (
         asset_run_ids == {} or asset_run_ids is None
     ), f"Pre-fix run should return empty asset_run_ids, got: {asset_run_ids}"
+
+
+def test_summary_resolves_poll_prefix(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GET /api/portfolio/poll_{id}/summary → 200 (poll_ prefix stripped)."""
+    run_id = "20260722_110000_portfolio_ema_crossover"
+    run_dir = tmp_path / run_id
+    run_dir.mkdir(parents=True)
+    summary = {
+        "run_id": run_id,
+        "strategy_name": "ema_crossover",
+        "assets": ["gold"],
+        "skipped_assets": [],
+        "initial_capital_per_asset": 1_000_000.0,
+        "initial_capital_total": 1_000_000.0,
+        "portfolio_date_range": ["2020-01-01", "2026-07-01"],
+        "portfolio_metrics": {
+            "sharpe": 0.42,
+            "max_drawdown": -0.05,
+            "total_return": 0.02,
+            "cagr": 0.001,
+            "portfolio_vol": 0.025,
+            "n_trading_days": 1500,
+        },
+        "asset_contributions": {"gold": 1.0},
+        "absolute_pnl_by_asset": {"gold": 20000.0},
+        "per_asset_metrics": {"gold": {"sharpe": 0.42}},
+        "asset_run_ids": {"gold": "20260722_110000_ema_crossover_gold"},
+    }
+    (run_dir / "portfolio_summary.json").write_text(
+        json.dumps(summary), encoding="utf-8"
+    )
+    import api.routers.portfolio as pr
+
+    monkeypatch.setattr(pr, "RUNS_DIR", tmp_path)
+    r = client.get(f"/api/portfolio/poll_{run_id}/summary")
+    assert (
+        r.status_code == 200
+    ), f"poll_ prefix not resolved for /summary: {r.status_code} {r.json()}"
+
+
+def test_equity_resolves_poll_prefix(client: TestClient) -> None:
+    """GET /api/portfolio/poll_{id}/equity → 200 (poll_ prefix resolved via state).
+
+    Equity is served from in-memory multi_result (not disk). Resolution is via
+    _get_task_or_404 trying poll_ and bare artifact ids.
+    """
+    run_id = "20260722_110001_portfolio_ema_crossover"
+    poll_id = f"poll_{run_id}"
+    idx = pd.date_range("2020-01-01", periods=5, freq="D", tz="UTC")
+    multi = MagicMock()
+    multi.portfolio_equity_curve = pd.Series(
+        [1_000_000.0, 1_000_100.0, 1_000_200.0, 1_000_150.0, 1_000_300.0],
+        index=idx,
+    )
+    multi.portfolio_pnl_series = pd.Series([0.0, 100.0, 100.0, -50.0, 150.0], index=idx)
+    _inject_complete_task(poll_id, multi_result=multi)
+    # Also register bare→poll artifact map like a real completed launch
+    import api.state as _s
+
+    _s.set_artifact_id(poll_id, run_id)
+
+    r = client.get(f"/api/portfolio/{poll_id}/equity")
+    assert (
+        r.status_code == 200
+    ), f"poll_ prefix not resolved for /equity: {r.status_code} {r.json()}"
+
+
+def test_risk_resolves_poll_prefix(client: TestClient) -> None:
+    """GET /api/portfolio/poll_{id}/risk → 200 (poll_ prefix resolved via state)."""
+    run_id = "20260722_110002_portfolio_ema_crossover"
+    poll_id = f"poll_{run_id}"
+    _inject_complete_task(poll_id, risk_report=_make_mock_risk_report())
+    import api.state as _s
+
+    _s.set_artifact_id(poll_id, run_id)
+
+    r = client.get(f"/api/portfolio/{poll_id}/risk")
+    assert (
+        r.status_code == 200
+    ), f"poll_ prefix not resolved for /risk: {r.status_code} {r.json()}"
+
+
+def test_correlation_resolves_poll_prefix(client: TestClient) -> None:
+    """GET /api/portfolio/poll_{id}/correlation → 200 (poll_ prefix resolved)."""
+    run_id = "20260722_110003_portfolio_ema_crossover"
+    poll_id = f"poll_{run_id}"
+    _inject_complete_task(poll_id, corr_report=_make_mock_corr_report())
+    import api.state as _s
+
+    _s.set_artifact_id(poll_id, run_id)
+
+    r = client.get(f"/api/portfolio/{poll_id}/correlation")
+    assert (
+        r.status_code == 200
+    ), f"poll_ prefix not resolved for /correlation: {r.status_code} {r.json()}"
+
+
+def test_assets_still_resolves_poll_prefix_regression(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GET /api/portfolio/poll_{id}/assets → 200 (regression: 141f6e8 intact)."""
+    run_id = "20260722_110004_portfolio_ema_crossover"
+    run_dir = tmp_path / run_id
+    run_dir.mkdir(parents=True)
+    summary = {
+        "run_id": run_id,
+        "strategy_name": "ema_crossover",
+        "assets": ["gold"],
+        "skipped_assets": [],
+        "initial_capital_total": 1_000_000.0,
+        "portfolio_metrics": {"sharpe": 0.10},
+        "asset_contributions": {"gold": 1.0},
+        "absolute_pnl_by_asset": {"gold": 3000.0},
+        "per_asset_metrics": {"gold": {"sharpe": 0.10, "max_drawdown": -0.02}},
+        "asset_run_ids": {"gold": "20260722_110004_ema_crossover_gold"},
+    }
+    (run_dir / "portfolio_summary.json").write_text(
+        json.dumps(summary), encoding="utf-8"
+    )
+    import api.routers.portfolio as pr
+
+    monkeypatch.setattr(pr, "RUNS_DIR", tmp_path)
+    r = client.get(f"/api/portfolio/poll_{run_id}/assets")
+    assert (
+        r.status_code == 200
+    ), f"Regression — 141f6e8 fix broken: {r.status_code} {r.json()}"
+    assert "asset_metrics" in r.json()
