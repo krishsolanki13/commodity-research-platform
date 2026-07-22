@@ -10,6 +10,7 @@ interface PortfolioPerAssetPanelProps {
 export function PortfolioPerAssetPanel({ runId, assets }: PortfolioPerAssetPanelProps) {
   const [open, setOpen] = useState(false)
   const { data, isLoading, error } = usePortfolioAssets(runId)
+  const assetRunIds = data?.asset_run_ids
 
   if (error) {
     return (
@@ -41,6 +42,7 @@ export function PortfolioPerAssetPanel({ runId, assets }: PortfolioPerAssetPanel
           <PortfolioAssetTable
             assets={data?.assets ?? assets}
             assetMetrics={data?.asset_metrics ?? {}}
+            assetRunIds={assetRunIds}
             loading={isLoading}
           />
         </div>
