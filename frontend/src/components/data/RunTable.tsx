@@ -95,9 +95,20 @@ export function RunTable({
 
   const columns = [
     selectionCol,
+    colHelper.accessor('run_id', {
+      header: 'RUN',
+      enableSorting: false,
+      size: 220,
+      cell: (info) => (
+        <span className="font-mono text-xs text-text-emphasis" title={info.getValue()}>
+          {info.getValue()}
+        </span>
+      ),
+    }),
     colHelper.accessor('status', {
       header: 'STATUS',
       enableSorting: false,
+      size: 100,
       cell: (info) => (
         <div className="flex justify-center">
           <RunStatusBadge status={info.getValue()} />
@@ -107,6 +118,7 @@ export function RunTable({
     colHelper.accessor('asset', {
       header: 'ASSET',
       enableSorting: false,
+      size: 120,
       cell: (info) => (
         <span className="font-mono uppercase text-text-emphasis">{info.getValue()}</span>
       ),
@@ -114,10 +126,12 @@ export function RunTable({
     colHelper.accessor('strategy', {
       header: 'STRATEGY',
       enableSorting: false,
+      size: 150,
       cell: (info) => <span className="text-sm">{info.getValue()}</span>,
     }),
     colHelper.accessor('sharpe', {
       header: 'SHARPE',
+      size: 90,
       cell: (info) => {
         const v = info.getValue()
         return (
@@ -129,6 +143,7 @@ export function RunTable({
     }),
     colHelper.accessor('max_drawdown', {
       header: 'MAX DD',
+      size: 90,
       cell: (info) => {
         const v = info.getValue()
         return (
@@ -140,6 +155,7 @@ export function RunTable({
     }),
     colHelper.accessor('total_return', {
       header: 'RETURN',
+      size: 90,
       cell: (info) => {
         const v = info.getValue()
         return (
@@ -151,6 +167,7 @@ export function RunTable({
     }),
     colHelper.accessor('cagr', {
       header: 'CAGR',
+      size: 90,
       cell: (info) => {
         const v = info.getValue()
         return (
@@ -163,6 +180,7 @@ export function RunTable({
     colHelper.accessor('ic', {
       header: 'IC',
       enableSorting: false,
+      size: 110,
       cell: (info) => {
         const v = info.getValue()
         if (v === null) return <span className="text-text-secondary">—</span>
@@ -172,6 +190,7 @@ export function RunTable({
     colHelper.accessor('n_trades', {
       header: 'TRADES',
       enableSorting: false,
+      size: 80,
       cell: (info) => {
         const v = info.getValue()
         return <span className="font-mono">{v === null ? '—' : Math.round(v).toString()}</span>
@@ -180,6 +199,7 @@ export function RunTable({
     colHelper.accessor('from_date', {
       header: 'FROM',
       enableSorting: false,
+      size: 110,
       cell: (info) => (
         <span className="font-mono text-xs text-text-secondary">
           {fmt.isoDate(info.getValue())}
@@ -188,6 +208,7 @@ export function RunTable({
     }),
     colHelper.accessor('executed_at', {
       header: 'EXECUTED',
+      size: 120,
       cell: (info) => (
         <span className="font-mono text-xs text-text-secondary">
           {fmt.isoDate(info.getValue())}

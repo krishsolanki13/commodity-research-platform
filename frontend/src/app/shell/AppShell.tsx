@@ -52,9 +52,9 @@ export function AppShell() {
       <div className="flex flex-1 overflow-hidden">
         <SidebarNav />
 
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <ContextBar />
-          <main id="main-content" role="main" className="flex-1 overflow-y-auto">
+          <main id="main-content" role="main" className="min-w-0 flex-1 overflow-y-auto">
             <Outlet />
           </main>
         </div>
