@@ -109,9 +109,9 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
     const grids = showVolume
       ? [
           { left: 60, right: 16, top: '5%', height: '72%' },
-          { left: 60, right: 16, bottom: '6%', height: '14%' },
+          { left: 60, right: 16, bottom: 60, height: '14%' },
         ]
-      : [{ left: 60, right: 16, top: '5%', bottom: '6%' }]
+      : [{ left: 60, right: 16, top: '5%', bottom: 60 }]
 
     const xAxes = showVolume
       ? [
@@ -254,7 +254,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
     const dataZoom = [
       {
         type: 'slider' as const,
-        bottom: 0,
+        bottom: 8,
         xAxisIndex: showVolume ? [0, 1] : [0],
         height: 20,
       },

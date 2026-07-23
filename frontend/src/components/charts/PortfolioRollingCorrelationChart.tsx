@@ -143,7 +143,7 @@ function PortfolioRollingCorrelationChartInner({
           fontWeight: 'normal' as const,
         },
       },
-      grid: { left: 52, right: 16, top: 40, bottom: 56 },
+      grid: { left: 52, right: 16, top: 40, bottom: 60 },
       xAxis: {
         type: 'time' as const,
         axisLabel: {

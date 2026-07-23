@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { MetricGrid } from '@/components/data/MetricGrid'
 import type { MetricStatProps } from '@/components/data/MetricStat'
+import { fmt } from '@/lib/fmt'
 import type { components } from '@/api/schema'
 
 type AssetSummaryResponse = components['schemas']['AssetSummaryResponse']
@@ -14,7 +15,7 @@ interface AssetMetricsPanelProps {
 }
 
 export function AssetMetricsPanel({
-  asset: _asset,
+  asset,
   summary,
   ohlcv,
   loading,
@@ -28,7 +29,8 @@ export function AssetMetricsPanel({
     return (latest - oneYearAgo) / oneYearAgo
   }, [ohlcv])
 
-  // MetricStat requires { label, value, format }. LAST has no price format — use raw.
+  // MetricStat requires { label, value: number|null, format }. No price format —
+  // pre-round via fmt.price so format:'raw' does not show float noise.
   // When ohlcv yields a 1Y return, replace 1M% with 1Y% (6 metrics max, never 7).
   const periodReturnMetric: MetricStatProps =
     oneYearReturn !== null
@@ -38,7 +40,8 @@ export function AssetMetricsPanel({
   const metrics: MetricStatProps[] = [
     {
       label: 'LAST',
-      value: summary?.last_price ?? null,
+      value:
+        summary?.last_price != null ? Number(fmt.price(summary.last_price, asset)) : null,
       format: 'raw',
       tone: 'neutral',
       hint: summary?.last_date ?? undefined,
