@@ -47,16 +47,19 @@ describe('fmt.isoDate', () => {
 })
 
 describe('fmtDate', () => {
-  it('formats epoch ms as YYYY-MM-DD', () => {
+  it('formats epoch ms to ISO date', () => {
     expect(fmtDate(1262563200000)).toBe('2010-01-04')
+    expect(fmtDate(0)).toBe('1970-01-01')
   })
-  it('coerces numeric strings from category axes', () => {
+
+  it('coerces numeric strings', () => {
     expect(fmtDate('1262563200000' as unknown as number)).toBe('2010-01-04')
   })
 })
 
 describe('fmt.tradeBars', () => {
-  it('rounds to whole bars', () => {
-    expect(fmt.tradeBars(8.850107066381156)).toBe('9 bars')
+  it('rounds and suffixes bars', () => {
+    expect(fmt.tradeBars(8.85)).toBe('9 bars')
+    expect(fmt.tradeBars(1.0)).toBe('1 bars')
   })
 })

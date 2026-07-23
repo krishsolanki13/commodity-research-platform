@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { useChartTheme } from '@/lib/chart-theme'
+import { resolveCssVar, useChartTheme } from '@/lib/chart-theme'
 
 describe('useChartTheme', () => {
   it('returns an object with the required ECharts theme fields', () => {
@@ -19,8 +19,14 @@ describe('useChartTheme', () => {
     const { result } = renderHook(() => useChartTheme())
     // CSS vars resolve to empty strings in jsdom (no real stylesheet loaded).
     // Test verifies the array structure is correct regardless of resolved values.
-    result.current.seriesPalette.forEach(entry => {
+    result.current.seriesPalette.forEach((entry) => {
       expect(typeof entry).toBe('string')
     })
+  })
+})
+
+describe('resolveCssVar', () => {
+  it('returns fallback when CSS var is missing', () => {
+    expect(resolveCssVar('--does-not-exist', '#123456')).toBe('#123456')
   })
 })

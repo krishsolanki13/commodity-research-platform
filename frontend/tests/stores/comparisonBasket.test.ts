@@ -42,4 +42,13 @@ describe('comparisonBasket store', () => {
     clear()
     expect(useComparisonBasket.getState().ids).toEqual([])
   })
+
+  it('has and ids reflect add/remove membership', () => {
+    const basket = useComparisonBasket.getState()
+    basket.add('run_001')
+    expect(useComparisonBasket.getState().has('run_001')).toBe(true)
+    expect(useComparisonBasket.getState().ids).toContain('run_001')
+    useComparisonBasket.getState().remove('run_001')
+    expect(useComparisonBasket.getState().has('run_001')).toBe(false)
+  })
 })
