@@ -6,7 +6,7 @@ import traceback
 from pathlib import Path
 from typing import Any, cast
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 
 from api import state
 from api.exceptions import ApiError
@@ -17,6 +17,8 @@ from api.models import (
     PortfolioAssetsResponse,
     PortfolioEquityResponse,
     PortfolioLaunchRequest,
+    PortfolioRunListItem,
+    PortfolioRunListResponse,
     PortfolioSummaryResponse,
     RiskReportResponse,
     RollingCorrSeries,
@@ -238,6 +240,63 @@ def launch_portfolio(
     state.register(polling_run_id)
     background_tasks.add_task(_run_portfolio_task, polling_run_id, request)
     return TaskLaunchResponse(run_id=polling_run_id, status="queued")
+
+
+@router.get("/runs", response_model=PortfolioRunListResponse)
+async def list_portfolio_runs(
+    limit: int = Query(default=20, ge=1, le=100),
+) -> PortfolioRunListResponse:
+    """List recent portfolio runs from disk.
+
+    Scans RUNS_DIR for directories containing portfolio_summary.json.
+    Returns runs sorted newest-first by directory name (which encodes
+    execution timestamp: YYYYMMDD_HHMMSS_portfolio_{strategy}).
+
+    Replaces the frontend portfolioHistory Zustand+localStorage store
+    with a proper server-side run list.
+    """
+    import json as json_mod  # noqa: PLC0415
+
+    if not RUNS_DIR.exists():
+        return PortfolioRunListResponse(runs=[], total=0)
+
+    items: list[PortfolioRunListItem] = []
+    try:
+        candidates = sorted(
+            (d for d in RUNS_DIR.iterdir() if d.is_dir()),
+            key=lambda d: d.name,
+            reverse=True,  # newest first (YYYYMMDD_HHMMSS prefix)
+        )
+    except PermissionError:
+        return PortfolioRunListResponse(runs=[], total=0)
+
+    for run_dir in candidates:
+        if len(items) >= limit:
+            break
+        summary_path = run_dir / "portfolio_summary.json"
+        if not summary_path.exists():
+            continue
+        try:
+            summary = json_mod.loads(summary_path.read_text(encoding="utf-8"))
+            metrics = summary.get("portfolio_metrics", {})
+            items.append(
+                PortfolioRunListItem(
+                    run_id=summary.get("run_id", run_dir.name),
+                    strategy_name=summary.get("strategy_name", ""),
+                    assets=summary.get("assets", []),
+                    skipped_assets=summary.get("skipped_assets", []),
+                    total_return=metrics.get("total_return"),
+                    sharpe=metrics.get("sharpe"),
+                    max_drawdown=metrics.get("max_drawdown"),
+                    portfolio_vol=metrics.get("portfolio_vol"),
+                    initial_capital_total=summary.get("initial_capital_total"),
+                    portfolio_date_range=summary.get("portfolio_date_range", []),
+                )
+            )
+        except Exception:  # noqa: BLE001
+            continue  # skip malformed summary files
+
+    return PortfolioRunListResponse(runs=items, total=len(items))
 
 
 @router.get("/{run_id}/status", response_model=TaskStatusResponse)
