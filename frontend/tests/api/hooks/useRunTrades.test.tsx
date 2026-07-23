@@ -20,10 +20,7 @@ function createWrapper() {
 describe('useRunTrades', () => {
   it('returns paginated trades with trade records and stats', async () => {
     const wrapper = createWrapper()
-    const { result } = renderHook(
-      () => useRunTrades(MOCK_RUN_ID, 1),
-      { wrapper }
-    )
+    const { result } = renderHook(() => useRunTrades(MOCK_RUN_ID, 1), { wrapper })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.trades).toHaveLength(10)
@@ -37,20 +34,14 @@ describe('useRunTrades', () => {
     let capturedUrl = ''
 
     server.use(
-      http.get(
-        `http://localhost:8000/api/runs/${MOCK_RUN_ID}/trades`,
-        ({ request }) => {
-          capturedUrl = request.url
-          return HttpResponse.json(goldTradesFixture)
-        }
-      )
+      http.get(`http://localhost:8000/api/runs/${MOCK_RUN_ID}/trades`, ({ request }) => {
+        capturedUrl = request.url
+        return HttpResponse.json(goldTradesFixture)
+      })
     )
 
     const wrapper = createWrapper()
-    const { result } = renderHook(
-      () => useRunTrades(MOCK_RUN_ID, 2),
-      { wrapper }
-    )
+    const { result } = renderHook(() => useRunTrades(MOCK_RUN_ID, 2), { wrapper })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(capturedUrl).toContain('page=2')
@@ -72,13 +63,10 @@ describe('useRunTrades', () => {
     let capturedUrl = ''
 
     server.use(
-      http.get(
-        `http://localhost:8000/api/runs/${MOCK_RUN_ID}/trades`,
-        ({ request }) => {
-          capturedUrl = request.url
-          return HttpResponse.json(goldTradesFixture)
-        }
-      )
+      http.get(`http://localhost:8000/api/runs/${MOCK_RUN_ID}/trades`, ({ request }) => {
+        capturedUrl = request.url
+        return HttpResponse.json(goldTradesFixture)
+      })
     )
 
     const wrapper = createWrapper()

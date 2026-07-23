@@ -14,7 +14,9 @@ test.describe('Run Explorer and Comparison (S7/S8)', () => {
     await page.waitForSelector('table tbody tr', { timeout: 10_000 })
   })
 
-  test('ComparisonTray appears when run selected; Compare navigates correctly', async ({ page }) => {
+  test('ComparisonTray appears when run selected; Compare navigates correctly', async ({
+    page,
+  }) => {
     await page.goto('/runs')
     await page.waitForSelector('table tbody tr', { timeout: 10_000 })
     const rows = page.locator('table tbody tr')
@@ -32,7 +34,9 @@ test.describe('Run Explorer and Comparison (S7/S8)', () => {
     }
   })
 
-  test('DataGrid 300-row virtualization: fewer rows in DOM than total (/dev/gallery)', async ({ page }) => {
+  test('DataGrid 300-row virtualization: fewer rows in DOM than total (/dev/gallery)', async ({
+    page,
+  }) => {
     // NOTE: data-testid="gallery-datagrid-300" added to Gallery.tsx in F8 Increment 4
     await page.goto('/dev/gallery')
     await page.waitForLoadState('networkidle')

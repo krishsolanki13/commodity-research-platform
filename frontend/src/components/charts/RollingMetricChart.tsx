@@ -190,7 +190,8 @@ function RollingMetricChartInner({
             axisValue?: string | number
             value?: number | [number, number] | null
           }>
-          const axisRaw = items[0]?.axisValue ?? (Array.isArray(items[0]?.value) ? items[0]?.value[0] : undefined)
+          const axisRaw =
+            items[0]?.axisValue ?? (Array.isArray(items[0]?.value) ? items[0]?.value[0] : undefined)
           const axisMs = typeof axisRaw === 'number' ? axisRaw : Number(axisRaw)
           const date = Number.isFinite(axisMs) ? fmtDate(axisMs) : String(axisRaw ?? '')
           const lines = items.map((p) => {

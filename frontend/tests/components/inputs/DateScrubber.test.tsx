@@ -15,9 +15,7 @@ describe('DateScrubber', () => {
   it('clicking Latest button calls onChange with null', async () => {
     const onChange = vi.fn()
     render(<DateScrubber value="2025-01-02" onChange={onChange} />)
-    await userEvent.click(
-      screen.getByRole('button', { name: /use latest available date/i }),
-    )
+    await userEvent.click(screen.getByRole('button', { name: /use latest available date/i }))
     expect(onChange).toHaveBeenCalledWith(null)
   })
 
@@ -29,7 +27,7 @@ describe('DateScrubber', () => {
         onChange={onChange}
         minDate="2023-01-01"
         maxDate="2026-07-16"
-      />,
+      />
     )
     const input = screen.getByLabelText('Observation date')
     fireEvent.change(input, { target: { value: '2025-01-15' } })

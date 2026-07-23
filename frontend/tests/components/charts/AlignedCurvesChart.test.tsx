@@ -11,19 +11,13 @@ const twoSeriesFixture = compareFixture.aligned_series.map((s, i) => ({
 
 describe('AlignedCurvesChart', () => {
   it('renders without errors with 2-series fixture', () => {
-    render(
-      <AlignedCurvesChart series={twoSeriesFixture} title="Normalized Returns" />
-    )
+    render(<AlignedCurvesChart series={twoSeriesFixture} title="Normalized Returns" />)
     expect(screen.getByText('Normalized Returns')).toBeInTheDocument()
   })
 
   it('loading=true passes loading state to ChartFrame', () => {
     const { container } = render(
-      <AlignedCurvesChart
-        series={twoSeriesFixture}
-        title="Normalized Returns"
-        loading
-      />
+      <AlignedCurvesChart series={twoSeriesFixture} title="Normalized Returns" loading />
     )
     const loadingEl = container.querySelector(
       '[aria-busy="true"], .animate-pulse, [data-testid="loading-skeleton"]'
@@ -32,8 +26,6 @@ describe('AlignedCurvesChart', () => {
   })
 
   it('empty series array does not throw', () => {
-    expect(() =>
-      render(<AlignedCurvesChart series={[]} title="Empty" />)
-    ).not.toThrow()
+    expect(() => render(<AlignedCurvesChart series={[]} title="Empty" />)).not.toThrow()
   })
 })

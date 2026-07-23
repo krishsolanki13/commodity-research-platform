@@ -39,10 +39,7 @@ describe('useRunDetail', () => {
 
   it('surfaces an ApiClientError for an unknown run id (RUN_NOT_FOUND)', async () => {
     const wrapper = createWrapper()
-    const { result } = renderHook(
-      () => useRunDetail('unknown-run-id-99999'),
-      { wrapper }
-    )
+    const { result } = renderHook(() => useRunDetail('unknown-run-id-99999'), { wrapper })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(result.current.error).toBeInstanceOf(ApiClientError)

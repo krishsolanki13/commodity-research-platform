@@ -31,10 +31,7 @@ describe('comparisonBasket store', () => {
   })
 
   it('clear empties basket; max enforced — 9th add silently ignored', () => {
-    const fullIds = Array.from(
-      { length: MAX_COMPARISON_SIZE },
-      (_, i) => `run-${i}`
-    )
+    const fullIds = Array.from({ length: MAX_COMPARISON_SIZE }, (_, i) => `run-${i}`)
     useComparisonBasket.setState({ ids: fullIds })
     const { add, clear } = useComparisonBasket.getState()
     add('run-overflow')

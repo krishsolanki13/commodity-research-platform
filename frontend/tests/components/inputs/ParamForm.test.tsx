@@ -70,9 +70,7 @@ describe('ParamForm', () => {
 
   test('onChange called when valid value entered', async () => {
     const onChange = vi.fn()
-    render(
-      <ParamForm schema={emaCrossoverSchema} values={defaultValues} onChange={onChange} />
-    )
+    render(<ParamForm schema={emaCrossoverSchema} values={defaultValues} onChange={onChange} />)
 
     const fastInput = screen.getAllByRole('spinbutton')[0]
     await userEvent.clear(fastInput)

@@ -52,7 +52,9 @@ describe('PortfolioAnalytics screen', () => {
   it('shows PortfolioRunSelector when API returns runs', async () => {
     render(<Wrapper initialPath={`/portfolio?run_id=${MOCK_PORTFOLIO_RUN_ID}`} />)
     await waitFor(() => screen.getByRole('combobox', { name: /select a recent portfolio run/i }))
-    expect(screen.getByRole('combobox', { name: /select a recent portfolio run/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('combobox', { name: /select a recent portfolio run/i })
+    ).toBeInTheDocument()
   })
 
   it('shows delete button when run is active; AlertDialog opens on click', async () => {

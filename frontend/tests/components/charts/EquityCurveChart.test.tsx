@@ -29,10 +29,9 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 describe('EquityCurveChart', () => {
   it('renders without errors with equity series', () => {
     expect(() =>
-      render(
-        <EquityCurveChart equity={equityFixture} baseline={1000000} height={300} />,
-        { wrapper: Wrapper }
-      )
+      render(<EquityCurveChart equity={equityFixture} baseline={1000000} height={300} />, {
+        wrapper: Wrapper,
+      })
     ).not.toThrow()
   })
 
@@ -59,14 +58,9 @@ describe('EquityCurveChart', () => {
       },
     }
     expect(() =>
-      render(
-        <EquityCurveChart
-          equity={equityFixture}
-          compare={[compareFixture]}
-          height={300}
-        />,
-        { wrapper: Wrapper }
-      )
+      render(<EquityCurveChart equity={equityFixture} compare={[compareFixture]} height={300} />, {
+        wrapper: Wrapper,
+      })
     ).not.toThrow()
   })
 })

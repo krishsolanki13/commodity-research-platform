@@ -41,9 +41,7 @@ export default function StrategyBuilder() {
 
   // Prefer URL-threaded evaluation (Issue T); fall back to F5 evaluate-chain cache
   const cachedEval = useSignalEvaluate(asset, strategy, parsedParams)
-  const evaluation = evalOverride
-    ? null
-    : (urlEvaluation ?? cachedEval.data?.evaluation ?? null)
+  const evaluation = evalOverride ? null : (urlEvaluation ?? cachedEval.data?.evaluation ?? null)
 
   const [config, setConfig] = useState<BacktestConfig>({
     initial_capital: 1_000_000,

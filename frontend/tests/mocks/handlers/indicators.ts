@@ -6,7 +6,5 @@ export const indicatorHandlers = [
   http.get('http://localhost:8000/api/indicators', () =>
     HttpResponse.json(indicatorCatalogFixture)
   ),
-  http.get('http://localhost:8000/api/strategies', () =>
-    HttpResponse.json(strategyCatalogFixture)
-  ),
+  http.get('http://localhost:8000/api/strategies', () => HttpResponse.json(strategyCatalogFixture)),
 ]

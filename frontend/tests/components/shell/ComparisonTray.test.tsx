@@ -34,9 +34,7 @@ describe('ComparisonTray', () => {
     useComparisonBasket.setState({ ids: ['run-1'] })
     renderTray()
     expect(screen.getByText('1 run selected')).toBeInTheDocument()
-    expect(
-      screen.getByText('Select 1 more run to compare')
-    ).toBeInTheDocument()
+    expect(screen.getByText('Select 1 more run to compare')).toBeInTheDocument()
   })
 
   it('Compare button is disabled with 1 run; navigates with correct URL with 2 runs', async () => {
@@ -53,8 +51,6 @@ describe('ComparisonTray', () => {
     const enabledBtn = screen.getByRole('button', { name: /compare/i })
     expect(enabledBtn).not.toBeDisabled()
     await userEvent.click(enabledBtn)
-    expect(mockNavigate).toHaveBeenCalledWith(
-      '/runs/compare?ids=run-1,run-2'
-    )
+    expect(mockNavigate).toHaveBeenCalledWith('/runs/compare?ids=run-1,run-2')
   })
 })

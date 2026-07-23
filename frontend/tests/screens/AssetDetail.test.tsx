@@ -25,10 +25,9 @@ beforeEach(() => qc.clear())
 describe('AssetDetailScreen', () => {
   it('renders asset header for gold', async () => {
     render(<Wrapper asset="gold" />)
-    await waitFor(
-      () => expect(screen.getAllByText(/GC=F/i).length).toBeGreaterThan(0),
-      { timeout: 5000 }
-    )
+    await waitFor(() => expect(screen.getAllByText(/GC=F/i).length).toBeGreaterThan(0), {
+      timeout: 5000,
+    })
     expect(screen.getByRole('heading', { name: /gold/i })).toBeInTheDocument()
   })
 
@@ -73,10 +72,9 @@ describe('AssetDetailScreen', () => {
 
   it('renders without crash when regime chip data loads', async () => {
     render(<Wrapper asset="gold" />)
-    await waitFor(
-      () => expect(screen.queryAllByText(/GC=F|gold/i).length).toBeGreaterThan(0),
-      { timeout: 5000 }
-    )
+    await waitFor(() => expect(screen.queryAllByText(/GC=F|gold/i).length).toBeGreaterThan(0), {
+      timeout: 5000,
+    })
     expect(screen.queryByText(/crashed|error thrown/i)).not.toBeInTheDocument()
   })
 })

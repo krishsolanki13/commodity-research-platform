@@ -36,7 +36,7 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
   if (evaluation === null || evaluation === undefined) {
     return (
       <Panel title="Signal Quality">
-        <div className="flex h-48 flex-col items-center justify-center gap-2 px-6 text-center text-sm text-text-secondary">
+        <div className="h-48 flex flex-col items-center justify-center gap-2 px-6 text-center text-sm text-text-secondary">
           <span className="text-2xl text-text-disabled">~</span>
           <span className="font-medium">No signal evaluation recorded</span>
           <span className="text-xs leading-relaxed text-text-disabled">

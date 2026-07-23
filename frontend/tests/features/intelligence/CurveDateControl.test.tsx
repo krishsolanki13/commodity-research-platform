@@ -23,7 +23,7 @@ describe('CurveDateControl', () => {
     })
     // findByRole is async — retries until found or timeout
     await expect(
-      screen.findByRole('button', { name: /use latest available date/i }, { timeout: 5000 }),
+      screen.findByRole('button', { name: /use latest available date/i }, { timeout: 5000 })
     ).resolves.toBeInTheDocument()
   })
 
@@ -32,7 +32,7 @@ describe('CurveDateControl', () => {
       wrapper: makeWrapper('/intelligence'),
     })
     expect(
-      screen.queryByRole('button', { name: /use latest available date/i }),
+      screen.queryByRole('button', { name: /use latest available date/i })
     ).not.toBeInTheDocument()
   })
 })

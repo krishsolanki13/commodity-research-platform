@@ -11,20 +11,14 @@ describe('FuturesCurveChart', () => {
         regime={goldCurveSnapshotFixture.regime as 'contango'}
         asset="gold"
         height={300}
-      />,
+      />
     )
     expect(container.firstChild).toBeTruthy()
   })
 
   it('shows loading state when loading=true without crashing', () => {
     const { container } = render(
-      <FuturesCurveChart
-        points={[]}
-        regime={null}
-        asset="gold"
-        loading={true}
-        height={300}
-      />,
+      <FuturesCurveChart points={[]} regime={null} asset="gold" loading={true} height={300} />
     )
     // ChartFrame renders loading skeleton — no empty message should appear
     expect(container.firstChild).toBeTruthy()
@@ -40,7 +34,7 @@ describe('FuturesCurveChart', () => {
         asset="gold"
         empty={{ message: emptyMsg }}
         height={300}
-      />,
+      />
     )
     expect(screen.getByText(emptyMsg)).toBeTruthy()
   })

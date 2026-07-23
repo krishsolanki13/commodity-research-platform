@@ -95,8 +95,6 @@ describe('ChartFrame', () => {
       </ChartFrame>,
       { wrapper: Wrapper }
     )
-    expect(
-      screen.getByRole('button', { name: /export chart as png/i })
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /export chart as png/i })).toBeInTheDocument()
   })
 })

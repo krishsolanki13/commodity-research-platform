@@ -133,7 +133,11 @@ export function BacktestConfigPanel({
     <Panel title="Backtest Config" className={className}>
       <div className="flex flex-col gap-4">
         <p className="font-mono text-xs text-text-secondary">
-          {[asset && asset.toUpperCase(), strategy, hasPeriods ? `${String(params.fast_period)}/${String(params.slow_period)}` : null]
+          {[
+            asset && asset.toUpperCase(),
+            strategy,
+            hasPeriods ? `${String(params.fast_period)}/${String(params.slow_period)}` : null,
+          ]
             .filter(Boolean)
             .join(' · ') || 'Select an asset and strategy'}
         </p>

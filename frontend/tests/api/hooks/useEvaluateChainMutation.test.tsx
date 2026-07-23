@@ -41,10 +41,9 @@ describe('useEvaluateChainMutation', () => {
 
   it('onProgress called in order features→signal→evaluation', async () => {
     const steps: string[] = []
-    const { result } = renderHook(
-      () => useEvaluateChainMutation((s) => steps.push(s.step)),
-      { wrapper }
-    )
+    const { result } = renderHook(() => useEvaluateChainMutation((s) => steps.push(s.step)), {
+      wrapper,
+    })
     await result.current.mutateAsync(validParams)
     expect(steps).toEqual(['features', 'signal', 'evaluation'])
   })
@@ -52,9 +51,7 @@ describe('useEvaluateChainMutation', () => {
   it('after successful chain, queryClient has signalEvaluate data', async () => {
     const { result } = renderHook(() => useEvaluateChainMutation(), { wrapper })
     await result.current.mutateAsync(validParams)
-    const cached = qc.getQueryData(
-      qk.signalEvaluate('gold', 'ema_crossover', validParams.params)
-    )
+    const cached = qc.getQueryData(qk.signalEvaluate('gold', 'ema_crossover', validParams.params))
     expect(cached).toBeDefined()
   })
 
@@ -87,9 +84,7 @@ describe('useEvaluateChainMutation', () => {
     )
     const { result } = renderHook(() => useEvaluateChainMutation(), { wrapper })
     await expect(result.current.mutateAsync(validParams)).rejects.toThrow()
-    const cached = qc.getQueryData(
-      qk.signalEvaluate('gold', 'ema_crossover', validParams.params)
-    )
+    const cached = qc.getQueryData(qk.signalEvaluate('gold', 'ema_crossover', validParams.params))
     expect(cached).toBeUndefined()
   })
 })
