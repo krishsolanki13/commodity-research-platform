@@ -86,9 +86,9 @@ function EquityCurveChartInner({
       ? [
           // Increase gap between panes so $0 / 0.0% labels do not overlap at the seam.
           { left: 70, right: 16, top: '5%', height: '60%' },
-          { left: 70, right: 16, bottom: '8%', height: '18%' },
+          { left: 70, right: 16, bottom: 60, height: '18%' },
         ]
-      : [{ left: 70, right: 16, top: '5%', bottom: '8%' }]
+      : [{ left: 70, right: 16, top: '5%', bottom: 60 }]
 
     // ---------------------------------------------------------------------------
     // X axes
@@ -258,7 +258,7 @@ function EquityCurveChartInner({
     const dataZoom = [
       {
         type: 'slider' as const,
-        bottom: 0,
+        bottom: 8,
         xAxisIndex: showDrawdown ? [0, 1] : [0],
         height: 20,
       },
