@@ -202,9 +202,7 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
             ? new Date(axisMs).toISOString().slice(0, 10)
             : String(axisRaw ?? '')
           const lines = items
-            .filter(
-              (p) => p.seriesName === 'Slope %/yr' || p.seriesName === 'Roll Yield %/yr'
-            )
+            .filter((p) => p.seriesName === 'Slope %/yr' || p.seriesName === 'Roll Yield %/yr')
             .map((p) => {
               const marker = p.marker ?? ''
               let v: unknown = p.value

@@ -14,12 +14,7 @@ interface AssetMetricsPanelProps {
   loading?: boolean
 }
 
-export function AssetMetricsPanel({
-  asset,
-  summary,
-  ohlcv,
-  loading,
-}: AssetMetricsPanelProps) {
+export function AssetMetricsPanel({ asset, summary, ohlcv, loading }: AssetMetricsPanelProps) {
   const oneYearReturn = useMemo(() => {
     const closes = ohlcv?.data?.columns?.close?.filter((v): v is number => v !== null)
     if (!closes || closes.length < 252) return null
@@ -29,8 +24,8 @@ export function AssetMetricsPanel({
     return (latest - oneYearAgo) / oneYearAgo
   }, [ohlcv])
 
-  // MetricStat requires { label, value: number|null, format }. No price format —
-  // pre-round via fmt.price so format:'raw' does not show float noise.
+  // MetricStat accepts string | number. LAST uses fmt.price string directly so
+  // trailing zeros are preserved (Number() would strip them).
   // When ohlcv yields a 1Y return, replace 1M% with 1Y% (6 metrics max, never 7).
   const periodReturnMetric: MetricStatProps =
     oneYearReturn !== null
@@ -40,8 +35,7 @@ export function AssetMetricsPanel({
   const metrics: MetricStatProps[] = [
     {
       label: 'LAST',
-      value:
-        summary?.last_price != null ? Number(fmt.price(summary.last_price, asset)) : null,
+      value: summary?.last_price != null ? fmt.price(summary.last_price, asset) : null,
       format: 'raw',
       tone: 'neutral',
       hint: summary?.last_date ?? undefined,

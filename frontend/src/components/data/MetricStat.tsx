@@ -9,7 +9,7 @@ type MetricFormat =
 
 interface MetricStatProps {
   label: string
-  value: number | null | undefined
+  value: string | number | null | undefined
   format: MetricFormat
   delta?: number
   deltaFormat?: 'percent' | 'ratio'
@@ -43,7 +43,7 @@ function formatValue(value: number, format: MetricFormat): string {
 }
 
 function getValueColor(
-  value: number | null | undefined,
+  value: string | number | null | undefined,
   format: MetricFormat,
   toneProp: 'auto' | 'neutral'
 ): string {
@@ -51,6 +51,8 @@ function getValueColor(
   // Drawdown is always a loss metric regardless of tone prop
   if (format === 'drawdown') return 'var(--text-loss)'
   if (toneProp === 'neutral') return 'var(--text-primary)'
+  // Pre-formatted strings have no sign semantics for auto tone
+  if (typeof value === 'string') return 'var(--text-primary)'
   // auto tone
   if (format === 'ic') return tone.ic(value)
   if (format === 'percent' || format === 'compactUsd' || format === 'fullUsd') {
@@ -94,12 +96,12 @@ export function MetricStat({
           )}
         </div>
 
-        {/* Value */}
+        {/* Value — strings are pre-formatted (e.g. fmt.price); render directly */}
         <span
           style={{ color }}
           className={cn('font-mono font-medium', size === 'lg' ? 'text-metric-lg' : 'text-metric')}
         >
-          {isEmpty ? '—' : formatValue(value, format)}
+          {isEmpty ? '—' : typeof value === 'string' ? value : formatValue(value, format)}
         </span>
 
         {/* Delta */}

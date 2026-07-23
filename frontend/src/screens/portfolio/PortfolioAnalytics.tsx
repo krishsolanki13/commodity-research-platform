@@ -121,7 +121,7 @@ export function PortfolioAnalytics() {
           <div>
             <h1 className="font-mono text-base text-text-primary">Portfolio Analytics</h1>
             <span className="block max-w-xs truncate font-mono text-xs text-text-secondary">
-              {run_id}
+              {(run_id ?? '').replace(/^poll_/, '')}
             </span>
           </div>
         </div>

@@ -38,9 +38,14 @@ export function PortfolioLaunchPanel({
 
   useEffect(() => {
     if (status.data?.status === 'complete' && pollingRunId) {
-      onLaunched(pollingRunId)
+      // Prefer a clean artifact id from status when present; else strip poll_ prefix
+      const statusRunId = status.data.run_id
+      const artifactId = (
+        statusRunId && !statusRunId.startsWith('poll_') ? statusRunId : pollingRunId
+      ).replace(/^poll_/, '')
+      onLaunched(artifactId)
     }
-  }, [status.data?.status, pollingRunId, onLaunched])
+  }, [status.data?.status, status.data?.run_id, pollingRunId, onLaunched])
 
   async function handleLaunch() {
     const request: PortfolioLaunchRequest = {
