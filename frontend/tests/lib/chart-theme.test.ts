@@ -27,6 +27,7 @@ describe('useChartTheme', () => {
 
 describe('resolveCssVar', () => {
   it('returns fallback when CSS var is missing', () => {
-    expect(resolveCssVar('--does-not-exist', '#123456')).toBe('#123456')
+    // Fallback path only — value need not be a design token
+    expect(resolveCssVar('--does-not-exist', 'rgb(18, 52, 86)')).toBe('rgb(18, 52, 86)')
   })
 })

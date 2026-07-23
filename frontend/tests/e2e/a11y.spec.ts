@@ -108,32 +108,18 @@ test.describe('Accessibility Audit (Axe)', () => {
   test('Portfolio Analytics results state has no critical/serious a11y violations', async ({
     page,
   }) => {
-    // Navigate to portfolio screen
-    await page.goto('/portfolio')
-    await page.waitForLoadState('networkidle')
-
-    // Look for run selector — populated from portfolioHistory store
-    const runSelector = page.getByRole('combobox', {
-      name: /select a recent portfolio run/i,
-    })
-
-    if (!(await runSelector.isVisible({ timeout: 3_000 }).catch(() => false))) {
-      console.log('No portfolio run history — skipping results-state a11y audit')
+    const res = await page.request.get('/api/portfolio/runs')
+    const data = (await res.json()) as { runs?: Array<{ run_id: string }> }
+    const runId = data.runs?.[0]?.run_id
+    if (!runId) {
+      console.log('No portfolio runs from API — skipping results-state a11y audit')
       test.skip()
       return
     }
 
-    // Select the most recent run
-    await runSelector.click()
-    const firstOption = page.getByRole('option').first()
-    if (!(await firstOption.isVisible({ timeout: 2_000 }).catch(() => false))) {
-      test.skip()
-      return
-    }
-    await firstOption.click()
+    await page.goto(`/portfolio?run_id=${encodeURIComponent(runId)}`)
     await page.waitForLoadState('networkidle')
 
-    // Wait for results to render (KPI row or sharpe metric)
     await page
       .waitForSelector(
         '[data-testid="portfolio-kpi-row"], [aria-label*="sharpe"], :text("sharpe")',
@@ -143,7 +129,6 @@ test.describe('Accessibility Audit (Axe)', () => {
         // Results may take time or selector may differ — audit whatever is rendered
       })
 
-    // Run axe audit
     await auditPage(page)
   })
 })

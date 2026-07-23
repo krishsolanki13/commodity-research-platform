@@ -22,9 +22,12 @@ test.describe('F16 Inc6 polish', () => {
     await page.goto('/research')
     const trigger = page.locator('[role="combobox"]').first()
     await trigger.click()
-    await page.waitForSelector('[role="listbox"], [role="option"]', { timeout: 3_000 })
-    const dropdown = page.locator('[role="listbox"]').first()
-    const bg = await dropdown.evaluate((el) => getComputedStyle(el).backgroundColor)
+    const panel = page.locator('[data-radix-popper-content-wrapper]').first()
+    await expect(panel).toBeVisible({ timeout: 3_000 })
+    const bg = await panel.locator(':scope > *').first().evaluate((el) => {
+      return getComputedStyle(el).backgroundColor
+    })
+    // Must not be white (rgb(255, 255, 255))
     expect(bg).not.toBe('rgb(255, 255, 255)')
   })
 

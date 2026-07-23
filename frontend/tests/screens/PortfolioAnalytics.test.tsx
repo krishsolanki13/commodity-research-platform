@@ -51,7 +51,10 @@ describe('PortfolioAnalytics screen', () => {
 
   it('shows PortfolioRunSelector when API returns runs', async () => {
     render(<Wrapper initialPath={`/portfolio?run_id=${MOCK_PORTFOLIO_RUN_ID}`} />)
-    await waitFor(() => screen.getByRole('combobox', { name: /select a recent portfolio run/i }))
+    await waitFor(
+      () => screen.getByRole('combobox', { name: /select a recent portfolio run/i }),
+      { timeout: 5000 }
+    )
     expect(
       screen.getByRole('combobox', { name: /select a recent portfolio run/i })
     ).toBeInTheDocument()

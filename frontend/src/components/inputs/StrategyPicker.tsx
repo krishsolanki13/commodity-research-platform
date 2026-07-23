@@ -29,7 +29,14 @@ export function StrategyPicker({ strategies, value, onChange, className }: Strat
             )}
           >
             <p className="text-sm font-semibold text-text-primary">{strategy.display_name}</p>
-            <p className="mt-0.5 text-xs text-text-secondary">{strategy.description}</p>
+            <p
+              className={cn(
+                'mt-0.5 text-xs',
+                isActive ? 'text-text-primary' : 'text-text-secondary'
+              )}
+            >
+              {strategy.description}
+            </p>
           </button>
         )
       })}

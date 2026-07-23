@@ -34,7 +34,7 @@ export function PortfolioCorrelationPanel({
     return (
       <div className="flex items-center gap-2 p-4 text-xs text-text-secondary">
         <span>Detailed analytics unavailable after server restart.</span>
-        <span className="ml-1 text-text-disabled">Re-run the portfolio analysis to restore.</span>
+        <span className="ml-1 text-text-secondary">Re-run the portfolio analysis to restore.</span>
       </div>
     )
   }
