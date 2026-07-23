@@ -206,3 +206,45 @@ def test_delete_run_calls_run_manager(client: TestClient) -> None:
             mock_rm.return_value.delete_run.assert_called_once_with(run_id)
     assert response.status_code == 200
     assert response.json()["deleted"] is True
+
+
+def test_trades_direction_serialized_as_string(client: TestClient) -> None:
+    """Trade direction values must be 'long'/'short' strings, not int 1/-1.
+
+    Root cause of bug: parquet stores direction as int64; filter compared
+    against strings → 0 results. Fix: normalize at serialization time.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        base = Path(tmp)
+        run_id = "20240101_120000_ema_crossover_gold"
+        run_dir = _write_fake_run(base, run_id, n_trades=4)
+        # Production parquet stores direction as int64 (1/-1), not strings.
+        trades_df = pd.read_parquet(run_dir / "trades.parquet")
+        trades_df["direction"] = [1, -1, 1, -1]
+        trades_df.to_parquet(run_dir / "trades.parquet")
+
+        with _patch_runs_dir(base):
+            response = client.get(f"/api/runs/{run_id}/trades")
+            assert response.status_code == 200
+            data = response.json()
+            trades = data.get("trades", data) if isinstance(data, dict) else data
+            assert trades
+
+            for trade in trades:
+                d = trade.get("direction")
+                if d is not None:
+                    assert isinstance(d, str), (
+                        f"Trade direction must be string, got {type(d).__name__}: {d!r}. "
+                        "Parquet stores int64 (1/-1); normalize to long/short at serialization."
+                    )
+                    assert d in (
+                        "long",
+                        "short",
+                        "flat",
+                    ), f"Trade direction must be long/short/flat, got: {d!r}"
+
+            r_long = client.get(f"/api/runs/{run_id}/trades?direction=long")
+            assert r_long.status_code == 200
+            long_trades = r_long.json()["trades"]
+            assert len(long_trades) == 2
+            assert all(t["direction"] == "long" for t in long_trades)
