@@ -288,7 +288,7 @@ export function DataGrid<T>({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className={cn('flex h-full flex-col', className)}>
+    <div className={cn('flex h-full w-full flex-col', className)}>
       {/* Toolbar */}
       {toolbar && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border-default px-3 py-2">
@@ -348,7 +348,7 @@ export function DataGrid<T>({
       >
         <table
           role="grid"
-          className="border-collapse text-sm"
+          className="w-full border-collapse text-sm"
           style={{
             tableLayout: 'fixed',
             // Absolute-positioned body rows are independent tables — keep thead

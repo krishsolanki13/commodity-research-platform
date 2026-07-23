@@ -158,6 +158,15 @@ function EquityCurveChartInner({
     const drawdownYAxis = {
       gridIndex: 1,
       max: 0,
+      name: 'Drawdown',
+      nameLocation: 'middle',
+      nameRotate: 90,
+      nameGap: 40,
+      nameTextStyle: {
+        color: theme.secondaryText,
+        fontFamily: theme.monoFont,
+        fontSize: 11,
+      },
       axisLabel: {
         color: theme.secondaryText,
         fontFamily: theme.monoFont,

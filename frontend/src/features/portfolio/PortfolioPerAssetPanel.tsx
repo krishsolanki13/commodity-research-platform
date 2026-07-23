@@ -24,7 +24,7 @@ export function PortfolioPerAssetPanel({ runId, assets }: PortfolioPerAssetPanel
   }
 
   return (
-    <section className="rounded border border-border-default">
+    <section className="w-full rounded border border-border-default">
       <button
         type="button"
         aria-expanded={open}

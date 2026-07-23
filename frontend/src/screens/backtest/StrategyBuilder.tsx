@@ -7,7 +7,7 @@
  * PATH B — no evaluation param (direct nav or evalOverride=1) → override / empty states.
  */
 import { useState } from 'react'
-import { useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useAssets, useStrategies, useSignalEvaluate } from '@/api/hooks'
 import { AssetSelector } from '@/components/inputs/AssetSelector'
 import { StrategyPicker } from '@/components/inputs/StrategyPicker'
@@ -122,16 +122,7 @@ export default function StrategyBuilder() {
   return (
     <div className="flex flex-col gap-4 p-6">
       <div className="mb-2">
-        <nav className="mb-1 text-xs text-text-secondary">
-          <Link to="/market">Market</Link>
-          {asset ? (
-            <>
-              {' / '}
-              <Link to={`/market/${asset}`}>{asset.toUpperCase()}</Link>
-            </>
-          ) : null}
-          {' / Strategy Builder'}
-        </nav>
+        <nav className="mb-1 text-xs text-text-secondary">Strategy Builder</nav>
         <h1 className="text-xl font-semibold text-text-primary">Strategy Builder</h1>
       </div>
 

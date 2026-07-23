@@ -1,6 +1,6 @@
 import { useAssets } from '@/api/hooks/useAssets'
 import { useDataStatus } from '@/api/hooks/useDataStatus'
-import { useIngestMutation } from '@/api/hooks/useIngestMutation'
+import { useSystemIngest } from '@/api/hooks/useSystemIngest'
 import { MetricGrid } from '@/components/data/MetricGrid'
 import type { MetricStatProps } from '@/components/data/MetricStat'
 import { Button } from '@/ui/button'
@@ -22,7 +22,7 @@ function daysSinceIngest(iso: string): number {
 export function UniverseStatsBar() {
   const { data: universe, isLoading: universeLoading } = useAssets()
   const { data: status } = useDataStatus()
-  const ingest = useIngestMutation()
+  const ingest = useSystemIngest()
   const [{ range }, setUrlState] = useUrlState(rangeSchema, { range: '1Y' })
 
   // MetricStat requires { label, value: number|null, format }. LAST INGESTION is a
@@ -87,11 +87,17 @@ export function UniverseStatsBar() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => ingest.mutate({ asset: null })}
+            onClick={() => ingest.mutate(null)}
             disabled={ingest.isPending}
           >
             {ingest.isPending ? 'Ingesting…' : 'Re-ingest all'}
           </Button>
+          {ingest.isSuccess && (
+            <span className="ml-2 text-xs text-text-secondary">
+              {ingest.data?.assets_ingested?.length ?? 6} assets ingested — refresh page to see
+              updated data
+            </span>
+          )}
         </div>
       </div>
       <MetricGrid metrics={metrics} loading={universeLoading} />
