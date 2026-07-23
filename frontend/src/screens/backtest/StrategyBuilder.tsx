@@ -2,6 +2,9 @@
  * StrategyBuilder (S4) — configure and launch a backtest from URL context.
  * Prefers URL-threaded `evaluation` (Issue T); falls back to F5 evaluate-chain cache.
  * Asset/strategy selectors are always visible for direct /backtest/new navigation.
+ *
+ * PATH A — ?evaluation=<JSON> from Workbench Configure Backtest → show IC context.
+ * PATH B — no evaluation param (direct nav or evalOverride=1) → override / empty states.
  */
 import { useState } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
@@ -18,6 +21,24 @@ import { safeJsonParse } from '@/lib/json'
 import type { components } from '@/api/schema'
 
 type BacktestLaunchRequest = components['schemas']['BacktestLaunchRequest']
+type SignalEvaluationData = components['schemas']['SignalEvaluationData']
+
+function parseUrlEvaluation(raw: string | null): SignalEvaluationData | null {
+  if (!raw) return null
+  const parsed = safeJsonParse<SignalEvaluationData | { evaluation?: SignalEvaluationData } | null>(
+    raw,
+    null
+  )
+  if (!parsed || typeof parsed !== 'object') return null
+  // Workbench may stringify SignalEvaluationData, or a wrapper with nested .evaluation
+  if ('ic' in parsed && typeof (parsed as SignalEvaluationData).ic === 'number') {
+    return parsed as SignalEvaluationData
+  }
+  if ('evaluation' in parsed && parsed.evaluation && typeof parsed.evaluation.ic === 'number') {
+    return parsed.evaluation
+  }
+  return null
+}
 
 export default function StrategyBuilder() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -26,13 +47,12 @@ export default function StrategyBuilder() {
   const strategy = searchParams.get('strategy') ?? ''
   const paramsJson = searchParams.get('params') ?? '{}'
   const evaluationJson = searchParams.get('evaluation')
-  const evalOverride = searchParams.get('evalOverride') === '1'
+  const evalOverrideParam = searchParams.get('evalOverride') === '1'
   const parsedParams = safeJsonParse<Record<string, unknown>>(paramsJson, {})
 
-  type SignalEvaluationData = components['schemas']['SignalEvaluationData']
-  const urlEvaluation = evaluationJson
-    ? safeJsonParse<SignalEvaluationData | null>(evaluationJson, null)
-    : null
+  // PATH A: evaluation in URL wins — show IC context even if evalOverride is also present
+  const urlEvaluation = parseUrlEvaluation(evaluationJson)
+  const evalOverride = evalOverrideParam && urlEvaluation === null
 
   const { data: assetsData } = useAssets()
   const { data: strategiesData } = useStrategies()
@@ -41,7 +61,8 @@ export default function StrategyBuilder() {
 
   // Prefer URL-threaded evaluation (Issue T); fall back to F5 evaluate-chain cache
   const cachedEval = useSignalEvaluate(asset, strategy, parsedParams)
-  const evaluation = evalOverride ? null : (urlEvaluation ?? cachedEval.data?.evaluation ?? null)
+  const cachedEvaluation = cachedEval.data?.evaluation ?? null
+  const evaluation = evalOverride ? null : (urlEvaluation ?? cachedEvaluation)
 
   const [config, setConfig] = useState<BacktestConfig>({
     initial_capital: 1_000_000,
@@ -94,7 +115,8 @@ export default function StrategyBuilder() {
   }
 
   function handleLaunched(runId: string) {
-    void navigate(`/runs/${runId}`)
+    const artifactId = runId.replace(/^poll_/, '')
+    void navigate(`/runs/${artifactId}`)
   }
 
   return (
