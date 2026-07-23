@@ -1,13 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { usePortfolioSummary } from '@/api/hooks/usePortfolioSummary'
 import { usePortfolioEquity } from '@/api/hooks/usePortfolioEquity'
 import { usePortfolioRisk } from '@/api/hooks/usePortfolioRisk'
 import { usePortfolioCorrelation } from '@/api/hooks/usePortfolioCorrelation'
 import { usePortfolioAssets } from '@/api/hooks/usePortfolioAssets'
-import { usePortfolioDelete } from '@/api/hooks'
+import { usePortfolioDelete, usePortfolioRuns } from '@/api/hooks'
 import { useUrlState } from '@/lib/useUrlState'
-import { usePortfolioHistory } from '@/stores/portfolioHistory'
 import { PortfolioConfigPanel } from '@/features/portfolio/PortfolioConfigPanel'
 import { PortfolioLaunchPanel } from '@/features/portfolio/PortfolioLaunchPanel'
 import { PortfolioKPIRow } from '@/features/portfolio/PortfolioKPIRow'
@@ -48,8 +47,8 @@ export function PortfolioAnalytics() {
   )
   const [initialCapital, setInitialCapital] = useState(1_000_000)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
-  const history = usePortfolioHistory()
   const deleteRun = usePortfolioDelete()
+  const portfolioRuns = usePortfolioRuns()
 
   const params = DEFAULT_PARAMS[strategy] ?? {}
 
@@ -63,24 +62,15 @@ export function PortfolioAnalytics() {
   const isLoading =
     summaryQuery.isLoading || equity.isLoading || risk.isLoading || correlation.isLoading
 
-  useEffect(() => {
-    if (!summary || !run_id || history.has(run_id)) return
-    history.addRun({
-      run_id,
-      strategy: summary.strategy,
-      executed_at: new Date().toISOString(),
-      n_assets: summary.assets?.length ?? 0,
-      total_return: summary.portfolio_metrics?.total_return ?? null,
-    })
-    // The run ID and loaded summary are the only recording triggers.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [summary?.run_id, run_id])
+  const deleteStrategyName =
+    portfolioRuns.data?.runs.find((r) => r.run_id === deleteConfirmId)?.strategy_name ??
+    summary?.strategy ??
+    deleteConfirmId
 
   function handleConfirmDelete() {
     if (!deleteConfirmId) return
     deleteRun.mutate(deleteConfirmId, {
       onSuccess: () => {
-        history.removeRun(deleteConfirmId)
         setDeleteConfirmId(null)
         setUrlState({ run_id: undefined })
       },
@@ -175,18 +165,11 @@ export function PortfolioAnalytics() {
 
       <PortfolioPerAssetPanel runId={run_id} assets={summary?.assets ?? []} />
 
-      <PortfolioRiskPanel
-        risk={risk.data ?? null}
-        summary={summary ?? null}
-        loading={risk.isLoading}
-        error={risk.error}
-      />
+      <PortfolioRiskPanel risk={risk.data ?? null} loading={risk.isLoading} />
 
       <PortfolioCorrelationPanel
         correlation={correlation.data ?? null}
-        summary={summary ?? null}
         loading={correlation.isLoading}
-        error={correlation.error}
       />
 
       {correlation.data && (
@@ -204,11 +187,7 @@ export function PortfolioAnalytics() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this portfolio run?</AlertDialogTitle>
             <AlertDialogDescription>
-              Run{' '}
-              <span className="font-mono text-text-emphasis">
-                {deleteConfirmId?.replace(/^(?:poll_)?\d{8}_\d{6}_portfolio_/, '') ??
-                  deleteConfirmId}
-              </span>{' '}
+              Strategy <span className="font-mono text-text-emphasis">{deleteStrategyName}</span>{' '}
               will be permanently deleted. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

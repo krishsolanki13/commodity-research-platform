@@ -43,11 +43,12 @@ export const qk = {
   runTrades: (
     runId: string,
     page = 1,
-    filters: { direction?: 'long' | 'short'; forceClosed?: boolean; pageSize?: number } = {}
+    filters: { direction?: 'long' | 'short'; forceClosed?: boolean } = {}
   ) => ['runs', runId, 'trades', { page, ...filters }] as const,
 
   runCompare: (ids: string[]) => ['runs', 'compare', [...ids].sort()] as const,
 
+  portfolioRuns: () => ['portfolio', 'runs'] as const,
   portfolioStatus: (runId: string) => ['portfolio', runId, 'status'] as const,
   portfolioSummary: (runId: string) => ['portfolio', runId, 'summary'] as const,
   portfolioRisk: (runId: string) => ['portfolio', runId, 'risk'] as const,

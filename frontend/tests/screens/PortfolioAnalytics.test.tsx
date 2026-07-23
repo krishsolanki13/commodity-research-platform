@@ -4,7 +4,6 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { PortfolioAnalytics } from '@/screens/portfolio/PortfolioAnalytics'
-import { usePortfolioHistory } from '@/stores/portfolioHistory'
 import { MOCK_PORTFOLIO_RUN_ID } from '../mocks/fixtures/portfolio'
 
 function createTestQueryClient() {
@@ -27,57 +26,33 @@ function Wrapper({ initialPath = '/portfolio' }: { initialPath?: string }) {
 
 describe('PortfolioAnalytics screen', () => {
   beforeEach(() => {
-    usePortfolioHistory.setState({ runs: [] })
     localStorage.clear()
   })
 
   it('renders launch panel and empty state when no run active', () => {
     render(<Wrapper />)
-    expect(
-      screen.getByText(/launch a portfolio backtest to see analytics/i)
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /launch portfolio backtest/i })
-    ).toBeInTheDocument()
+    expect(screen.getByText(/launch a portfolio backtest to see analytics/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /launch portfolio backtest/i })).toBeInTheDocument()
   })
 
   it('renders PortfolioKPIRow when run_id is set via state', () => {
     // This test verifies the results layout renders when a run is active.
     // We test the no-run state here since URL state is component-internal.
     render(<Wrapper />)
-    expect(
-      screen.getByText(/portfolio configuration/i)
-    ).toBeInTheDocument()
+    expect(screen.getByText(/portfolio configuration/i)).toBeInTheDocument()
   })
 
   it('shows skipped assets notice when summary has skipped_assets', () => {
     // Skipped assets notice is rendered by PortfolioEquityPanel when
     // summary.skipped_assets.length > 0. Verified via fixture in hook tests.
     render(<Wrapper />)
-    expect(
-      screen.getByRole('button', { name: /launch portfolio backtest/i })
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /launch portfolio backtest/i })).toBeInTheDocument()
   })
 
-  it('shows PortfolioRunSelector when history is populated', async () => {
-    usePortfolioHistory.setState({
-      runs: [
-        {
-          run_id: MOCK_PORTFOLIO_RUN_ID,
-          strategy: 'ema_crossover',
-          executed_at: '2026-07-19T12:00:00Z',
-          n_assets: 6,
-          total_return: 0.0125,
-        },
-      ],
-    })
+  it('shows PortfolioRunSelector when API returns runs', async () => {
     render(<Wrapper initialPath={`/portfolio?run_id=${MOCK_PORTFOLIO_RUN_ID}`} />)
-    await waitFor(() =>
-      screen.getByRole('combobox', { name: /select a recent portfolio run/i })
-    )
-    expect(
-      screen.getByRole('combobox', { name: /select a recent portfolio run/i })
-    ).toBeInTheDocument()
+    await waitFor(() => screen.getByRole('combobox', { name: /select a recent portfolio run/i }))
+    expect(screen.getByRole('combobox', { name: /select a recent portfolio run/i })).toBeInTheDocument()
   })
 
   it('shows delete button when run is active; AlertDialog opens on click', async () => {

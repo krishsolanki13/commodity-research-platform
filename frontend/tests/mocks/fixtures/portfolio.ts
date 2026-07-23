@@ -1,5 +1,23 @@
 export const MOCK_PORTFOLIO_RUN_ID = '20260718_120000_portfolio_ema_crossover'
 
+export const portfolioRunsListFixture = {
+  runs: [
+    {
+      run_id: MOCK_PORTFOLIO_RUN_ID,
+      strategy_name: 'ema_crossover',
+      assets: ['gold', 'silver', 'copper', 'wti', 'brent', 'natural_gas'],
+      skipped_assets: [],
+      total_return: 0.0125,
+      sharpe: 0.0018,
+      max_drawdown: -0.0737,
+      portfolio_vol: 0.0254,
+      initial_capital_total: 6_000_000,
+      portfolio_date_range: ['2015-01-05', '2026-07-15'],
+    },
+  ],
+  total: 1,
+}
+
 export const portfolioSummaryFixture = {
   run_id: MOCK_PORTFOLIO_RUN_ID,
   strategy: 'ema_crossover',

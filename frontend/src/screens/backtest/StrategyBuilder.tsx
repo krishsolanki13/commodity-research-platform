@@ -1,6 +1,6 @@
 /**
  * StrategyBuilder (S4) — configure and launch a backtest from URL context.
- * Reads F5 signal-evaluate cache only (useSignalEvaluate has enabled: false).
+ * Prefers URL-threaded `evaluation` (Issue T); falls back to F5 evaluate-chain cache.
  * Asset/strategy selectors are always visible for direct /backtest/new navigation.
  */
 import { useState } from 'react'
@@ -25,17 +25,25 @@ export default function StrategyBuilder() {
   const asset = searchParams.get('asset') ?? ''
   const strategy = searchParams.get('strategy') ?? ''
   const paramsJson = searchParams.get('params') ?? '{}'
+  const evaluationJson = searchParams.get('evaluation')
   const evalOverride = searchParams.get('evalOverride') === '1'
   const parsedParams = safeJsonParse<Record<string, unknown>>(paramsJson, {})
+
+  type SignalEvaluationData = components['schemas']['SignalEvaluationData']
+  const urlEvaluation = evaluationJson
+    ? safeJsonParse<SignalEvaluationData | null>(evaluationJson, null)
+    : null
 
   const { data: assetsData } = useAssets()
   const { data: strategiesData } = useStrategies()
   const strategies = strategiesData?.strategies ?? []
   const selectedStrategy = strategies.find((s) => s.name === strategy)
 
-  // Cache-read only — useSignalEvaluate never auto-fetches (enabled: false internally)
+  // Prefer URL-threaded evaluation (Issue T); fall back to F5 evaluate-chain cache
   const cachedEval = useSignalEvaluate(asset, strategy, parsedParams)
-  const evaluation = evalOverride ? null : (cachedEval.data?.evaluation ?? null)
+  const evaluation = evalOverride
+    ? null
+    : (urlEvaluation ?? cachedEval.data?.evaluation ?? null)
 
   const [config, setConfig] = useState<BacktestConfig>({
     initial_capital: 1_000_000,
