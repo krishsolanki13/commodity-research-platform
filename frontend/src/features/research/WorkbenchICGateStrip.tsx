@@ -23,13 +23,25 @@ export function WorkbenchICGateStrip({
   const navigate = useNavigate()
 
   const handleConfigureBacktest = () => {
-    const url = `/backtest/new?asset=${encodeURIComponent(asset)}&strategy=${encodeURIComponent(strategy)}&params=${encodeURIComponent(paramsJson)}`
-    void navigate(url)
+    const params = new URLSearchParams({
+      asset,
+      strategy,
+      params: paramsJson,
+    })
+    if (evaluation) {
+      params.set('evaluation', JSON.stringify(evaluation))
+    }
+    void navigate(`/backtest/new?${params.toString()}`)
   }
 
   const handleOverride = () => {
-    const url = `/backtest/new?asset=${encodeURIComponent(asset)}&strategy=${encodeURIComponent(strategy)}&params=${encodeURIComponent(paramsJson)}&evalOverride=1`
-    void navigate(url)
+    const params = new URLSearchParams({
+      asset,
+      strategy,
+      params: paramsJson,
+      evalOverride: '1',
+    })
+    void navigate(`/backtest/new?${params.toString()}`)
   }
 
   return (

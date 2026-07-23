@@ -15,7 +15,7 @@ const Command = React.forwardRef<
   <CommandPrimitive
     ref={ref}
     className={cn(
-      'text-slate-950 dark:bg-slate-950 dark:text-slate-50 flex h-full w-full flex-col overflow-hidden rounded-md bg-white',
+      'flex h-full w-full flex-col overflow-hidden rounded-md bg-bg-app text-text-primary',
       className
     )}
     {...props}
@@ -44,7 +44,7 @@ const CommandInput = React.forwardRef<
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
-        'h-11 placeholder:text-slate-500 dark:placeholder:text-slate-400 flex w-full rounded-md bg-transparent py-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50',
+        'h-11 flex w-full rounded-md bg-transparent py-3 text-sm text-text-primary outline-none placeholder:text-text-secondary disabled:cursor-not-allowed disabled:opacity-50',
         className
       )}
       {...props}
@@ -111,7 +111,7 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      "py-1.5 data-[selected='true']:bg-slate-100 data-[selected=true]:text-slate-900 dark:data-[selected='true']:bg-slate-800 dark:data-[selected=true]:text-slate-50 relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 text-sm outline-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      "py-1.5 relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 text-sm text-text-primary outline-none data-[disabled=true]:pointer-events-none data-[selected='true']:bg-bg-raised data-[selected=true]:bg-bg-raised data-[selected=true]:text-text-primary data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
       className
     )}
     {...props}

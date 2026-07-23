@@ -54,6 +54,7 @@ export function TradeTable({
     }),
     colHelper.accessor('direction', {
       header: 'DIRECTION',
+      size: 90,
       cell: (info) => {
         const value = info.getValue()
         const color = tone.pnl(value === 'long' ? 1 : -1)
@@ -66,26 +67,32 @@ export function TradeTable({
     }),
     colHelper.accessor('entry_date', {
       header: 'ENTRY',
+      size: 110,
       cell: (info) => <span className="font-mono">{fmt.isoDate(info.getValue())}</span>,
     }),
     colHelper.accessor('exit_date', {
       header: 'EXIT',
+      size: 110,
       cell: (info) => <span className="font-mono">{fmt.isoDate(info.getValue())}</span>,
     }),
     colHelper.accessor('duration_bars', {
       header: 'DURATION',
+      size: 90,
       cell: (info) => <span className="font-mono">{fmt.tradeBars(info.getValue())}</span>,
     }),
     colHelper.accessor('entry_price', {
       header: 'ENTRY PX',
+      size: 100,
       cell: (info) => <span className="font-mono">{fmt.price(info.getValue(), '')}</span>,
     }),
     colHelper.accessor('exit_price', {
       header: 'EXIT PX',
+      size: 100,
       cell: (info) => <span className="font-mono">{fmt.price(info.getValue(), '')}</span>,
     }),
     colHelper.accessor('gross_pnl', {
       header: 'GROSS P&L',
+      size: 110,
       cell: (info) => {
         const value = info.getValue()
         return (
@@ -97,12 +104,14 @@ export function TradeTable({
     }),
     colHelper.accessor('cost', {
       header: 'COST',
+      size: 90,
       cell: (info) => (
         <span className="font-mono text-text-secondary">{fmt.compactUsd(info.getValue())}</span>
       ),
     }),
     colHelper.accessor('net_pnl', {
       header: 'NET P&L',
+      size: 100,
       cell: (info) => {
         const value = info.getValue()
         return (
@@ -114,6 +123,7 @@ export function TradeTable({
     }),
     colHelper.accessor('return_pct', {
       header: 'RETURN',
+      size: 90,
       cell: (info) => {
         const value = info.getValue()
         return (
@@ -125,7 +135,7 @@ export function TradeTable({
     }),
     colHelper.display({
       id: 'force_closed',
-      header: '⚑',
+      header: '⚠',
       size: 40,
       cell: (info) =>
         info.row.original.force_closed ? (

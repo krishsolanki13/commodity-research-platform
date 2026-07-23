@@ -21,14 +21,14 @@ test.describe('Intelligence — Futures Curve (S9)', () => {
     await page.waitForLoadState('networkidle')
 
     // Page heading
-    await expect(
-      page.getByRole('heading', { name: /futures curve/i }),
-    ).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('heading', { name: /futures curve/i })).toBeVisible({
+      timeout: 10_000,
+    })
 
     // Regime badge — contango or backwardation depending on live market
-    await expect(
-      page.getByText(/contango|backwardation|flat/i).first(),
-    ).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(/contango|backwardation|flat/i).first()).toBeVisible({
+      timeout: 15_000,
+    })
 
     // Front price KPI label is visible
     await expect(page.getByText(/front/i).first()).toBeVisible({ timeout: 5_000 })
@@ -76,7 +76,7 @@ test.describe('Intelligence — Futures Curve (S9)', () => {
     // Gate: verify backend supports observation_date param (FULL mode)
     const paramCheck = await page.request
       .get(
-        'http://localhost:8000/api/curves/gold/snapshot?n_contracts=2&observation_date=2025-01-02',
+        'http://localhost:8000/api/curves/gold/snapshot?n_contracts=2&observation_date=2025-01-02'
       )
       .catch(() => null)
 
@@ -96,7 +96,7 @@ test.describe('Intelligence — Futures Curve (S9)', () => {
         // Date input is disabled while Latest is active (value === null).
         // Seed a date via URL to exit Latest mode, then exercise fill + clear.
         await page.goto(
-          '/intelligence?asset=gold&n_contracts=6&lookback=1Y&observation_date=2025-06-01',
+          '/intelligence?asset=gold&n_contracts=6&lookback=1Y&observation_date=2025-06-01'
         )
         await page.waitForLoadState('networkidle')
         await expect(page).toHaveURL(/observation_date=2025-06-01/, { timeout: 5_000 })
@@ -137,9 +137,9 @@ test.describe('Intelligence — Futures Curve (S9)', () => {
     await page.goto(`/intelligence/compare?assets=${a1},${a2}&n_contracts=4`)
     await page.waitForLoadState('networkidle')
 
-    await expect(
-      page.getByRole('heading', { name: /curve comparison/i }),
-    ).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('heading', { name: /curve comparison/i })).toBeVisible({
+      timeout: 10_000,
+    })
 
     const checkedBoxes = page.locator('input[type="checkbox"]:checked')
     await expect(checkedBoxes).toHaveCount(2, { timeout: 10_000 })

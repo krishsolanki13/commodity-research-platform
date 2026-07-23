@@ -7,7 +7,7 @@ async function auditPage(page: Page) {
     .exclude('.animate-shimmer')
   const results = await builder.analyze()
   const criticalOrSerious = results.violations.filter(
-    v => v.impact === 'critical' || v.impact === 'serious'
+    (v) => v.impact === 'critical' || v.impact === 'serious'
   )
   if (criticalOrSerious.length > 0) {
     console.log('A11y violations:', JSON.stringify(criticalOrSerious, null, 2))
@@ -33,7 +33,9 @@ test.describe('Accessibility Audit (Axe)', () => {
   })
 
   test('Strategy Builder has no critical/serious a11y violations', async ({ page }) => {
-    await page.goto('/backtest/new?asset=gold&strategy=ema_crossover&params={"fast_period":50,"slow_period":200}')
+    await page.goto(
+      '/backtest/new?asset=gold&strategy=ema_crossover&params={"fast_period":50,"slow_period":200}'
+    )
     await page.waitForLoadState('networkidle')
     await auditPage(page)
   })
@@ -42,7 +44,7 @@ test.describe('Accessibility Audit (Axe)', () => {
     await page.goto('/runs')
     await page.waitForSelector('table tbody tr', { timeout: 10_000 })
     const rows = page.locator('table tbody tr')
-    if (await rows.count() > 0) {
+    if ((await rows.count()) > 0) {
       await rows.first().click()
       await page.waitForURL(/\/runs\/[^/]+$/, { timeout: 5_000 })
       await page.waitForLoadState('networkidle')
@@ -103,41 +105,30 @@ test.describe('Accessibility Audit (Axe)', () => {
     await auditPage(page)
   })
 
-  test('Portfolio Analytics results state has no critical/serious a11y violations', async ({ page }) => {
-    // Navigate to portfolio screen
-    await page.goto('/portfolio')
-    await page.waitForLoadState('networkidle')
-
-    // Look for run selector — populated from portfolioHistory store
-    const runSelector = page.getByRole('combobox', {
-      name: /select a recent portfolio run/i,
-    })
-
-    if (!(await runSelector.isVisible({ timeout: 3_000 }).catch(() => false))) {
-      console.log('No portfolio run history — skipping results-state a11y audit')
+  test('Portfolio Analytics results state has no critical/serious a11y violations', async ({
+    page,
+  }) => {
+    const res = await page.request.get('/api/portfolio/runs')
+    const data = (await res.json()) as { runs?: Array<{ run_id: string }> }
+    const runId = data.runs?.[0]?.run_id
+    if (!runId) {
+      console.log('No portfolio runs from API — skipping results-state a11y audit')
       test.skip()
       return
     }
 
-    // Select the most recent run
-    await runSelector.click()
-    const firstOption = page.getByRole('option').first()
-    if (!(await firstOption.isVisible({ timeout: 2_000 }).catch(() => false))) {
-      test.skip()
-      return
-    }
-    await firstOption.click()
+    await page.goto(`/portfolio?run_id=${encodeURIComponent(runId)}`)
     await page.waitForLoadState('networkidle')
 
-    // Wait for results to render (KPI row or sharpe metric)
-    await page.waitForSelector(
-      '[data-testid="portfolio-kpi-row"], [aria-label*="sharpe"], :text("sharpe")',
-      { timeout: 15_000 }
-    ).catch(() => {
-      // Results may take time or selector may differ — audit whatever is rendered
-    })
+    await page
+      .waitForSelector(
+        '[data-testid="portfolio-kpi-row"], [aria-label*="sharpe"], :text("sharpe")',
+        { timeout: 15_000 }
+      )
+      .catch(() => {
+        // Results may take time or selector may differ — audit whatever is rendered
+      })
 
-    // Run axe audit
     await auditPage(page)
   })
 })

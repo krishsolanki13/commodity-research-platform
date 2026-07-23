@@ -19,11 +19,13 @@ function buildColumns(asset: string) {
     colHelper.accessor('ticker', {
       header: 'TICKER',
       enableSorting: false,
+      size: 90,
       cell: (info) => <span className="font-mono text-xs font-medium">{info.getValue()}</span>,
     }),
     colHelper.accessor('close', {
       header: 'SETTLE',
       enableSorting: false,
+      size: 90,
       cell: (info) => (
         <span className="font-mono text-xs">{fmt.price(info.getValue(), asset)}</span>
       ),
@@ -31,6 +33,7 @@ function buildColumns(asset: string) {
     colHelper.accessor('days_to_delivery', {
       header: 'DTD',
       enableSorting: false,
+      size: 80,
       cell: (info) => (
         <span className="font-mono text-xs text-text-secondary">{info.getValue()}</span>
       ),
@@ -38,6 +41,7 @@ function buildColumns(asset: string) {
     colHelper.accessor('data_date', {
       header: 'DATA DATE',
       enableSorting: false,
+      size: 120,
       cell: (info) => (
         <span className="font-mono text-xs text-text-secondary">
           {fmt.isoDate(info.getValue())}

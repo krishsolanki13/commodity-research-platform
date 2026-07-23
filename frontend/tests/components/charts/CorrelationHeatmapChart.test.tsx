@@ -23,13 +23,9 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 describe('CorrelationHeatmapChart', () => {
   it('renders without errors with a 2-asset correlation matrix', () => {
     expect(() =>
-      render(
-        <CorrelationHeatmapChart
-          correlationMatrix={twoAssetMatrix}
-          assets={twoAssets}
-        />,
-        { wrapper: Wrapper }
-      )
+      render(<CorrelationHeatmapChart correlationMatrix={twoAssetMatrix} assets={twoAssets} />, {
+        wrapper: Wrapper,
+      })
     ).not.toThrow()
   })
 
@@ -48,10 +44,7 @@ describe('CorrelationHeatmapChart', () => {
 
   it('renders the empty state without throwing for an empty correlation matrix', () => {
     expect(() =>
-      render(
-        <CorrelationHeatmapChart correlationMatrix={{}} assets={[]} />,
-        { wrapper: Wrapper }
-      )
+      render(<CorrelationHeatmapChart correlationMatrix={{}} assets={[]} />, { wrapper: Wrapper })
     ).not.toThrow()
 
     expect(screen.getByText('No correlation data')).toBeInTheDocument()

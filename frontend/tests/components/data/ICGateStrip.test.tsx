@@ -13,13 +13,22 @@ const base = {
 }
 
 const noiseEval: SignalEvaluationData = {
-  ...base, ic: 0.0123, icir: 0.12, ic_band: 'noise',
+  ...base,
+  ic: 0.0123,
+  icir: 0.12,
+  ic_band: 'noise',
 }
 const weakEval: SignalEvaluationData = {
-  ...base, ic: 0.032, icir: 0.40, ic_band: 'weak_positive',
+  ...base,
+  ic: 0.032,
+  icir: 0.4,
+  ic_band: 'weak_positive',
 }
 const strongEval: SignalEvaluationData = {
-  ...base, ic: 0.061, icir: 0.72, ic_band: 'strong',
+  ...base,
+  ic: 0.061,
+  icir: 0.72,
+  ic_band: 'strong',
 }
 
 const onConfigure = vi.fn()
@@ -32,11 +41,7 @@ beforeEach(() => {
 describe('ICGateStrip', () => {
   test('null evaluation renders locked state — button disabled', () => {
     render(
-      <ICGateStrip
-        evaluation={null}
-        onConfigureBacktest={onConfigure}
-        onOverride={onOverride}
-      />
+      <ICGateStrip evaluation={null} onConfigureBacktest={onConfigure} onOverride={onOverride} />
     )
     expect(screen.getByRole('button', { name: /configure backtest/i })).toBeDisabled()
     expect(screen.getByText(/evaluate this signal/i)).toBeInTheDocument()
@@ -62,9 +67,7 @@ describe('ICGateStrip', () => {
         onOverride={onOverride}
       />
     )
-    expect(
-      screen.getByRole('button', { name: /configure backtest/i })
-    ).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: /configure backtest/i })).not.toBeDisabled()
     expect(screen.getByText(/WEAK SIGNAL — INVESTIGATE FURTHER/i)).toBeInTheDocument()
     expect(screen.getByText(/result may not be robust/i)).toBeInTheDocument()
   })
@@ -77,19 +80,13 @@ describe('ICGateStrip', () => {
         onOverride={onOverride}
       />
     )
-    expect(
-      screen.getByRole('button', { name: /configure backtest/i })
-    ).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: /configure backtest/i })).not.toBeDisabled()
     expect(screen.getByText(/meaningful signal/i)).toBeInTheDocument()
   })
 
   test('override link is present in ALL four states', () => {
     const { rerender } = render(
-      <ICGateStrip
-        evaluation={null}
-        onConfigureBacktest={onConfigure}
-        onOverride={onOverride}
-      />
+      <ICGateStrip evaluation={null} onConfigureBacktest={onConfigure} onOverride={onOverride} />
     )
     expect(screen.getByText(/backtest without evaluation/i)).toBeInTheDocument()
 

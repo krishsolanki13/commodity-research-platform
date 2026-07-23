@@ -34,45 +34,33 @@ describe('RunComparison', () => {
 
   it('renders AlignedCurvesChart title and MetricDeltaTable metrics with compare fixture', async () => {
     render(<Wrapper />)
-    await waitFor(() =>
-      expect(screen.getByText('Normalized Returns')).toBeInTheDocument()
-    )
-    await waitFor(() =>
-      expect(screen.getByText('Sharpe')).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByText('Normalized Returns')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Sharpe')).toBeInTheDocument())
   })
 
   it('single ID in URL redirects to run detail page', async () => {
     render(<Wrapper url={`/runs/compare?ids=${MOCK_RUN_ID}`} />)
-    await waitFor(() =>
-      expect(screen.getByTestId('run-detail')).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByTestId('run-detail')).toBeInTheDocument())
   })
 
-  it('zero IDs in URL redirects to run explorer', async () => {
+  it('zero IDs in URL shows empty comparison state', async () => {
     render(<Wrapper url="/runs/compare" />)
-    await waitFor(() =>
-      expect(screen.getByTestId('run-explorer')).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByText(/no runs selected/i)).toBeInTheDocument())
+    expect(screen.queryByTestId('run-explorer')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /run comparison/i })).toBeInTheDocument()
   })
 
   it('mixed_assets=true shows cross-asset notice', async () => {
     // compareFixture has mixed_assets: true
     render(<Wrapper />)
-    await waitFor(() =>
-      expect(screen.getByText(/different assets/i)).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByText(/different assets/i)).toBeInTheDocument())
   })
 
   it('removing a run chip leaves one ID and triggers redirect to run detail', async () => {
     render(<Wrapper />)
-    await waitFor(() =>
-      expect(screen.getByText('Normalized Returns')).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByText('Normalized Returns')).toBeInTheDocument())
     const removeButtons = screen.getAllByRole('button', { name: /remove/i })
     await userEvent.click(removeButtons[0])
-    await waitFor(() =>
-      expect(screen.getByTestId('run-detail')).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByTestId('run-detail')).toBeInTheDocument())
   })
 })

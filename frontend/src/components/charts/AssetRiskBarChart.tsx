@@ -83,6 +83,16 @@ function AssetRiskBarChartInner({ assetVar99, assets, theme }: AssetRiskBarChart
           fontFamily: theme.monoFont,
           fontSize: 12,
         },
+        formatter: (params: unknown) => {
+          const p = (Array.isArray(params) ? params[0] : params) as {
+            name?: string
+            value?: number | { value?: number }
+          }
+          const name = p?.name ?? ''
+          const raw = typeof p?.value === 'object' && p?.value != null ? p.value.value : p?.value
+          const value = Number(raw ?? 0)
+          return `${name}<br/>VaR: ${fmt.compactUsd(value)}`
+        },
       },
       series: [
         {

@@ -58,7 +58,7 @@ describe('RunDetail', () => {
 
   it('renders ErrorState for an unknown runId (RUN_NOT_FOUND)', async () => {
     renderRunDetail('completely-unknown-run-id-xyz')
-    await waitFor(() => expect(screen.getByText(/all runs/i)).toBeInTheDocument(), {
+    await waitFor(() => expect(screen.getByText(/run explorer/i)).toBeInTheDocument(), {
       timeout: 3000,
     })
   })
@@ -69,5 +69,23 @@ describe('RunDetail', () => {
     await waitFor(() => screen.getByRole('tab', { name: 'Signal Quality' }))
     await user.click(screen.getByRole('tab', { name: 'Signal Quality' }))
     await waitFor(() => expect(screen.getByText(/noise/i)).toBeInTheDocument())
+  })
+
+  it('Compare button is enabled and navigates after adding run to basket', async () => {
+    const user = userEvent.setup()
+    renderRunDetail()
+    await waitFor(() => screen.getByRole('button', { name: /compare/i }))
+    const compareBtn = screen.getByRole('button', { name: /compare/i })
+    expect(compareBtn).not.toBeDisabled()
+    await user.click(compareBtn)
+  })
+
+  it('Delete button opens confirmation dialog', async () => {
+    const user = userEvent.setup()
+    renderRunDetail()
+    await waitFor(() => screen.getByRole('button', { name: /delete run/i }))
+    await user.click(screen.getByRole('button', { name: /delete run/i }))
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+    expect(screen.getByText(/permanently remove/i)).toBeInTheDocument()
   })
 })

@@ -52,8 +52,7 @@ export function AssetAttributionTable({
                 {fmt.compactUsd(pnl)}
               </td>
               <td className="px-3 py-2 text-right font-mono text-xs" style={{ color }}>
-                {pnl >= 0 ? '+' : ''}
-                {(pnlPct * 100).toFixed(2)}%
+                {fmt.percent(pnlPct)}
               </td>
             </tr>
           )

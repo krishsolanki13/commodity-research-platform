@@ -27,21 +27,14 @@ describe('AssetRiskBarChart', () => {
   it('renders without errors with asset VaR fixture', () => {
     expect(() =>
       render(
-        <AssetRiskBarChart
-          assetVar99={mockVar99}
-          assets={Object.keys(mockVar99)}
-          height={220}
-        />,
+        <AssetRiskBarChart assetVar99={mockVar99} assets={Object.keys(mockVar99)} height={220} />,
         { wrapper: Wrapper }
       )
     ).not.toThrow()
   })
 
   it('loading=true → loading skeleton', () => {
-    render(
-      <AssetRiskBarChart assetVar99={{}} assets={[]} loading={true} />,
-      { wrapper: Wrapper }
-    )
+    render(<AssetRiskBarChart assetVar99={{}} assets={[]} loading={true} />, { wrapper: Wrapper })
     expect(document.querySelector('.animate-shimmer')).toBeTruthy()
   })
 })

@@ -20,20 +20,16 @@ function makeWrapper() {
 
 describe('useRunCompare', () => {
   it('returns CompareResponse with 2 runs and aligned_series', async () => {
-    const { result } = renderHook(
-      () => useRunCompare(['run-a', 'run-b']),
-      { wrapper: makeWrapper() }
-    )
+    const { result } = renderHook(() => useRunCompare(['run-a', 'run-b']), {
+      wrapper: makeWrapper(),
+    })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.runs).toHaveLength(2)
     expect(result.current.data?.aligned_series).toHaveLength(2)
   })
 
   it('is disabled when fewer than 2 ids provided', () => {
-    const { result } = renderHook(
-      () => useRunCompare(['run-a']),
-      { wrapper: makeWrapper() }
-    )
+    const { result } = renderHook(() => useRunCompare(['run-a']), { wrapper: makeWrapper() })
     expect(result.current.fetchStatus).toBe('idle')
   })
 })

@@ -18,6 +18,7 @@ import type { ECharts } from '@/lib/echarts-setup'
 import { echarts } from '@/lib/echarts-setup'
 import { ChartFrame, useChartFrame } from '@/components/charts/ChartFrame'
 import { useChartTheme, type EChartsTheme } from '@/lib/chart-theme'
+import { fmtDate } from '@/lib/fmt'
 import type { components } from '@/api/schema'
 
 type ColumnarSeries = components['schemas']['ColumnarSeries']
@@ -183,6 +184,22 @@ function RollingMetricChartInner({
           fontFamily: theme.monoFont,
           fontSize: 12,
         },
+        formatter: (params: unknown) => {
+          const items = (Array.isArray(params) ? params : [params]) as Array<{
+            seriesName?: string
+            axisValue?: string | number
+            value?: number | [number, number] | null
+          }>
+          const axisRaw =
+            items[0]?.axisValue ?? (Array.isArray(items[0]?.value) ? items[0]?.value[0] : undefined)
+          const axisMs = typeof axisRaw === 'number' ? axisRaw : Number(axisRaw)
+          const date = Number.isFinite(axisMs) ? fmtDate(axisMs) : String(axisRaw ?? '')
+          const lines = items.map((p) => {
+            const raw = Array.isArray(p.value) ? p.value[1] : p.value
+            return `${p.seriesName}: ${Number(raw ?? 0).toFixed(3)}`
+          })
+          return [date, ...lines].join('<br/>')
+        },
       },
       xAxis: {
         type: 'category' as const,
@@ -191,6 +208,7 @@ function RollingMetricChartInner({
           color: theme.secondaryText,
           fontFamily: theme.monoFont,
           fontSize: 11,
+          formatter: (value: number) => fmtDate(value),
         },
       },
       yAxis: yAxes,

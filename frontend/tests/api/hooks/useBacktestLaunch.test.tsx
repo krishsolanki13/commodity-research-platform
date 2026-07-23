@@ -68,10 +68,7 @@ describe('useBacktestLaunch', () => {
     server.use(
       http.post('http://localhost:8000/api/backtests', async ({ request }) => {
         capturedBody = (await request.json()) as Record<string, unknown>
-        return HttpResponse.json(
-          { run_id: MOCK_RUN_ID, status: 'queued' },
-          { status: 202 }
-        )
+        return HttpResponse.json({ run_id: MOCK_RUN_ID, status: 'queued' }, { status: 202 })
       })
     )
 

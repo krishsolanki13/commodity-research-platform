@@ -58,10 +58,15 @@ export function isoDate(value: string | number | Date): string {
   return value.toISOString().slice(0, 10)
 }
 
+/** Format epoch milliseconds as YYYY-MM-DD (UTC). Coerces numeric strings from category axes. */
+export const fmtDate = (ms: number): string => {
+  const n = Number(ms)
+  if (!Number.isFinite(n)) return String(ms ?? '')
+  return new Date(n).toISOString().slice(0, 10)
+}
+
 export function tradeBars(bars: number): string {
-  if (bars >= 252) return `${(bars / 252).toFixed(1)}yr`
-  if (bars >= 21) return `${Math.round(bars / 21)}mo`
-  return `${bars}d`
+  return `${Math.round(bars)} bars`
 }
 
 export const fmt = {

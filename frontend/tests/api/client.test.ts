@@ -75,9 +75,7 @@ describe('client', () => {
   })
 
   it('throws NETWORK_ERROR when fetch itself fails', async () => {
-    server.use(
-      http.get('http://localhost:8000/api/network-fail', () => HttpResponse.error())
-    )
+    server.use(http.get('http://localhost:8000/api/network-fail', () => HttpResponse.error()))
     try {
       await client.get('/api/network-fail')
     } catch (e) {

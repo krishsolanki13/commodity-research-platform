@@ -4,11 +4,9 @@ import { goldTradesFixture } from '../fixtures/run-trades'
 import { goldOhlcvFixture } from '../fixtures/gold-ohlcv'
 
 // Build series from the shared OHLCV fixture so indices are consistent
-const equityValues = goldOhlcvFixture.data.index.map(
-  (_: number, i: number) => 1_000_000 + i * 500
-)
-const pnlValues = goldOhlcvFixture.data.index.map(
-  (_: number, i: number) => (i % 3 === 0 ? 500 : -200)
+const equityValues = goldOhlcvFixture.data.index.map((_: number, i: number) => 1_000_000 + i * 500)
+const pnlValues = goldOhlcvFixture.data.index.map((_: number, i: number) =>
+  i % 3 === 0 ? 500 : -200
 )
 
 const equitySeriesFixture = {
@@ -33,24 +31,20 @@ export const runsDetailHandlers = [
   // ── Specific MOCK_RUN_ID handlers BEFORE the wildcard ──────────────────────
   // MSW matches in registration order; wildcard would intercept if listed first.
 
-  http.get(
-    `http://localhost:8000/api/runs/${MOCK_RUN_ID}`,
-    () => HttpResponse.json(goldEmaRunDetailFixture)
+  http.get(`http://localhost:8000/api/runs/${MOCK_RUN_ID}`, () =>
+    HttpResponse.json(goldEmaRunDetailFixture)
   ),
 
-  http.get(
-    `http://localhost:8000/api/runs/${MOCK_RUN_ID}/series/equity_curve`,
-    () => HttpResponse.json(equitySeriesFixture)
+  http.get(`http://localhost:8000/api/runs/${MOCK_RUN_ID}/series/equity_curve`, () =>
+    HttpResponse.json(equitySeriesFixture)
   ),
 
-  http.get(
-    `http://localhost:8000/api/runs/${MOCK_RUN_ID}/series/pnl`,
-    () => HttpResponse.json(pnlSeriesFixture)
+  http.get(`http://localhost:8000/api/runs/${MOCK_RUN_ID}/series/pnl`, () =>
+    HttpResponse.json(pnlSeriesFixture)
   ),
 
-  http.get(
-    `http://localhost:8000/api/runs/${MOCK_RUN_ID}/trades`,
-    () => HttpResponse.json(goldTradesFixture)
+  http.get(`http://localhost:8000/api/runs/${MOCK_RUN_ID}/trades`, () =>
+    HttpResponse.json(goldTradesFixture)
   ),
 
   // ── Wildcard fallback → 404 for unknown run IDs ─────────────────────────────

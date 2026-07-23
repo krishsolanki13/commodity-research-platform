@@ -49,10 +49,9 @@ describe('MarketOverviewScreen', () => {
       )
     )
     render(<MarketOverviewScreen />, { wrapper: Wrapper })
-    await waitFor(
-      () => expect(screen.getByText(/no market data|ingest/i)).toBeInTheDocument(),
-      { timeout: 5000 }
-    )
+    await waitFor(() => expect(screen.getByText(/no market data|ingest/i)).toBeInTheDocument(), {
+      timeout: 5000,
+    })
   })
 
   it('range selector "3Y" button is present and interactive', async () => {

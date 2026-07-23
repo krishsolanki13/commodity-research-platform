@@ -12,7 +12,11 @@ const flagFixture: DataFlag[] = [
 
 const twoFlagsFixture: DataFlag[] = [
   { date: '2020-04-20', violation_type: 'negative_price', detail: 'Close -37.63 below zero' },
-  { date: '2021-02-24', violation_type: 'ohlc_consistency', detail: 'Close outside High-Low range' },
+  {
+    date: '2021-02-24',
+    violation_type: 'ohlc_consistency',
+    detail: 'Close outside High-Low range',
+  },
 ]
 
 describe('ValidationRibbon', () => {

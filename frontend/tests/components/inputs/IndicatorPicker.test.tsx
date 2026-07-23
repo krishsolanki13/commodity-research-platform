@@ -59,9 +59,7 @@ describe('IndicatorPicker', () => {
     expect(onChange).toHaveBeenCalledWith([{ name: 'ema', params: { period: 20 } }])
 
     onChange.mockClear()
-    rerender(
-      <IndicatorPicker catalog={catalog} selected={selected} onChange={onChange} />
-    )
+    rerender(<IndicatorPicker catalog={catalog} selected={selected} onChange={onChange} />)
     expect(screen.getByText('ema_20')).toBeInTheDocument()
 
     await userEvent.click(screen.getByText('Exponential Moving Average'))

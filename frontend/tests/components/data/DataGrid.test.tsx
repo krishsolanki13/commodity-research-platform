@@ -19,15 +19,15 @@ const colHelper = createColumnHelper<Row>()
 const columns = [
   colHelper.accessor('name', {
     header: 'NAME',
-    cell: i => i.getValue(),
+    cell: (i) => i.getValue(),
   }),
   colHelper.accessor('value', {
     header: 'VALUE',
-    cell: i => i.getValue(),
+    cell: (i) => i.getValue(),
   }),
   colHelper.accessor('category', {
     header: 'CATEGORY',
-    cell: i => i.getValue(),
+    cell: (i) => i.getValue(),
   }),
 ]
 
@@ -43,18 +43,14 @@ const LARGE_DATA = Array.from({ length: 300 }, (_, i) => makeRow(i))
 
 describe('DataGrid', () => {
   it('renders column headers', () => {
-    render(
-      <DataGrid columns={columns} data={SMALL_DATA} getRowId={r => r.id} />
-    )
+    render(<DataGrid columns={columns} data={SMALL_DATA} getRowId={(r) => r.id} />)
     expect(screen.getByText('NAME')).toBeInTheDocument()
     expect(screen.getByText('VALUE')).toBeInTheDocument()
     expect(screen.getByText('CATEGORY')).toBeInTheDocument()
   })
 
   it('renders all rows for small datasets', () => {
-    render(
-      <DataGrid columns={columns} data={SMALL_DATA} getRowId={r => r.id} />
-    )
+    render(<DataGrid columns={columns} data={SMALL_DATA} getRowId={(r) => r.id} />)
     // 5 rows: Alpha (indices 0,2,4) + Beta (indices 1,3)
     const alphas = screen.getAllByText('Alpha')
     const betas = screen.getAllByText('Beta')
@@ -66,7 +62,7 @@ describe('DataGrid', () => {
       <DataGrid
         columns={columns}
         data={SMALL_DATA}
-        getRowId={r => r.id}
+        getRowId={(r) => r.id}
         toolbar={{ search: true }}
       />
     )
@@ -76,9 +72,7 @@ describe('DataGrid', () => {
   })
 
   it('sort click updates sort state — internal uncontrolled sort', async () => {
-    render(
-      <DataGrid columns={columns} data={SMALL_DATA} getRowId={r => r.id} />
-    )
+    render(<DataGrid columns={columns} data={SMALL_DATA} getRowId={(r) => r.id} />)
     const valueHeader = screen.getByText('VALUE')
     await userEvent.click(valueHeader)
     // After ascending sort: first value should be 0
@@ -92,7 +86,7 @@ describe('DataGrid', () => {
       <DataGrid
         columns={columns}
         data={SMALL_DATA}
-        getRowId={r => r.id}
+        getRowId={(r) => r.id}
         sortState={[]}
         onSort={onSort}
       />
@@ -107,7 +101,7 @@ describe('DataGrid', () => {
       <DataGrid
         columns={columns}
         data={SMALL_DATA}
-        getRowId={r => r.id}
+        getRowId={(r) => r.id}
         selection={{ ids: new Set(), onChange }}
       />
     )
@@ -120,21 +114,14 @@ describe('DataGrid', () => {
   })
 
   it('renders LoadingSkeleton when loading=true — no headers visible', () => {
-    render(
-      <DataGrid columns={columns} data={[]} getRowId={r => r.id} loading={true} />
-    )
+    render(<DataGrid columns={columns} data={[]} getRowId={(r) => r.id} loading={true} />)
     expect(document.querySelector('.animate-shimmer')).toBeTruthy()
     expect(screen.queryByText('NAME')).not.toBeInTheDocument()
   })
 
   it('with 300 rows and virtualized=true: fewer than 300 tr elements in DOM', () => {
     render(
-      <DataGrid
-        columns={columns}
-        data={LARGE_DATA}
-        getRowId={r => r.id}
-        virtualized={true}
-      />
+      <DataGrid columns={columns} data={LARGE_DATA} getRowId={(r) => r.id} virtualized={true} />
     )
     // jsdom has no layout engine — elements have 0 height.
     // useVirtualizer renders 0 virtual items (all "below the fold").
@@ -146,12 +133,7 @@ describe('DataGrid', () => {
   it('onHoverRow fires when mouse enters a row', async () => {
     const onHover = vi.fn()
     render(
-      <DataGrid
-        columns={columns}
-        data={SMALL_DATA}
-        getRowId={(r) => r.id}
-        onHoverRow={onHover}
-      />
+      <DataGrid columns={columns} data={SMALL_DATA} getRowId={(r) => r.id} onHoverRow={onHover} />
     )
     const firstRow = document.querySelectorAll('tbody tr')[0]
     if (firstRow) await userEvent.hover(firstRow)

@@ -15,11 +15,7 @@ function createTestClient() {
   })
 }
 
-function renderStrategyBuilder(
-  url: string,
-  qc = createTestClient(),
-  withRunsRoute = false
-) {
+function renderStrategyBuilder(url: string, qc = createTestClient(), withRunsRoute = false) {
   return render(
     <QueryClientProvider client={qc}>
       <MemoryRouter initialEntries={[url]}>
@@ -41,9 +37,7 @@ const BASE_URL =
 describe('StrategyBuilder', () => {
   it('pre-fills asset and strategy context from URL params', async () => {
     renderStrategyBuilder(BASE_URL)
-    await waitFor(() =>
-      expect(screen.getAllByText(/gold/i).length).toBeGreaterThan(0)
-    )
+    await waitFor(() => expect(screen.getAllByText(/gold/i).length).toBeGreaterThan(0))
     expect(screen.getByRole('heading', { name: /strategy builder/i })).toBeInTheDocument()
   })
 

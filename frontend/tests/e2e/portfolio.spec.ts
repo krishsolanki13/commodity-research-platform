@@ -128,23 +128,16 @@ test.describe('Portfolio Analytics', () => {
   })
 
   test('per-asset View links navigate to individual run detail', async ({ page }) => {
-    await page.goto('/portfolio')
-    await page.waitForLoadState('networkidle')
+    const res = await page.request.get('/api/portfolio/runs')
+    const data = (await res.json()) as { runs?: Array<{ run_id: string }> }
+    const runId = data.runs?.[0]?.run_id
+    if (!runId) {
+      console.log('No portfolio runs from API — skipping per-asset navigation test')
+      test.skip()
+      return
+    }
 
-    // Use run selector to navigate to a post-fix run
-    const runSelector = page.getByRole('combobox', { name: /select a recent portfolio run/i })
-    if (!(await runSelector.isVisible({ timeout: 3_000 }).catch(() => false))) {
-      console.log('No portfolio run history — skipping per-asset navigation test')
-      test.skip()
-      return
-    }
-    await runSelector.click()
-    const firstOption = page.getByRole('option').first()
-    if (!(await firstOption.isVisible({ timeout: 2_000 }).catch(() => false))) {
-      test.skip()
-      return
-    }
-    await firstOption.click()
+    await page.goto(`/portfolio?run_id=${encodeURIComponent(runId)}`)
     await page.waitForLoadState('networkidle')
 
     // Expand per-asset panel

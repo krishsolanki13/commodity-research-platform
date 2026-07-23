@@ -1,6 +1,7 @@
 /**
  * RunTradesTab — paginated trade log with direction/forceClosed filters.
  * Filters are component state — NOT in URL (tab is already URL-synced).
+ * Filtering is server-side via ?direction= and ?force_closed= query params.
  */
 import { useState } from 'react'
 import { useRunTrades } from '@/api/hooks'

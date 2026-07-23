@@ -1,15 +1,40 @@
 import { MetricGrid } from '@/components/data/MetricGrid'
 import { AssetRiskBarChart } from '@/components/charts/AssetRiskBarChart'
+import type { ApiClientError } from '@/api/client'
 import type { components } from '@/api/schema'
 
 type RiskReportResponse = components['schemas']['RiskReportResponse']
+type PortfolioSummaryResponse = components['schemas']['PortfolioSummaryResponse']
+
+function isApiError(error: unknown): error is ApiClientError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'apiError' in error &&
+    typeof (error as ApiClientError).apiError?.status === 'number'
+  )
+}
 
 interface PortfolioRiskPanelProps {
   risk: RiskReportResponse | null
+  summary?: PortfolioSummaryResponse | null
   loading?: boolean
+  error?: ApiClientError | Error | null
 }
 
-export function PortfolioRiskPanel({ risk, loading }: PortfolioRiskPanelProps) {
+export function PortfolioRiskPanel({ risk, summary, loading, error }: PortfolioRiskPanelProps) {
+  const isServerRestartLoss =
+    !!error && isApiError(error) && error.apiError.status === 404 && !!summary
+
+  if (isServerRestartLoss) {
+    return (
+      <div className="flex items-center gap-2 p-4 text-xs text-text-secondary">
+        <span>Detailed analytics unavailable after server restart.</span>
+        <span className="ml-1 text-text-secondary">Re-run the portfolio analysis to restore.</span>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div>
