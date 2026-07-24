@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useAssets } from '@/api/hooks/useAssets'
 import { useDataStatus } from '@/api/hooks/useDataStatus'
 import { useIngestMutation } from '@/api/hooks/useIngestMutation'
@@ -8,25 +9,24 @@ import { RANGE_PRESETS } from '@/lib/date-range'
 import type { RangePreset } from '@/lib/date-range'
 import { useUrlState } from '@/lib/useUrlState'
 import { z } from 'zod'
-import { fmt } from '@/lib/fmt'
 import { cn } from '@/lib/cn'
 
 const rangeSchema = z.object({
   range: z.enum(['1M', '3M', '6M', '1Y', '3Y', '5Y', 'MAX']).default('1Y'),
 })
 
-function daysSinceIngest(iso: string): number {
-  return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000))
-}
-
 export function UniverseStatsBar() {
   const { data: universe, isLoading: universeLoading } = useAssets()
   const { data: status } = useDataStatus()
   const ingest = useIngestMutation()
   const [{ range }, setUrlState] = useUrlState(rangeSchema, { range: '1Y' })
+  // Backend may return last_ingestion: null — stamp local time after a successful re-ingest.
+  const [lastIngestedAt, setLastIngestedAt] = useState<Date | null>(null)
 
-  // MetricStat requires { label, value: number|null, format }. LAST INGESTION is a
-  // date string in the API — surface days-since as the value with ISO date in hint.
+  const lastIngestionDisplay = lastIngestedAt
+    ? lastIngestedAt.toLocaleTimeString()
+    : (universe?.last_ingestion ?? '—')
+
   const metrics: MetricStatProps[] = [
     {
       label: 'ASSETS TRACKED',
@@ -36,12 +36,14 @@ export function UniverseStatsBar() {
     },
     {
       label: 'LAST INGESTION',
-      value: universe?.last_ingestion ? daysSinceIngest(universe.last_ingestion) : null,
-      format: 'integer',
+      value: lastIngestionDisplay,
+      format: 'raw',
       tone: 'neutral',
-      hint: universe?.last_ingestion
-        ? `Last ingested ${fmt.isoDate(universe.last_ingestion)} (days ago)`
-        : 'Never ingested',
+      hint: lastIngestedAt
+        ? `Ingested at ${lastIngestedAt.toLocaleString()}`
+        : universe?.last_ingestion
+          ? `Last ingested ${universe.last_ingestion}`
+          : 'Never ingested',
     },
     {
       label: 'FLAGGED ANOMALIES',
@@ -87,7 +89,16 @@ export function UniverseStatsBar() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => ingest.mutate({ asset: null })}
+            onClick={() =>
+              ingest.mutate(
+                { asset: null },
+                {
+                  onSuccess: () => {
+                    setLastIngestedAt(new Date())
+                  },
+                }
+              )
+            }
             disabled={ingest.isPending}
           >
             {ingest.isPending ? 'Ingesting…' : 'Re-ingest all'}

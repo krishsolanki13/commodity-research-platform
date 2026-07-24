@@ -6,12 +6,12 @@
  */
 import { useRunDetail } from '@/api/hooks'
 import { ICDecayChart } from '@/components/charts/ICDecayChart'
-import { ICBandBadge } from '@/components/data/ICBandBadge'
-import { MetricGrid } from '@/components/data/MetricGrid'
+import { MetricStat } from '@/components/data/MetricStat'
 import { EmptyState } from '@/components/layout/EmptyState'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton'
 import { Panel } from '@/ui/Panel'
+import { cn } from '@/lib/cn'
 
 interface RunSignalQualityTabProps {
   runId: string
@@ -55,18 +55,37 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
   }
 
   // STATE B — signal_evaluation present
+  const icBand = evaluation.ic_band
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4">
-        <ICBandBadge ic={evaluation.ic} />
-        <MetricGrid
-          columns={3}
-          metrics={[
-            { label: 'IC', value: evaluation.ic, format: 'ic', tone: 'neutral' },
-            { label: 'ICIR', value: evaluation.icir, format: 'ic', tone: 'neutral' },
-            { label: 'TURNOVER', value: evaluation.turnover, format: 'percent', tone: 'neutral' },
-          ]}
-        />
+      <div className="grid w-full grid-cols-3 gap-4">
+        <div className="gap-0.5 flex min-w-0 flex-col">
+          <span className="text-xs uppercase tracking-wider text-text-secondary">IC</span>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-mono">
+              {evaluation.ic != null ? evaluation.ic.toFixed(3) : '—'}
+            </span>
+            {icBand != null && (
+              <span
+                className={cn(
+                  'rounded px-1.5 py-0.5 font-mono text-xs',
+                  icBand === 'strong'
+                    ? 'bg-gain-fill text-gain'
+                    : icBand === 'inverse_meaningful'
+                      ? 'bg-loss-fill text-loss'
+                      : icBand === 'noise'
+                        ? 'bg-bg-raised text-text-secondary'
+                        : 'bg-accent-fill text-warn'
+                )}
+              >
+                {icBand}
+              </span>
+            )}
+          </div>
+        </div>
+        <MetricStat label="ICIR" value={evaluation.icir} format="ic" tone="neutral" />
+        <MetricStat label="TURNOVER" value={evaluation.turnover} format="percent" tone="neutral" />
       </div>
 
       <ICDecayChart decay={evaluation.decay} height={250} title="IC Decay at Horizons" />
