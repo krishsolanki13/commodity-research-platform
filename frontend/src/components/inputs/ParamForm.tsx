@@ -118,7 +118,7 @@ export function ParamForm({
                   <NumberInput
                     id={p.name}
                     aria-label={p.description ?? p.name}
-                    value={field.value as number | ''}
+                    value={(field.value as number | '' | undefined) ?? ''}
                     onChange={(v) => {
                       field.onChange(v)
                       void field.onBlur()

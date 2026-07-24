@@ -122,7 +122,6 @@ export default function StrategyBuilder() {
   return (
     <div className="flex flex-col gap-4 p-6">
       <div className="mb-2">
-        <nav className="mb-1 text-xs text-text-secondary">Strategy Builder</nav>
         <h1 className="text-xl font-semibold text-text-primary">Strategy Builder</h1>
       </div>
 

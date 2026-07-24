@@ -28,14 +28,14 @@ export function PortfolioRunSelector() {
           return (
             <SelectItem key={run.run_id} value={run.run_id}>
               <div className="flex w-full items-center justify-between gap-4">
-                <span>{shortName}</span>
+                <span className="truncate">{shortName}</span>
                 <span
                   className={
                     run.total_return == null
-                      ? 'text-xs text-text-secondary'
+                      ? 'shrink-0 text-xs text-text-secondary'
                       : run.total_return < 0
-                        ? 'text-xs text-loss'
-                        : 'text-xs text-gain'
+                        ? 'shrink-0 text-xs text-loss'
+                        : 'shrink-0 text-xs text-gain'
                   }
                 >
                   {returnPct}

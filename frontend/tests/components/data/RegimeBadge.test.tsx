@@ -33,6 +33,6 @@ describe('RegimeBadge', () => {
 
   it('renders with horizontal padding', () => {
     const { container } = render(<RegimeBadge regime="contango" />)
-    expect(container.firstChild).toHaveClass('px-2.5')
+    expect(container.firstChild).toHaveClass('px-3')
   })
 })

@@ -32,7 +32,7 @@ export function NumberInput({
       <input
         id={id}
         type="number"
-        value={value}
+        value={value ?? ''}
         onChange={(e) => onChange(Number(e.target.value))}
         min={min}
         max={max}

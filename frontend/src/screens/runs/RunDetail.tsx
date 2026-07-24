@@ -1,6 +1,6 @@
 import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Trash2, ClipboardCopy, Check } from 'lucide-react'
 import { TabsUrlSync } from '@/ui/TabsUrlSync'
 import { useRunDetail, useRunDelete } from '@/api/hooks'
 import { ApiClientError } from '@/api/client'
@@ -28,10 +28,11 @@ export default function RunDetail() {
   const { runId } = useParams<{ runId: string }>()
   const navigate = useNavigate()
   const { data: run, isLoading, error } = useRunDetail(runId ?? '')
-  const displayId = runId?.replace(/^poll_/, '') ?? ''
+  const cleanRunId = (runId ?? '').replace(/^poll_/, '')
   const basket = useComparisonBasket()
   const deleteRun = useRunDelete()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   if (!runId) return <Navigate to="/runs" replace />
 
@@ -70,36 +71,24 @@ export default function RunDetail() {
     })
   }
 
+  function handleCopy() {
+    void navigator.clipboard.writeText(cleanRunId)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex shrink-0 flex-col gap-1 border-b border-border-default px-6 py-3">
-        <Link
-          to="/runs"
-          className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary"
-        >
-          ← Run Explorer
-        </Link>
+      {/* Header — Q1 layout */}
+      <div className="flex shrink-0 flex-col gap-2 border-b border-border-default px-6 py-3">
+        {/* LINE 1: back + actions */}
         <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-3">
-              {run && <RunStatusBadge status={run.status} />}
-              <span
-                className="max-w-xs truncate font-mono text-xs text-text-secondary"
-                title={displayId}
-              >
-                {displayId}
-              </span>
-            </div>
-            {run && (
-              <span className="text-xs text-text-secondary">
-                {run.asset.toUpperCase()} · {run.strategy}
-                {' · '}
-                {fmt.isoDate(run.from_date)} → {fmt.isoDate(run.to_date)}
-              </span>
-            )}
-          </div>
-
+          <Link
+            to="/runs"
+            className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary"
+          >
+            ← Run Explorer
+          </Link>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -119,6 +108,34 @@ export default function RunDetail() {
               Compare →
             </button>
           </div>
+        </div>
+
+        {/* LINE 2: status + primary description */}
+        {run && (
+          <div className="flex items-center gap-3">
+            <RunStatusBadge status={run.status} />
+            <span className="text-sm text-text-primary">
+              {run.asset.toUpperCase()} · {run.strategy}
+              {' · '}
+              {fmt.isoDate(run.from_date)} → {fmt.isoDate(run.to_date)}
+            </span>
+          </div>
+        )}
+
+        {/* LINE 3: clean run ID + clipboard */}
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-xs text-text-secondary" title={cleanRunId}>
+            {cleanRunId}
+          </span>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="text-text-secondary transition-colors hover:text-text-primary"
+            aria-label={copied ? 'Copied' : 'Copy run ID'}
+            title={copied ? 'Copied' : 'Copy run ID'}
+          >
+            {copied ? <Check size={12} /> : <ClipboardCopy size={12} />}
+          </button>
         </div>
       </div>
 
@@ -165,7 +182,7 @@ export default function RunDetail() {
             <AlertDialogTitle>Delete run?</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently remove{' '}
-              <span className="font-mono text-text-emphasis">{displayId}</span> and all its
+              <span className="font-mono text-text-emphasis">{cleanRunId}</span> and all its
               artifacts.
             </AlertDialogDescription>
           </AlertDialogHeader>

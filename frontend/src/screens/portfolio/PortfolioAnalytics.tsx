@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Trash2, ClipboardCopy, Check } from 'lucide-react'
 import { usePortfolioSummary } from '@/api/hooks/usePortfolioSummary'
 import { usePortfolioEquity } from '@/api/hooks/usePortfolioEquity'
 import { usePortfolioRisk } from '@/api/hooks/usePortfolioRisk'
@@ -47,10 +47,12 @@ export function PortfolioAnalytics() {
   )
   const [initialCapital, setInitialCapital] = useState(1_000_000)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
   const deleteRun = usePortfolioDelete()
   const portfolioRuns = usePortfolioRuns()
 
   const params = DEFAULT_PARAMS[strategy] ?? {}
+  const cleanRunId = (run_id ?? '').replace(/^poll_/, '')
 
   const summaryQuery = usePortfolioSummary(run_id ?? '')
   const summary = summaryQuery.data
@@ -78,6 +80,13 @@ export function PortfolioAnalytics() {
         setDeleteConfirmId(null)
       },
     })
+  }
+
+  function handleCopyRunId() {
+    if (!cleanRunId) return
+    void navigator.clipboard.writeText(cleanRunId)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
   }
 
   if (!run_id) {
@@ -120,9 +129,20 @@ export function PortfolioAnalytics() {
           <PortfolioRunSelector />
           <div>
             <h1 className="font-mono text-base text-text-primary">Portfolio Analytics</h1>
-            <span className="block max-w-xs truncate font-mono text-xs text-text-secondary">
-              {(run_id ?? '').replace(/^poll_/, '')}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-mono text-xs text-text-secondary" title={cleanRunId}>
+                {cleanRunId}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyRunId}
+                className="text-text-secondary transition-colors hover:text-text-primary"
+                aria-label={copied ? 'Copied' : 'Copy portfolio run ID'}
+                title={copied ? 'Copied' : 'Copy portfolio run ID'}
+              >
+                {copied ? <Check size={12} /> : <ClipboardCopy size={12} />}
+              </button>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
