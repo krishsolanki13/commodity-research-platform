@@ -101,4 +101,28 @@ describe('SignalOverlayChart', () => {
       )
     ).not.toThrow()
   })
+
+  it('position pane has non-zero Long/Short values and yAxis padding beyond clipping range', () => {
+    const mixedPosition: ColumnarSeries = {
+      index: [1609459200000, 1609545600000, 1609632000000],
+      columns: { position: [1, -1, 1] },
+    }
+    render(
+      <SignalOverlayChart ohlcv={ohlcvFixture} raw={rawFixture} position={mixedPosition} />,
+      { wrapper: Wrapper }
+    )
+    const option = lastChartOption() as {
+      series?: Array<{ name?: string; data?: (number | null)[] }>
+      yAxis?: Array<{ min?: number | null; max?: number | null }>
+    }
+    const position = option.series?.find((s) => s.name === 'Position')
+    expect(position?.data).toBeDefined()
+    const values = (position?.data ?? []).filter((v): v is number => typeof v === 'number')
+    expect(values.some((v) => v !== 0)).toBe(true)
+    expect(values).toContain(1)
+    expect(values).toContain(-1)
+    const posAxis = option.yAxis?.[2]
+    expect(posAxis?.min).toBe(-1.5)
+    expect(posAxis?.max).toBe(1.5)
+  })
 })
