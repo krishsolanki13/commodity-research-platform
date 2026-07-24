@@ -31,8 +31,8 @@ function parseUrlEvaluation(raw: string | null): SignalEvaluationData | null {
   )
   if (!parsed || typeof parsed !== 'object') return null
   // Workbench may stringify SignalEvaluationData, or a wrapper with nested .evaluation
-  if ('ic' in parsed && typeof (parsed as SignalEvaluationData).ic === 'number') {
-    return parsed as SignalEvaluationData
+  if ('ic' in parsed && typeof parsed.ic === 'number') {
+    return parsed
   }
   if ('evaluation' in parsed && parsed.evaluation && typeof parsed.evaluation.ic === 'number') {
     return parsed.evaluation

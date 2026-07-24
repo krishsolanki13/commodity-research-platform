@@ -80,10 +80,10 @@ export function RunTradesTab({ runId }: RunTradesTabProps) {
   const filteredTrades = tradesQuery.data?.trades ?? []
   const total = tradesQuery.data?.total ?? filteredTrades.length
 
-  const stats = useMemo(
-    () => (tradesQuery.data ? computeFilteredStats(filteredTrades, total) : DEFAULT_STATS),
-    [filteredTrades, total, tradesQuery.data]
-  )
+  const stats = useMemo(() => {
+    if (!tradesQuery.data) return DEFAULT_STATS
+    return computeFilteredStats(tradesQuery.data.trades, tradesQuery.data.total)
+  }, [tradesQuery.data])
 
   function handleDirectionChange(d: 'all' | 'long' | 'short') {
     setPage(1)
