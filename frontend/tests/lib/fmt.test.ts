@@ -55,6 +55,12 @@ describe('fmtDate', () => {
   it('coerces numeric strings', () => {
     expect(fmtDate('1262563200000' as unknown as number)).toBe('2010-01-04')
   })
+
+  it('fmtDate formats numeric string epoch-ms', () => {
+    const ms = new Date('2024-01-15').getTime()
+    expect(fmtDate(String(ms) as unknown as number)).toMatch(/2024/)
+    expect(fmtDate(ms)).toMatch(/2024/)
+  })
 })
 
 describe('fmt.tradeBars', () => {
