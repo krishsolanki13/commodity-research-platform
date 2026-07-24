@@ -40,9 +40,8 @@ export function PortfolioLaunchPanel({
     if (status.data?.status === 'complete' && pollingRunId) {
       // Prefer a clean artifact id from status when present; else strip poll_ prefix
       const statusRunId = status.data.run_id
-      const artifactId = (statusRunId && !statusRunId.startsWith('poll_')
-        ? statusRunId
-        : pollingRunId
+      const artifactId = (
+        statusRunId && !statusRunId.startsWith('poll_') ? statusRunId : pollingRunId
       ).replace(/^poll_/, '')
       onLaunched(artifactId)
     }

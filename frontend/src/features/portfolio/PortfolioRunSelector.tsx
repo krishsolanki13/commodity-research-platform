@@ -5,9 +5,7 @@ import { portfolioUrlDefaults, portfolioUrlSchema } from '@/features/portfolio/p
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/select'
 
 function shortRunName(runId: string): string {
-  return (runId ?? '')
-    .replace(/^poll_/, '')
-    .replace(/^\d{8}_\d{6}_portfolio_/, '')
+  return (runId ?? '').replace(/^poll_/, '').replace(/^\d{8}_\d{6}_portfolio_/, '')
 }
 
 export function PortfolioRunSelector() {

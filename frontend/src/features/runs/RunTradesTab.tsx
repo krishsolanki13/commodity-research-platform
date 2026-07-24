@@ -24,7 +24,8 @@ const DEFAULT_STATS: TradeStats = {
   largest_loss: 0,
 }
 
-function computeFilteredStats(trades: TradeRecord[], total: number): TradeStats {
+/** Recompute KPI stats from the filtered trade page (exported for unit tests). */
+export function computeFilteredStats(trades: TradeRecord[], total: number): TradeStats {
   const nTrades = total
   if (trades.length === 0) {
     return {
@@ -44,8 +45,7 @@ function computeFilteredStats(trades: TradeRecord[], total: number): TradeStats 
   const wins = trades.filter((t) => t.net_pnl > 0)
   const losses = trades.filter((t) => t.net_pnl < 0)
 
-  const avgWin =
-    wins.length > 0 ? wins.reduce((sum, t) => sum + t.net_pnl, 0) / wins.length : 0
+  const avgWin = wins.length > 0 ? wins.reduce((sum, t) => sum + t.net_pnl, 0) / wins.length : 0
   const avgLoss =
     losses.length > 0 ? losses.reduce((sum, t) => sum + t.net_pnl, 0) / losses.length : 0
   const largestWin = wins.length > 0 ? Math.max(...wins.map((t) => t.net_pnl)) : 0
@@ -81,10 +81,7 @@ export function RunTradesTab({ runId }: RunTradesTabProps) {
   const total = tradesQuery.data?.total ?? filteredTrades.length
 
   const stats = useMemo(
-    () =>
-      tradesQuery.data
-        ? computeFilteredStats(filteredTrades, total)
-        : DEFAULT_STATS,
+    () => (tradesQuery.data ? computeFilteredStats(filteredTrades, total) : DEFAULT_STATS),
     [filteredTrades, total, tradesQuery.data]
   )
 
