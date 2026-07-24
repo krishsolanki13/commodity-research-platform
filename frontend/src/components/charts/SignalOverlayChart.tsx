@@ -4,7 +4,7 @@
  * Layout:
  *   grid[0] price pane      top: 2%,  height: 48%  — candlestick
  *   grid[1] raw signal pane top: 55%, height: 20%  — line + zero markLine
- *   grid[2] position pane   top: 82%, bottom: 60 — colored bars {-1,0,+1}
+ *   grid[2] position pane   bottom: 60, height: 12% — colored bars {-1,0,+1}
  *
  * CRITICAL constraints:
  *   - Price yAxis: min: null (NEVER min: 0 — WTI negative price)
@@ -91,8 +91,8 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       grid: [
         { left: 60, right: 16, top: '2%', height: '48%' },
         { left: 60, right: 16, top: '55%', height: '20%' },
-        // top: 82% clears Long from signal pane; bottom: 60 clears DataZoom slider
-        { left: 60, right: 16, top: '82%', bottom: 60 },
+        // bottom: 60 clears DataZoom slider; height 12% keeps Long/Short bars visible
+        { left: 60, right: 16, bottom: 60, height: '12%' },
       ],
       dataZoom: [
         {
@@ -165,21 +165,15 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           splitLine: { lineStyle: { color: theme.gridlineColor } },
         },
         {
+          // Dedicated position axis: padding beyond ±1 so Long/Short bars are not clipped
           gridIndex: 2,
-          min: -1,
-          max: 1,
-          interval: 1,
+          min: -1.5,
+          max: 1.5,
           axisLabel: {
             color: theme.secondaryText,
             fontFamily: theme.monoFont,
             fontSize: 11,
-            interval: 0,
-            formatter: (v: number) => {
-              if (v === 1) return 'Long'
-              if (v === 0) return 'Flat'
-              if (v === -1) return 'Short'
-              return ''
-            },
+            formatter: (v: number) => (v > 0 ? 'Long' : v < 0 ? 'Short' : 'Flat'),
           },
           splitLine: { show: false },
         },
