@@ -93,6 +93,15 @@ function EquityCurveChartInner({
     // ---------------------------------------------------------------------------
     // X axes
     // ---------------------------------------------------------------------------
+    const axisPointerLabel = {
+      label: {
+        formatter: (params: { value: number | string }) => {
+          const ms = typeof params.value === 'string' ? Number(params.value) : params.value
+          return fmtDate(ms)
+        },
+      },
+    }
+
     const xAxes = showDrawdown
       ? [
           {
@@ -103,6 +112,7 @@ function EquityCurveChartInner({
             axisLine: { show: false },
             axisTick: { show: false },
             splitLine: { show: false },
+            axisPointer: axisPointerLabel,
           },
           {
             gridIndex: 1,
@@ -115,6 +125,7 @@ function EquityCurveChartInner({
               formatter: (value: number) => fmtDate(value),
             },
             splitLine: { show: false },
+            axisPointer: axisPointerLabel,
           },
         ]
       : [
@@ -127,6 +138,7 @@ function EquityCurveChartInner({
               fontSize: 11,
               formatter: (value: number) => fmtDate(value),
             },
+            axisPointer: axisPointerLabel,
           },
         ]
 
@@ -214,12 +226,7 @@ function EquityCurveChartInner({
             ? {
                 silent: true,
                 symbol: 'none',
-                label: {
-                  formatter: 'Initial Capital',
-                  color: theme.secondaryText,
-                  fontFamily: theme.monoFont,
-                  fontSize: 10,
-                },
+                label: { show: false },
                 lineStyle: { type: 'dotted', color: theme.secondaryText, width: 1 },
                 data: [{ yAxis: baseline }],
               }

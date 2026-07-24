@@ -28,6 +28,8 @@ export function FuturesCurve() {
     error: snapshotError,
   } = useCurveSnapshot(asset ?? '', n_contracts, observation_date)
 
+  // History period (1Y/3Y/5Y/MAX) → lookback URL param → fromDate for HistoryPanel only.
+  // KPI row uses useCurveSnapshot(observation_date) and is intentionally independent.
   const dateParams = rangeToDateParams(lookback ?? '3Y')
 
   return (

@@ -46,8 +46,8 @@ export function Combobox({
           disabled={disabled}
           className={cn('w-full justify-between', className)}
         >
-          <span className={cn('truncate', !selected && 'text-text-secondary')}>
-            {selected ? selected.label : placeholder}
+          <span className={cn('truncate', !selected && !value && 'text-text-secondary')}>
+            {selected ? selected.label : value ? value : placeholder}
           </span>
           <ChevronsUpDown
             size={14}

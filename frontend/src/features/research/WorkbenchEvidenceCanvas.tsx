@@ -118,10 +118,10 @@ export function WorkbenchEvidenceCanvas({
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <ICDecayChart decay={evalData.decay} height={200} title="IC Decay" />
-            <MetricGrid metrics={metrics} columns={4} />
+            <MetricGrid metrics={metrics} columns={4} className="w-full" />
           </div>
 
-          <FeatureSpecTable specs={evaluationResult.features.specs} />
+          <FeatureSpecTable specs={evaluationResult.features.specs} className="w-full" />
         </div>
       </div>
     </div>

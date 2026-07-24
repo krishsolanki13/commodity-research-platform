@@ -180,6 +180,9 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
         },
       ],
       tooltip: {
+        // Dual-pane (two xAxes): axis trigger only includes series for the hovered
+        // pane. Resolve both Slope and Roll Yield from snapshots so the card always
+        // shows both series for the same date.
         trigger: 'axis',
         axisPointer: { type: 'cross', lineStyle: { color: theme.gridlineColor } },
         backgroundColor: theme.tooltip.backgroundColor,
@@ -196,29 +199,43 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
             axisValue?: string | number
             marker?: string
           }>
+          if (!items.length) return ''
           const axisRaw = items[0]?.axisValue
           const axisMs = typeof axisRaw === 'number' ? axisRaw : Number(axisRaw)
           const dateLabel = Number.isFinite(axisMs)
             ? new Date(axisMs).toISOString().slice(0, 10)
             : String(axisRaw ?? '')
-          const lines = items
-            .filter((p) => p.seriesName === 'Slope %/yr' || p.seriesName === 'Roll Yield %/yr')
-            .map((p) => {
-              const marker = p.marker ?? ''
-              let v: unknown = p.value
-              if (Array.isArray(p.value)) {
-                const arr = p.value as unknown[]
-                v = arr[arr.length - 1]
-              }
-              if (v == null || (typeof v !== 'number' && typeof v !== 'string')) {
-                return `${marker}${p.seriesName}: —`
-              }
-              const num = Number(v)
-              if (!Number.isFinite(num)) return `${marker}${p.seriesName}: —`
-              // Values are decimal fractions (0.0493 → 4.93%/yr)
-              return `${marker}${p.seriesName}: ${(num * 100).toFixed(2)}%/yr`
-            })
-          return [dateLabel, ...lines].join('<br/>')
+
+          const formatPctYr = (v: number | null | undefined) => {
+            if (v == null || !Number.isFinite(Number(v))) return '—'
+            // Values are decimal fractions (0.0493 → 4.93%/yr)
+            return `${(Number(v) * 100).toFixed(2)}%/yr`
+          }
+
+          const snap = Number.isFinite(axisMs)
+            ? snapshots.find((s) => new Date(s.observation_date).getTime() === axisMs)
+            : undefined
+
+          const byName = new Map<string, number | null>()
+          for (const p of items) {
+            if (p.seriesName !== 'Slope %/yr' && p.seriesName !== 'Roll Yield %/yr') continue
+            let v: unknown = p.value
+            if (Array.isArray(p.value)) {
+              const arr = p.value as unknown[]
+              v = arr[arr.length - 1]
+            }
+            const num = v == null ? null : Number(v)
+            byName.set(p.seriesName, num != null && Number.isFinite(num) ? num : null)
+          }
+
+          const slope = byName.get('Slope %/yr') ?? snap?.annualized_slope_pct ?? null
+          const roll = byName.get('Roll Yield %/yr') ?? snap?.roll_yield_annualized ?? null
+
+          return [
+            dateLabel,
+            `Slope %/yr: ${formatPctYr(slope)}`,
+            `Roll Yield %/yr: ${formatPctYr(roll)}`,
+          ].join('<br/>')
         },
       },
       series: [
@@ -312,11 +329,18 @@ export function TermStructureHistoryChart({
       {showRegimeBands !== false && snapshots.length >= 2 && (
         <div className="mt-2 flex items-center gap-4 px-2 text-xs text-text-secondary">
           <span className="gap-1.5 flex items-center">
-            <span className="inline-block h-3 w-6 rounded-sm bg-accent-fill opacity-60" />
+            {/* Same amber/gain tokens + opacity suffixes as markArea itemStyle */}
+            <span
+              className="inline-block h-3 w-6 rounded-sm"
+              style={{ backgroundColor: theme.amber + '26' }}
+            />
             Contango
           </span>
           <span className="gap-1.5 flex items-center">
-            <span className="inline-block h-3 w-6 rounded-sm bg-gain-fill opacity-50" />
+            <span
+              className="inline-block h-3 w-6 rounded-sm"
+              style={{ backgroundColor: theme.gain + '1F' }}
+            />
             Backwardation
           </span>
         </div>
