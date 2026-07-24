@@ -69,7 +69,7 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
             {icBand != null && (
               <span
                 className={cn(
-                  'rounded px-1.5 py-0.5 font-mono text-xs',
+                  'px-1.5 py-0.5 rounded font-mono text-xs',
                   icBand === 'strong'
                     ? 'bg-gain-fill text-gain'
                     : icBand === 'inverse_meaningful'
