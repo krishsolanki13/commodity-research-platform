@@ -4,7 +4,7 @@
  * Layout:
  *   grid[0] price pane      top: 2%,  height: 48%  — candlestick
  *   grid[1] raw signal pane top: 55%, height: 20%  — line + zero markLine
- *   grid[2] position pane   bottom: 8%, height: 15% — colored bars {-1,0,+1}
+ *   grid[2] position pane   bottom: 8%, height: 60 — colored bars {-1,0,+1}
  *
  * CRITICAL constraints:
  *   - Price yAxis: min: null (NEVER min: 0 — WTI negative price)
@@ -18,6 +18,7 @@ import type { ECharts } from '@/lib/echarts-setup'
 import { echarts } from '@/lib/echarts-setup'
 import { ChartFrame, useChartFrame } from '@/components/charts/ChartFrame'
 import { useChartTheme, type EChartsTheme } from '@/lib/chart-theme'
+import { fmtDate } from '@/lib/fmt'
 import type { ApiClientError } from '@/api/client'
 import type { components } from '@/api/schema'
 
@@ -90,7 +91,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       grid: [
         { left: 60, right: 16, top: '2%', height: '48%' },
         { left: 60, right: 16, top: '55%', height: '20%' },
-        { left: 60, right: 16, bottom: '8%', height: '15%' },
+        { left: 60, right: 16, bottom: '8%', height: 60 },
       ],
       xAxis: [
         {
@@ -120,6 +121,10 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             color: theme.secondaryText,
             fontFamily: theme.monoFont,
             fontSize: 11,
+            formatter: (v: number | string) => {
+              const ms = typeof v === 'string' ? Number(v) : v
+              return fmtDate(ms)
+            },
           },
           splitLine: { show: false },
         },
@@ -148,13 +153,20 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         },
         {
           gridIndex: 2,
-          min: -1.5,
-          max: 1.5,
+          min: -1,
+          max: 1,
+          interval: 1,
           axisLabel: {
             color: theme.secondaryText,
             fontFamily: theme.monoFont,
             fontSize: 11,
-            formatter: (v: number) => (v > 0 ? 'Long' : v < 0 ? 'Short' : 'Flat'),
+            interval: 0,
+            formatter: (v: number) => {
+              if (v === 1) return 'Long'
+              if (v === 0) return 'Flat'
+              if (v === -1) return 'Short'
+              return ''
+            },
           },
           splitLine: { show: false },
         },
@@ -177,6 +189,52 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           color: theme.tooltip.textStyle.color,
           fontFamily: theme.monoFont,
           fontSize: 12,
+        },
+        formatter: (params: unknown) => {
+          const items = (Array.isArray(params) ? params : [params]) as Array<{
+            seriesType?: string
+            seriesName?: string
+            name?: string | number
+            axisValue?: string | number
+            value?: unknown
+            data?: unknown
+            marker?: string
+          }>
+          const axisRaw = items[0]?.axisValue ?? items[0]?.name
+          const axisMs = typeof axisRaw === 'number' ? axisRaw : Number(axisRaw)
+          const dateLabel = Number.isFinite(axisMs) ? fmtDate(axisMs) : String(axisRaw ?? '')
+          const lines = items.map((p) => {
+            const marker = p.marker ?? ''
+            if (p.seriesType === 'candlestick') {
+              // ECharts candlestick value: [open, close, low, high] (or [idx, open, close, low, high])
+              const rawVal = (Array.isArray(p.value) ? p.value : p.data) as number[] | undefined
+              if (!rawVal || rawVal.length < 4) return `${marker}—`
+              const prices = rawVal.length >= 5 ? rawVal.slice(1, 5) : rawVal.slice(0, 4)
+              const [open, close, low, high] = prices
+              return [
+                `${marker}O: ${Number(open).toFixed(2)}`,
+                `C: ${Number(close).toFixed(2)}`,
+                `L: ${Number(low).toFixed(2)}`,
+                `H: ${Number(high).toFixed(2)}`,
+              ].join('<br/>')
+            }
+            let v: unknown = p.value
+            if (Array.isArray(p.value)) {
+              const arr = p.value as unknown[]
+              v = arr[arr.length - 1]
+            }
+            if (typeof v !== 'number' && typeof v !== 'string') {
+              return `${marker}${p.seriesName ?? ''}: —`
+            }
+            const num = Number(v)
+            if (p.seriesType === 'bar' && Number.isFinite(num)) {
+              const label = num > 0 ? 'Long' : num < 0 ? 'Short' : 'Flat'
+              return `${marker}${p.seriesName ?? 'Position'}: ${label}`
+            }
+            const formatted = Number.isFinite(num) ? num.toFixed(2) : v
+            return `${marker}${p.seriesName ?? ''}: ${formatted}`
+          })
+          return [dateLabel, ...lines].join('<br/>')
         },
       },
       series: [

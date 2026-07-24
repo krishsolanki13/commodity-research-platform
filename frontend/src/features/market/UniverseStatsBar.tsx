@@ -92,6 +92,12 @@ export function UniverseStatsBar() {
           >
             {ingest.isPending ? 'Ingesting…' : 'Re-ingest all'}
           </Button>
+          {ingest.isSuccess && (
+            <span className="ml-2 text-xs text-text-secondary">
+              {ingest.data?.assets_ingested?.length ?? 6} assets ingested — refresh page to see
+              updated data
+            </span>
+          )}
         </div>
       </div>
       <MetricGrid metrics={metrics} loading={universeLoading} />

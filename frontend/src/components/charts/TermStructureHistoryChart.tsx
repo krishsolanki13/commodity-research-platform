@@ -117,7 +117,7 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
       backgroundColor: 'transparent',
       grid: [
         { top: '5%', height: '42%', left: 64, right: 16 },
-        { top: '55%', height: '32%', left: 64, right: 16 },
+        { top: '55%', left: 64, right: 16, bottom: 60 },
       ],
       xAxis: [
         {
@@ -168,7 +168,7 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
         {
           type: 'slider',
           xAxisIndex: [0, 1],
-          bottom: 4,
+          bottom: 8,
           height: 16,
           borderColor: theme.gridlineColor,
           fillerColor: `${theme.amber}22`,
@@ -188,6 +188,37 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
           color: theme.tooltip.textStyle.color,
           fontFamily: theme.monoFont,
           fontSize: 11,
+        },
+        formatter: (params: unknown) => {
+          const items = (Array.isArray(params) ? params : [params]) as Array<{
+            seriesName?: string
+            value?: unknown
+            axisValue?: string | number
+            marker?: string
+          }>
+          const axisRaw = items[0]?.axisValue
+          const axisMs = typeof axisRaw === 'number' ? axisRaw : Number(axisRaw)
+          const dateLabel = Number.isFinite(axisMs)
+            ? new Date(axisMs).toISOString().slice(0, 10)
+            : String(axisRaw ?? '')
+          const lines = items
+            .filter((p) => p.seriesName === 'Slope %/yr' || p.seriesName === 'Roll Yield %/yr')
+            .map((p) => {
+              const marker = p.marker ?? ''
+              let v: unknown = p.value
+              if (Array.isArray(p.value)) {
+                const arr = p.value as unknown[]
+                v = arr[arr.length - 1]
+              }
+              if (v == null || (typeof v !== 'number' && typeof v !== 'string')) {
+                return `${marker}${p.seriesName}: —`
+              }
+              const num = Number(v)
+              if (!Number.isFinite(num)) return `${marker}${p.seriesName}: —`
+              // Values are decimal fractions (0.0493 → 4.93%/yr)
+              return `${marker}${p.seriesName}: ${(num * 100).toFixed(2)}%/yr`
+            })
+          return [dateLabel, ...lines].join('<br/>')
         },
       },
       series: [

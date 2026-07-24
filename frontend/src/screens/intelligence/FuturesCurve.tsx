@@ -28,7 +28,7 @@ export function FuturesCurve() {
     error: snapshotError,
   } = useCurveSnapshot(asset ?? '', n_contracts, observation_date)
 
-  const dateParams = rangeToDateParams(lookback)
+  const dateParams = rangeToDateParams(lookback ?? '3Y')
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -43,7 +43,6 @@ export function FuturesCurve() {
               Compare assets →
             </Link>
           )}
-          <span className="text-xs text-text-secondary">Commodity Intelligence · Phase 2</span>
         </div>
       </div>
 

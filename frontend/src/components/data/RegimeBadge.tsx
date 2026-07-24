@@ -13,8 +13,8 @@ export interface RegimeBadgeProps {
 }
 
 const SIZE: Record<string, string> = {
-  sm: 'px-1.5 py-0.5 text-xs',
-  md: 'px-2.5 py-1 text-sm',
+  sm: 'px-2.5 py-0.5 text-xs',
+  md: 'px-2.5 py-0.5 text-sm',
 }
 
 // All class strings listed statically so Tailwind includes them in the build

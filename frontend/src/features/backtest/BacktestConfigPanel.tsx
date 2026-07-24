@@ -142,13 +142,13 @@ export function BacktestConfigPanel({
             .join(' · ') || 'Select an asset and strategy'}
         </p>
 
-        <div className="flex overflow-hidden rounded-sm border border-border-strong">
+        <div className="flex w-full overflow-hidden rounded-sm border border-border-strong">
           <button
             type="button"
             aria-pressed={config.sizing_method === 'fixed_notional'}
             onClick={() => handleSizingMethod('fixed_notional')}
             className={cn(
-              'border-r border-border-strong px-2 py-1 font-mono text-xs last:border-r-0',
+              'flex-1 border-r border-border-strong px-2 py-1 font-mono text-xs last:border-r-0',
               'transition-colors duration-fast',
               config.sizing_method === 'fixed_notional'
                 ? 'bg-accent font-medium text-bg-app'
@@ -162,7 +162,7 @@ export function BacktestConfigPanel({
             aria-pressed={config.sizing_method === 'volatility_scaled'}
             onClick={() => handleSizingMethod('volatility_scaled')}
             className={cn(
-              'border-r border-border-strong px-2 py-1 font-mono text-xs last:border-r-0',
+              'flex-1 border-r border-border-strong px-2 py-1 font-mono text-xs last:border-r-0',
               'transition-colors duration-fast',
               config.sizing_method === 'volatility_scaled'
                 ? 'bg-accent font-medium text-bg-app'

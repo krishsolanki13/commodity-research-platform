@@ -21,11 +21,14 @@ export function AssetSelector({
   className,
   'aria-label': ariaLabel,
 }: AssetSelectorProps) {
-  const options = assets.map((a) => ({
-    value: a.name,
-    label: a.display_name,
-    meta: `${a.ticker_continuous} · ${a.exchange}`,
-  }))
+  const options = assets.map((a) => {
+    const parts = [a.ticker_continuous, a.exchange].filter(Boolean)
+    return {
+      value: a.name,
+      label: a.display_name,
+      meta: parts.length > 0 ? parts.join(' · ') : undefined,
+    }
+  })
 
   return (
     <Combobox

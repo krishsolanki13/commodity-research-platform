@@ -43,7 +43,7 @@ function CorrelationHeatmapInner({
     })
 
     const option: EChartsOption = {
-      grid: { left: 80, right: 80, bottom: 60, top: '5%' },
+      grid: { left: 80, right: 100, bottom: 60, top: '5%' },
       xAxis: {
         type: 'category',
         data: axisLabels,

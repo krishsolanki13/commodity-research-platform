@@ -30,4 +30,9 @@ describe('RegimeBadge', () => {
     expect(badge.textContent).toBe('—')
     expect(badge.getAttribute('aria-label')).toBe('regime unknown')
   })
+
+  it('renders with horizontal padding', () => {
+    const { container } = render(<RegimeBadge regime="contango" />)
+    expect(container.firstChild).toHaveClass('px-2.5')
+  })
 })

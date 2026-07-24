@@ -75,7 +75,7 @@ function CurveComparisonChartInner({ snapshots, theme }: CurveComparisonChartInn
 
     chart.setOption({
       backgroundColor: 'transparent',
-      grid: { left: 60, right: 16, top: 24, bottom: 58 },
+      grid: { left: 60, right: 16, top: 24, bottom: 60 },
       xAxis: {
         type: 'value',
         name: 'Days to delivery',

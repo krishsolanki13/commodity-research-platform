@@ -17,7 +17,7 @@ export function PortfolioKPIRow({ metrics, loading }: PortfolioKPIRowProps) {
         {
           label: 'SHARPE',
           value: metrics?.['sharpe'],
-          format: 'ratio',
+          format: 'ic',
           tone: 'neutral',
         },
         {

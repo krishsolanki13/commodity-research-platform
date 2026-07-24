@@ -105,7 +105,7 @@ function AlignedCurvesChartInner({
     chart.setOption({
       animation: true,
       backgroundColor: 'transparent',
-      grid: { left: 60, right: 16, top: '12%', bottom: '18%' },
+      grid: { left: 60, right: 16, top: '12%', bottom: 60 },
       legend: {
         top: 0,
         textStyle: {
@@ -156,7 +156,7 @@ function AlignedCurvesChartInner({
         },
       },
       dataZoom: [
-        { type: 'slider' as const, bottom: 0, xAxisIndex: [0], height: 20 },
+        { type: 'slider' as const, bottom: 8, xAxisIndex: [0], height: 20 },
         { type: 'inside' as const, xAxisIndex: [0] },
       ],
       series: echartsSeries,

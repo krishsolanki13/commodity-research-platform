@@ -44,12 +44,12 @@ export function PortfolioConfigPanel({
 
       <div>
         <p className="mb-1 font-mono text-xs uppercase text-text-secondary">Sizing Method</p>
-        <div className="flex gap-1">
+        <div className="flex w-full gap-1">
           {(['fixed_notional', 'volatility_scaled'] as const).map((m) => (
             <button
               key={m}
               onClick={() => onSizingChange(m)}
-              className={`rounded border px-3 py-1 font-mono text-xs ${
+              className={`flex-1 rounded border px-3 py-1 font-mono text-xs ${
                 sizingMethod === m
                   ? 'bg-bg-accent border-border-strong text-text-primary'
                   : 'border-border-default bg-bg-raised text-text-secondary'
