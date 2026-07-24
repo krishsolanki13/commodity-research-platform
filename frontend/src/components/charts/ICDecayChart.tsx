@@ -100,13 +100,15 @@ function ICDecayChartInner({ decay, theme }: ICDecayChartInnerProps) {
             name?: string
             value?: number | [number, number | null]
             seriesType?: string
+            marker?: string
           }>
           // Prefer the scatter/line point that carries [idx, ic]
           const point = items.find((p) => Array.isArray(p.value)) ?? items[0]
           const raw = Array.isArray(point?.value) ? point.value[1] : point?.value
           const label = point?.name ?? items[0]?.name ?? ''
-          if (raw == null) return `${label}<br/>IC: —`
-          return `${label}<br/>IC: ${Number(raw).toFixed(3)}`
+          const marker = point?.marker ?? ''
+          if (raw == null) return `${label}<br/>${marker}IC: —`
+          return `${label}<br/>${marker}IC: ${Number(raw).toFixed(3)}`
         },
       },
       series: [

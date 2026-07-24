@@ -14,7 +14,7 @@ import type { ECharts } from '@/lib/echarts-setup'
 import { echarts } from '@/lib/echarts-setup'
 import { ChartFrame, useChartFrame } from '@/components/charts/ChartFrame'
 import { useChartTheme, type EChartsTheme } from '@/lib/chart-theme'
-import { fmtDate } from '@/lib/fmt'
+import { fmt, fmtDate } from '@/lib/fmt'
 import type { ApiClientError } from '@/api/client'
 import type { components } from '@/api/schema'
 
@@ -226,7 +226,10 @@ function EquityCurveChartInner({
             ? {
                 silent: true,
                 symbol: 'none',
-                label: { show: false },
+                label: {
+                  formatter: () => fmt.compactUsd(baseline),
+                  position: 'insideEndTop',
+                },
                 lineStyle: { type: 'dotted', color: theme.secondaryText, width: 1 },
                 data: [{ yAxis: baseline }],
               }
@@ -317,31 +320,41 @@ function EquityCurveChartInner({
             value?: number | [number, number] | null
             marker?: string
           }>
-          const axisRaw = items[0]?.axisValue ?? items[0]?.name
-          const axisMs = typeof axisRaw === 'number' ? axisRaw : Number(axisRaw)
-          const date = Number.isFinite(axisMs) ? fmtDate(axisMs) : String(axisRaw ?? '')
 
-          return items
-            .map((p) => {
+          if (isCompare) {
+            const axisRaw = items[0]?.axisValue ?? items[0]?.name
+            const axisMs = typeof axisRaw === 'number' ? axisRaw : Number(axisRaw)
+            const date = Number.isFinite(axisMs) ? fmtDate(axisMs) : String(axisRaw ?? '')
+            const lines = items.map((p) => {
               const raw = Array.isArray(p.value) ? p.value[1] : p.value
               const num = Number(raw ?? 0)
-              if (p.seriesName === 'Drawdown') {
-                const pct = (num * 100).toFixed(2)
-                return `${date} · ${pct}%`
-              }
-              const marker = p.marker ?? ''
-              if (isCompare) {
-                return `${marker}${p.seriesName}: ${num.toFixed(2)}%`
-              }
-              const formatted =
-                Math.abs(num) >= 1_000_000
-                  ? `$${(num / 1_000_000).toFixed(2)}M`
-                  : Math.abs(num) >= 1_000
-                    ? `$${(num / 1_000).toFixed(1)}k`
-                    : `$${num.toFixed(0)}`
-              return `${marker}${p.seriesName}: ${formatted}`
+              return `${p.marker ?? ''}${p.seriesName}: ${num.toFixed(2)}%`
             })
-            .join('<br/>')
+            return [date, ...lines].join('<br/>')
+          }
+
+          const equityParam = items.find((p) => p.seriesName === 'Equity')
+          const ddParam = items.find((p) => p.seriesName === 'Drawdown')
+          const dateRaw =
+            (Array.isArray(equityParam?.value) ? equityParam.value[0] : undefined) ??
+            (Array.isArray(ddParam?.value) ? ddParam.value[0] : undefined) ??
+            equityParam?.axisValue ??
+            ddParam?.axisValue ??
+            items[0]?.axisValue ??
+            items[0]?.name
+          const dateMs = typeof dateRaw === 'number' ? dateRaw : Number(dateRaw)
+          const date = Number.isFinite(dateMs) ? fmtDate(dateMs) : String(dateRaw ?? '')
+          const equityVal = Array.isArray(equityParam?.value)
+            ? equityParam.value[1]
+            : equityParam?.value
+          const ddVal = Array.isArray(ddParam?.value) ? ddParam.value[1] : ddParam?.value
+          const equity = equityParam
+            ? `${equityParam.marker ?? ''}Equity: ${fmt.compactUsd(Number(equityVal))}`
+            : ''
+          const dd = ddParam
+            ? `${ddParam.marker ?? ''}Drawdown: ${(Number(ddVal) * 100).toFixed(2)}%`
+            : ''
+          return [date, equity, dd].filter(Boolean).join('<br/>')
         },
       },
       legend: isCompare

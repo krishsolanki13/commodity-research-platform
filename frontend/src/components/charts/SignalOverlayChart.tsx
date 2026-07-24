@@ -115,15 +115,24 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           axisLine: { show: false },
           axisTick: { show: false },
           splitLine: { show: false },
+          axisPointer: {
+            label: { formatter: (p: { value: number }) => fmtDate(p.value) },
+          },
         },
         {
           gridIndex: 1,
           type: 'category' as const,
           data: raw.index,
-          axisLabel: { show: false },
+          axisLabel: {
+            show: false,
+            formatter: (v: number | string) => fmtDate(typeof v === 'string' ? Number(v) : v),
+          },
           axisLine: { show: false },
           axisTick: { show: false },
           splitLine: { show: false },
+          axisPointer: {
+            label: { formatter: (p: { value: number }) => fmtDate(p.value) },
+          },
         },
         {
           gridIndex: 2,
@@ -140,6 +149,9 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             },
           },
           splitLine: { show: false },
+          axisPointer: {
+            label: { formatter: (p: { value: number }) => fmtDate(p.value) },
+          },
         },
       ],
       yAxis: [
@@ -161,6 +173,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             color: theme.secondaryText,
             fontFamily: theme.monoFont,
             fontSize: 11,
+            formatter: (v: number) => Number(v).toFixed(2),
           },
           splitLine: { lineStyle: { color: theme.gridlineColor } },
         },
