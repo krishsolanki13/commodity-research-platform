@@ -212,10 +212,9 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
             return `${(Number(v) * 100).toFixed(2)}%/yr`
           }
 
-          const snap =
-            Number.isFinite(axisMs)
-              ? snapshots.find((s) => new Date(s.observation_date).getTime() === axisMs)
-              : undefined
+          const snap = Number.isFinite(axisMs)
+            ? snapshots.find((s) => new Date(s.observation_date).getTime() === axisMs)
+            : undefined
 
           const byName = new Map<string, number | null>()
           for (const p of items) {

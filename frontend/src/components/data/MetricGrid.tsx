@@ -21,13 +21,7 @@ export function MetricGrid({ metrics, columns = 4, loading = false, className }:
   }
 
   return (
-    <div
-      className={cn(
-        'grid w-full gap-4',
-        gridColsClass[columns],
-        className
-      )}
-    >
+    <div className={cn('grid w-full gap-4', gridColsClass[columns], className)}>
       {metrics.map((metric, i) => (
         <MetricStat key={i} {...metric} className={cn('min-w-0', metric.className)} />
       ))}

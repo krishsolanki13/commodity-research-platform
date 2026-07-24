@@ -123,7 +123,7 @@ export default function RunDetail() {
         )}
 
         {/* LINE 3: clean run ID + clipboard */}
-        <div className="flex items-center gap-1.5">
+        <div className="gap-1.5 flex items-center">
           <span className="font-mono text-xs text-text-secondary" title={cleanRunId}>
             {cleanRunId}
           </span>

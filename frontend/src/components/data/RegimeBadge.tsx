@@ -37,10 +37,7 @@ const STYLE: Record<Regime, { classes: string; label: string }> = {
 }
 
 export function RegimeBadge({ regime, size = 'md', className }: RegimeBadgeProps) {
-  const base = cn(
-    'items-center rounded border font-mono font-medium tracking-wide',
-    SIZE[size]
-  )
+  const base = cn('items-center rounded border font-mono font-medium tracking-wide', SIZE[size])
 
   if (!regime) {
     return (
@@ -58,7 +55,12 @@ export function RegimeBadge({ regime, size = 'md', className }: RegimeBadgeProps
   const { classes, label } = STYLE[regime]
 
   return (
-    <span role="status" aria-label={`${regime} regime`} style={PAD} className={cn(base, classes, className)}>
+    <span
+      role="status"
+      aria-label={`${regime} regime`}
+      style={PAD}
+      className={cn(base, classes, className)}
+    >
       {label}
     </span>
   )

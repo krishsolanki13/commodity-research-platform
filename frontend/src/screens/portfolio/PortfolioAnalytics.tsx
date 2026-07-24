@@ -129,7 +129,7 @@ export function PortfolioAnalytics() {
           <PortfolioRunSelector />
           <div>
             <h1 className="font-mono text-base text-text-primary">Portfolio Analytics</h1>
-            <div className="flex items-center gap-1.5">
+            <div className="gap-1.5 flex items-center">
               <span className="font-mono text-xs text-text-secondary" title={cleanRunId}>
                 {cleanRunId}
               </span>
