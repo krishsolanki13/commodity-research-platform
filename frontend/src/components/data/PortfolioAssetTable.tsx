@@ -39,7 +39,7 @@ export function PortfolioAssetTable({
     <table
       role="grid"
       aria-label="Per-asset performance"
-      className={cn('w-full border-collapse text-sm', className)}
+      className={cn('w-full table-fixed border-collapse text-sm', className)}
     >
       <thead className="bg-bg-raised">
         <tr>

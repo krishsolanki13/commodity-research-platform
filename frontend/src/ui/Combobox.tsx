@@ -56,7 +56,7 @@ export function Combobox({
           />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="max-h-60 w-full overflow-y-auto p-0">
+      <PopoverContent className="max-h-60 w-[var(--radix-popover-trigger-width)] overflow-y-auto p-0">
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
           <CommandEmpty>No results found.</CommandEmpty>
