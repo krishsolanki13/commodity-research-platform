@@ -113,6 +113,10 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
         ]
       : [{ left: 60, right: 16, top: '5%', bottom: 60 }]
 
+    const axisPointerLabel = {
+      label: { formatter: (p: { value: number }) => fmtDate(p.value) },
+    }
+
     const xAxes = showVolume
       ? [
           {
@@ -123,6 +127,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
             axisLine: { show: false },
             axisTick: { show: false },
             splitLine: { show: false },
+            axisPointer: axisPointerLabel,
           },
           {
             gridIndex: 1,
@@ -135,6 +140,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
               formatter: (value: number) => fmtDate(value),
             },
             splitLine: { show: false },
+            axisPointer: axisPointerLabel,
           },
         ]
       : [
@@ -147,6 +153,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
               fontSize: 11,
               formatter: (value: number) => fmtDate(value),
             },
+            axisPointer: axisPointerLabel,
           },
         ]
 
@@ -224,6 +231,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
       ? [
           {
             type: 'bar' as const,
+            name: 'Volume',
             xAxisIndex: 1,
             yAxisIndex: 1,
             data: index.map((_t, i) => ({

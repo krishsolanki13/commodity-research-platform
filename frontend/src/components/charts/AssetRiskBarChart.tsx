@@ -87,11 +87,12 @@ function AssetRiskBarChartInner({ assetVar99, assets, theme }: AssetRiskBarChart
           const p = (Array.isArray(params) ? params[0] : params) as {
             name?: string
             value?: number | { value?: number }
+            marker?: string
           }
           const name = p?.name ?? ''
           const raw = typeof p?.value === 'object' && p?.value != null ? p.value.value : p?.value
           const value = Number(raw ?? 0)
-          return `${name}<br/>VaR: ${fmt.compactUsd(value)}`
+          return `${name}<br/>${p?.marker ?? ''}VaR: ${fmt.compactUsd(value)}`
         },
       },
       series: [

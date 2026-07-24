@@ -76,7 +76,7 @@ export function ContractInventoryPanel({ snapshot, loading }: ContractInventoryP
       )}
 
       <div
-        className="overflow-hidden rounded-md border border-border-default"
+        className="w-full overflow-hidden rounded-md border border-border-default"
         style={{ height: 220 }}
       >
         <DataGrid<CurvePointResponse>

@@ -74,13 +74,16 @@ export function UniverseTablePanel() {
   }
 
   return (
-    <UniverseGrid
-      rows={rows}
-      onRowClick={(name) => {
-        void navigate(`/market/${name}`)
-      }}
-      onHoverAsset={handleHoverAsset}
-      loading={isLoading}
-    />
+    <div className="w-full">
+      <UniverseGrid
+        rows={rows}
+        onRowClick={(name) => {
+          void navigate(`/market/${name}`)
+        }}
+        onHoverAsset={handleHoverAsset}
+        loading={isLoading}
+        className="w-full"
+      />
+    </div>
   )
 }

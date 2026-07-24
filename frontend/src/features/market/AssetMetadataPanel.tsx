@@ -21,7 +21,7 @@ export function AssetMetadataPanel({ metadata }: AssetMetadataPanelProps) {
 
   return (
     <Panel title="Contract Specs">
-      <table className="w-full text-xs">
+      <table className="w-full table-fixed text-xs">
         <tbody>
           {rows.map(({ label, value }) => (
             <tr key={label} className="border-b border-border-default last:border-b-0">

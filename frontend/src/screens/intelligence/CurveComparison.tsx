@@ -28,12 +28,7 @@ export function CurveComparison() {
       <CompareConfigPanel />
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-text-emphasis">Curve Comparison</h1>
-            <nav className="mt-1 text-xs text-text-secondary">
-              <Link to="/intelligence">Futures Curve</Link> / Compare
-            </nav>
-          </div>
+          <h1 className="text-xl font-semibold text-text-emphasis">Curve Comparison</h1>
           {assetList.length > 0 && (
             <Link
               to={`/intelligence?asset=${assetList[0]}`}

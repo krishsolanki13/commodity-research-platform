@@ -4,7 +4,7 @@
  * Layout:
  *   grid[0] price pane      top: 2%,  height: 48%  — candlestick
  *   grid[1] raw signal pane top: 55%, height: 20%  — line + zero markLine
- *   grid[2] position pane   bottom: 8%, height: 60 — colored bars {-1,0,+1}
+ *   grid[2] position pane   bottom: 60, height: 12% — colored bars {-1,0,+1}
  *
  * CRITICAL constraints:
  *   - Price yAxis: min: null (NEVER min: 0 — WTI negative price)
@@ -89,9 +89,21 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       animation: true,
       backgroundColor: 'transparent',
       grid: [
-        { left: 60, right: 16, top: '2%', height: '48%' },
-        { left: 60, right: 16, top: '55%', height: '20%' },
-        { left: 60, right: 16, bottom: '8%', height: 60 },
+        { left: 60, right: 16, top: '2%',  height: '44%' },
+        { left: 60, right: 16, top: '51%', height: '19%' },
+        { left: 60, right: 16, bottom: 60, height: '18%' },
+      ],
+      dataZoom: [
+        {
+          type: 'inside',
+          xAxisIndex: [0, 1, 2],
+        },
+        {
+          type: 'slider',
+          xAxisIndex: [0, 1, 2],
+          bottom: 5,
+          height: 20,
+        },
       ],
       xAxis: [
         {
@@ -102,15 +114,24 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           axisLine: { show: false },
           axisTick: { show: false },
           splitLine: { show: false },
+          axisPointer: {
+            label: { formatter: (p: { value: number }) => fmtDate(p.value) },
+          },
         },
         {
           gridIndex: 1,
           type: 'category' as const,
           data: raw.index,
-          axisLabel: { show: false },
+          axisLabel: {
+            show: false,
+            formatter: (v: number | string) => fmtDate(typeof v === 'string' ? Number(v) : v),
+          },
           axisLine: { show: false },
           axisTick: { show: false },
           splitLine: { show: false },
+          axisPointer: {
+            label: { formatter: (p: { value: number }) => fmtDate(p.value) },
+          },
         },
         {
           gridIndex: 2,
@@ -127,6 +148,9 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             },
           },
           splitLine: { show: false },
+          axisPointer: {
+            label: { formatter: (p: { value: number }) => fmtDate(p.value) },
+          },
         },
       ],
       yAxis: [
@@ -148,25 +172,20 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             color: theme.secondaryText,
             fontFamily: theme.monoFont,
             fontSize: 11,
+            formatter: (v: number) => Number(v).toFixed(2),
           },
           splitLine: { lineStyle: { color: theme.gridlineColor } },
         },
         {
+          // Dedicated position axis: padding beyond ±1 so Long/Short bars are not clipped
           gridIndex: 2,
-          min: -1,
-          max: 1,
-          interval: 1,
+          min: -1.5,
+          max: 1.5,
           axisLabel: {
             color: theme.secondaryText,
             fontFamily: theme.monoFont,
             fontSize: 11,
-            interval: 0,
-            formatter: (v: number) => {
-              if (v === 1) return 'Long'
-              if (v === 0) return 'Flat'
-              if (v === -1) return 'Short'
-              return ''
-            },
+            formatter: (v: number) => (v > 0 ? 'Long' : v < 0 ? 'Short' : 'Flat'),
           },
           splitLine: { show: false },
         },
@@ -253,6 +272,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         },
         {
           type: 'line' as const,
+          name: 'Signal',
           xAxisIndex: 1,
           yAxisIndex: 1,
           data: rawValues,
@@ -268,9 +288,11 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         },
         {
           type: 'bar' as const,
+          name: 'Position',
           xAxisIndex: 2,
           yAxisIndex: 2,
           data: posValues,
+          tooltip: { show: false },
           itemStyle: {
             // ECharts callback param typing is incomplete — cast from unknown per §17
             color: (params: unknown) => {
@@ -306,7 +328,7 @@ export function SignalOverlayChart({
   raw,
   position,
   title,
-  height = '65vh',
+  height = '75vh',
   loading,
   error,
   syncGroup,

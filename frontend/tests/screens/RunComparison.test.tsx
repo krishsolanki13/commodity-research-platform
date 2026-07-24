@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import { RunComparison } from '@/screens/runs/RunComparison'
+import { RunComparison, buildLabel } from '@/screens/runs/RunComparison'
 import { MOCK_RUN_ID } from '../mocks/fixtures/run-detail'
 import { MOCK_RUN_ID_2 } from '../mocks/fixtures/run-list'
 
@@ -62,5 +62,10 @@ describe('RunComparison', () => {
     const removeButtons = screen.getAllByRole('button', { name: /remove/i })
     await userEvent.click(removeButtons[0])
     await waitFor(() => expect(screen.getByTestId('run-detail')).toBeInTheDocument())
+  })
+
+  it('derived series name uses ASSET · strategy format', () => {
+    const label = buildLabel({ asset: 'natural_gas', strategy: 'ema_crossover' })
+    expect(label).toBe('NATURAL_GAS · ema_crossover')
   })
 })

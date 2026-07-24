@@ -232,7 +232,7 @@ export function RunTable({
                 <MoreHorizontal size={14} strokeWidth={1.75} />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuContent align="end" side="left" sideOffset={4} onClick={(e) => e.stopPropagation()}>
               <DropdownMenuItem
                 className="cursor-pointer"
                 style={{ color: 'var(--text-loss)' }}

@@ -46,8 +46,8 @@ export function Combobox({
           disabled={disabled}
           className={cn('w-full justify-between', className)}
         >
-          <span className={cn('truncate', !selected && 'text-text-secondary')}>
-            {selected ? selected.label : placeholder}
+          <span className={cn('truncate', !selected && !value && 'text-text-secondary')}>
+            {selected ? selected.label : value ? value : placeholder}
           </span>
           <ChevronsUpDown
             size={14}
@@ -56,7 +56,7 @@ export function Combobox({
           />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="max-h-60 w-full overflow-y-auto p-0">
+      <PopoverContent className="max-h-60 w-[var(--radix-popover-trigger-width)] overflow-y-auto p-0">
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
           <CommandEmpty>No results found.</CommandEmpty>

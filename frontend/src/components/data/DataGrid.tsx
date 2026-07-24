@@ -351,9 +351,9 @@ export function DataGrid<T>({
           className="w-full border-collapse text-sm"
           style={{
             tableLayout: 'fixed',
-            // Absolute-positioned body rows are independent tables — keep thead
-            // and body row widths identical so columns stay aligned.
-            width: totalColWidth,
+            // Stretch to container; minWidth keeps columns readable when narrow.
+            // Absolute-positioned body rows must share the same width as thead.
+            width: '100%',
             minWidth: totalColWidth,
           }}
         >
@@ -364,7 +364,7 @@ export function DataGrid<T>({
                   <th
                     key={header.id}
                     style={{
-                      width: header.getSize(),
+                      width: `${"$"}{(header.getSize() / totalColWidth) * 100}%`,
                       minWidth: header.getSize(),
                     }}
                     className={cn(
@@ -443,7 +443,8 @@ export function DataGrid<T>({
                       transform: `translateY(${virtualRow.start}px)`,
                       display: 'table',
                       tableLayout: 'fixed',
-                      width: totalColWidth,
+                      width: '100%',
+                      minWidth: totalColWidth,
                     }}
                   >
                     {row.getVisibleCells().map((cell) => (
@@ -453,7 +454,7 @@ export function DataGrid<T>({
                         style={{
                           verticalAlign: 'middle',
                           height: rowHeight,
-                          width: cell.column.getSize(),
+                          width: `${"$"}{(cell.column.getSize() / totalColWidth) * 100}%`,
                           minWidth: cell.column.getSize(),
                         }}
                       >

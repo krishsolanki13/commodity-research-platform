@@ -38,7 +38,7 @@ export function CurveDateControl() {
       <span className="font-mono text-xs text-text-secondary">Observation date:</span>
       <DateScrubber
         value={observation_date ?? null}
-        onChange={(date) => setUrlState({ observation_date: date ?? undefined })}
+        onChange={(date) => setUrlState({ observation_date: date ?? null })}
         minDate={minDate}
         maxDate={maxDate}
         disabled={historyLoading}

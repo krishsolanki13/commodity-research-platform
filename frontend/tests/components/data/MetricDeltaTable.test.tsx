@@ -32,10 +32,11 @@ describe('MetricDeltaTable', () => {
     expect(deltaValues.length).toBeGreaterThan(0)
   })
 
-  it('base run has ★ marker in column header', () => {
+  it('column headers use ASSET · strategy labels', () => {
     render(
       <MetricDeltaTable runs={compareFixture.runs} baseRunId={compareFixture.runs[0].run_id} />
     )
-    expect(screen.getByText(/★/)).toBeInTheDocument()
+    expect(screen.getByText('GOLD · ema_crossover')).toBeInTheDocument()
+    expect(screen.getByText('SILVER · ema_crossover')).toBeInTheDocument()
   })
 })

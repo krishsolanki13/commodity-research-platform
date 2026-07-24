@@ -13,9 +13,12 @@ export interface RegimeBadgeProps {
 }
 
 const SIZE: Record<string, string> = {
-  sm: 'px-2.5 py-0.5 text-xs',
-  md: 'px-2.5 py-0.5 text-sm',
+  sm: 'inline-flex px-3 py-0.5 text-xs',
+  md: 'inline-flex px-3 py-0.5 text-sm',
 }
+
+/** Guaranteed padding - Tailwind px-* was applied in F17 but still read as tight in QA. */
+const PAD = { paddingLeft: 10, paddingRight: 10, paddingTop: 2, paddingBottom: 2 } as const
 
 // All class strings listed statically so Tailwind includes them in the build
 const STYLE: Record<Regime, { classes: string; label: string }> = {
@@ -34,16 +37,14 @@ const STYLE: Record<Regime, { classes: string; label: string }> = {
 }
 
 export function RegimeBadge({ regime, size = 'md', className }: RegimeBadgeProps) {
-  const base = cn(
-    'inline-flex items-center rounded border font-mono font-medium tracking-wide',
-    SIZE[size]
-  )
+  const base = cn('items-center rounded border font-mono font-medium tracking-wide', SIZE[size])
 
   if (!regime) {
     return (
       <span
         role="status"
         aria-label="regime unknown"
+        style={PAD}
         className={cn(base, 'border-border-strong bg-bg-raised text-text-disabled', className)}
       >
         —
@@ -54,7 +55,12 @@ export function RegimeBadge({ regime, size = 'md', className }: RegimeBadgeProps
   const { classes, label } = STYLE[regime]
 
   return (
-    <span role="status" aria-label={`${regime} regime`} className={cn(base, classes, className)}>
+    <span
+      role="status"
+      aria-label={`${regime} regime`}
+      style={PAD}
+      className={cn(base, classes, className)}
+    >
       {label}
     </span>
   )

@@ -72,8 +72,8 @@ interface MetricDeltaTableProps {
   className?: string
 }
 
-function shortRunId(runId: string): string {
-  return runId.length > 16 ? runId.slice(-16) : runId
+function columnName(run: CompareRunSummary): string {
+  return `${run.asset.toUpperCase()} · ${run.strategy}`
 }
 
 export function MetricDeltaTable({
@@ -93,8 +93,7 @@ export function MetricDeltaTable({
             METRIC
           </th>
           {runs.map((run) => {
-            const isBase = run.run_id === resolvedBaseId
-            const label = isBase ? `${shortRunId(run.run_id)} ★` : shortRunId(run.run_id)
+            const label = columnName(run)
             return (
               <th
                 key={run.run_id}

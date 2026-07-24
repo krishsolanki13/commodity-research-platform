@@ -90,11 +90,12 @@ function AssetSharpeBarChartInner({ assetMetrics, assets, theme }: AssetSharpeBa
           const p = (Array.isArray(params) ? params[0] : params) as {
             name?: string
             value?: number | { value?: number }
+            marker?: string
           }
           const name = p?.name ?? ''
           const raw = typeof p?.value === 'object' && p?.value != null ? p.value.value : p?.value
           const value = Number(raw ?? 0)
-          return `${name}<br/>Sharpe: ${value.toFixed(3)}`
+          return `${name}<br/>${p?.marker ?? ''}Sharpe: ${value.toFixed(3)}`
         },
       },
       series: [

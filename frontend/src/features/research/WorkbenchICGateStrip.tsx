@@ -22,6 +22,7 @@ export function WorkbenchICGateStrip({
 }: WorkbenchICGateStripProps) {
   const navigate = useNavigate()
 
+  // PATH A — Configure backtest: thread evaluation JSON only (never evalOverride)
   const handleConfigureBacktest = () => {
     const params = new URLSearchParams({
       asset,
@@ -31,9 +32,11 @@ export function WorkbenchICGateStrip({
     if (evaluation) {
       params.set('evaluation', JSON.stringify(evaluation))
     }
+    params.delete('evalOverride')
     void navigate(`/backtest/new?${params.toString()}`)
   }
 
+  // PATH B — Backtest without evaluation: evalOverride=1 only (never evaluation=)
   const handleOverride = () => {
     const params = new URLSearchParams({
       asset,
@@ -41,6 +44,7 @@ export function WorkbenchICGateStrip({
       params: paramsJson,
       evalOverride: '1',
     })
+    params.delete('evaluation')
     void navigate(`/backtest/new?${params.toString()}`)
   }
 

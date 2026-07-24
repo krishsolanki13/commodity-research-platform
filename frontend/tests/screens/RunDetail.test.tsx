@@ -2,9 +2,11 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
 import RunDetail from '@/screens/runs/RunDetail'
-import { MOCK_RUN_ID } from '../mocks/fixtures/run-detail'
+import { goldEmaRunDetailFixture, MOCK_RUN_ID } from '../mocks/fixtures/run-detail'
+import { server } from '../setup'
 
 function renderRunDetail(runId = MOCK_RUN_ID) {
   const qc = new QueryClient({
@@ -26,6 +28,53 @@ describe('RunDetail', () => {
     renderRunDetail()
     await waitFor(() => expect(screen.getByText(MOCK_RUN_ID)).toBeInTheDocument())
     expect(screen.getByText(/gold/i)).toBeInTheDocument()
+  })
+
+  it('strips poll_ prefix from displayed run ID', async () => {
+    const runId = 'poll_20260724_054116_ema_crossover_gold'
+    const cleanId = '20260724_054116_ema_crossover_gold'
+    server.use(
+      http.get(`http://localhost:8000/api/runs/${runId}`, () =>
+        HttpResponse.json({ ...goldEmaRunDetailFixture, run_id: cleanId })
+      ),
+      http.get(`http://localhost:8000/api/runs/${runId}/series/:name`, () =>
+        HttpResponse.json({
+          run_id: cleanId,
+          name: 'equity_curve',
+          data: { index: [], columns: { value: [] } },
+        })
+      )
+    )
+    renderRunDetail(runId)
+    await waitFor(() => expect(screen.getByText(cleanId)).toBeInTheDocument())
+    expect(document.body.textContent).not.toContain('poll_')
+  })
+
+  it('copies clean run ID to clipboard on icon click', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', {
+      ...navigator,
+      clipboard: { writeText },
+    })
+    const runId = 'poll_20260724_054116_ema_crossover_gold'
+    const cleanId = '20260724_054116_ema_crossover_gold'
+    server.use(
+      http.get(`http://localhost:8000/api/runs/${runId}`, () =>
+        HttpResponse.json({ ...goldEmaRunDetailFixture, run_id: cleanId })
+      ),
+      http.get(`http://localhost:8000/api/runs/${runId}/series/:name`, () =>
+        HttpResponse.json({
+          run_id: cleanId,
+          name: 'equity_curve',
+          data: { index: [], columns: { value: [] } },
+        })
+      )
+    )
+    renderRunDetail(runId)
+    await waitFor(() => expect(screen.getByText(cleanId)).toBeInTheDocument())
+    screen.getByRole('button', { name: /copy run id/i }).click()
+    expect(writeText).toHaveBeenCalledWith(cleanId)
+    vi.unstubAllGlobals()
   })
 
   it('Overview tab is active by default when no ?tab= param is present', async () => {

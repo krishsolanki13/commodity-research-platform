@@ -47,6 +47,8 @@ test.describe('Accessibility Audit (Axe)', () => {
     if ((await rows.count()) > 0) {
       await rows.first().click()
       await page.waitForURL(/\/runs\/[^/]+$/, { timeout: 5_000 })
+      // Wait for Run Detail chrome so the explorer RunTable (IC badges) is unmounted
+      await page.getByRole('button', { name: /copy run id/i }).waitFor({ timeout: 10_000 })
       await page.waitForLoadState('networkidle')
       await auditPage(page)
     } else {

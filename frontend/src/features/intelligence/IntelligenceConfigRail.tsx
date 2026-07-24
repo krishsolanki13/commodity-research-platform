@@ -1,7 +1,9 @@
+import { useMemo } from 'react'
 import { z } from 'zod'
 import { cn } from '@/lib/cn'
 import { displayName } from '@/lib/commodity'
 import { useUrlState } from '@/lib/useUrlState'
+import { useAssets } from '@/api/hooks/useAssets'
 import { AssetSelector } from '@/components/inputs/AssetSelector'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/select'
 import type { components } from '@/api/schema'
@@ -33,19 +35,29 @@ export interface IntelligenceConfigRailProps {
 export function IntelligenceConfigRail({ availableAssets, loading }: IntelligenceConfigRailProps) {
   const [urlState, setUrlState] = useUrlState(intelligenceSchema, intelligenceDefaults)
 
-  const assetOptions: AssetMetadata[] = availableAssets.map((name) => ({
-    name,
-    display_name: displayName(name),
-    ticker_continuous: '',
-    contract_root: '',
-    exchange_suffix: '',
-    exchange: '',
-    currency: 'USD',
-    unit: '',
-    contract_multiplier: 1,
-    tick_size: 0.01,
-    tick_value: 1,
-  }))
+  const { data: assetsData } = useAssets()
+  const assetMetaMap = useMemo(() => {
+    const map = new Map<string, AssetMetadata>()
+    assetsData?.assets?.forEach((a) => map.set(a.name, a))
+    return map
+  }, [assetsData])
+
+  const assetOptions: AssetMetadata[] = availableAssets.map((name) => {
+    const meta = assetMetaMap.get(name)
+    return {
+      name,
+      display_name: meta?.display_name ?? displayName(name),
+      ticker_continuous: meta?.ticker_continuous ?? '',
+      contract_root: meta?.contract_root ?? '',
+      exchange_suffix: meta?.exchange_suffix ?? '',
+      exchange: meta?.exchange ?? '',
+      currency: meta?.currency ?? 'USD',
+      unit: meta?.unit ?? '',
+      contract_multiplier: meta?.contract_multiplier ?? 1,
+      tick_size: meta?.tick_size ?? 0.01,
+      tick_value: meta?.tick_value ?? 1,
+    }
+  })
 
   return (
     <div className="flex flex-wrap items-end gap-6">
@@ -55,7 +67,7 @@ export function IntelligenceConfigRail({ availableAssets, loading }: Intelligenc
         </span>
         <AssetSelector
           value={urlState.asset ?? null}
-          onChange={(v) => setUrlState({ asset: v ?? undefined })}
+          onChange={(v) => setUrlState({ asset: v ?? null })}
           assets={assetOptions}
           aria-label="Select commodity asset"
         />

@@ -109,6 +109,7 @@ export function RunTradesTab({ runId }: RunTradesTabProps) {
       forceClosed={forceClosed}
       onForceClosedChange={handleForceClosedChange}
       loading={tradesQuery.isLoading}
+      className="w-full"
     />
   )
 }

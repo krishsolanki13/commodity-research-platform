@@ -61,13 +61,23 @@ describe('useUrlState', () => {
     expect(result.current[0].page).toBe(3)
   })
 
-  it('setState removes param when value is undefined', () => {
+  it('setState removes param when value is null (explicit clear)', () => {
+    const { result } = renderHook(() => useUrlState(schema, defaults), {
+      wrapper: makeWrapper('asset=copper&range=5Y'),
+    })
+    act(() => {
+      result.current[1]({ range: null })
+    })
+    expect(result.current[0].range).toBe('1Y')
+  })
+
+  it('setState preserves existing param when value is undefined (no-op)', () => {
     const { result } = renderHook(() => useUrlState(schema, defaults), {
       wrapper: makeWrapper('asset=copper&range=5Y'),
     })
     act(() => {
       result.current[1]({ range: undefined })
     })
-    expect(result.current[0].range).toBe('1Y')
+    expect(result.current[0].range).toBe('5Y')
   })
 })

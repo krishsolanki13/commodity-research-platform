@@ -1,11 +1,14 @@
-import { fmt } from '@/lib/fmt'
+import { cn } from '@/lib/cn'
 import { useUrlState } from '@/lib/useUrlState'
 import { usePortfolioRuns } from '@/api/hooks/usePortfolioRuns'
 import { portfolioUrlDefaults, portfolioUrlSchema } from '@/features/portfolio/portfolioUrlState'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/select'
 
+/** Strip poll_ + timestamp portfolio prefix when present; else bare timestamp prefix. */
 function shortRunName(runId: string): string {
-  return (runId ?? '').replace(/^poll_/, '').replace(/^\d{8}_\d{6}_portfolio_/, '')
+  return (runId ?? '')
+    .replace(/^poll_\d{8}_\d{6}_portfolio_/, '')
+    .replace(/^\d{8}_\d{6}_portfolio_/, '')
 }
 
 export function PortfolioRunSelector() {
@@ -24,21 +27,23 @@ export function PortfolioRunSelector() {
       <SelectContent>
         {runs.map((run) => {
           const shortName = shortRunName(run.run_id) || run.strategy_name
-          const returnPct = run.total_return == null ? '—' : fmt.percent(run.total_return)
           return (
-            <SelectItem key={run.run_id} value={run.run_id}>
-              <div className="flex w-full items-center justify-between gap-4">
-                <span>{shortName}</span>
+            <SelectItem key={run.run_id} value={run.run_id} className="[&>span:first-child]:hidden [&>span:last-child]:w-full">
+              <div className="flex w-full items-center justify-between gap-3">
+                <span className="max-w-[140px] truncate font-mono text-xs">{shortName}</span>
                 <span
-                  className={
+                  className={cn(
+                    'shrink-0 font-mono text-xs',
                     run.total_return == null
-                      ? 'text-xs text-text-secondary'
-                      : run.total_return < 0
-                        ? 'text-xs text-loss'
-                        : 'text-xs text-gain'
-                  }
+                      ? 'text-text-secondary'
+                      : run.total_return >= 0
+                        ? 'text-gain'
+                        : 'text-loss'
+                  )}
                 >
-                  {returnPct}
+                  {run.total_return != null
+                    ? `${run.total_return >= 0 ? '+' : ''}${(run.total_return * 100).toFixed(2)}%`
+                    : '—'}
                 </span>
               </div>
             </SelectItem>
