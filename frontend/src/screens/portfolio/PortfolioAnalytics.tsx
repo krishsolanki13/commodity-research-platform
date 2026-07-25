@@ -136,7 +136,7 @@ export function PortfolioAnalytics() {
               <button
                 type="button"
                 onClick={handleCopyRunId}
-                className="text-text-secondary transition-colors hover:text-text-primary"
+                className="ml-2 text-text-secondary transition-colors hover:text-text-primary"
                 aria-label={copied ? 'Copied' : 'Copy portfolio run ID'}
                 title={copied ? 'Copied' : 'Copy portfolio run ID'}
               >

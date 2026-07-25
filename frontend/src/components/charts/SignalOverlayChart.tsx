@@ -89,9 +89,9 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       animation: true,
       backgroundColor: 'transparent',
       grid: [
-        { left: 60, right: 16, top: '2%',  height: '44%' },
-        { left: 60, right: 16, top: '51%', height: '19%' },
-        { left: 60, right: 16, bottom: 60, height: '18%' },
+        { left: 60, right: 24, top: '2%',  height: '42%' },
+        { left: 60, right: 24, top: '50%', height: '17%' },
+        { left: 60, right: 24, top: '72%', bottom: 50, height: '16%' },
       ],
       dataZoom: [
         {
@@ -168,11 +168,14 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           gridIndex: 1,
           min: -absMax,
           max: absMax,
+          scale: true,
+          splitNumber: 3,
           axisLabel: {
             color: theme.secondaryText,
             fontFamily: theme.monoFont,
             fontSize: 11,
             formatter: (v: number) => Number(v).toFixed(2),
+            showMinLabel: false,
           },
           splitLine: { lineStyle: { color: theme.gridlineColor } },
         },
@@ -288,6 +291,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           lineStyle: { color: theme.amber, width: 1.5 },
           itemStyle: { color: theme.amber },
           symbol: 'none',
+          endLabel: { show: false },
           markLine: {
             silent: true,
             data: [{ yAxis: 0 }],
@@ -336,7 +340,7 @@ export function SignalOverlayChart({
   raw,
   position,
   title,
-  height = '75vh',
+  height = '90vh',
   loading,
   error,
   syncGroup,

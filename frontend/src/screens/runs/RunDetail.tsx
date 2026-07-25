@@ -130,7 +130,7 @@ export default function RunDetail() {
           <button
             type="button"
             onClick={handleCopy}
-            className="text-text-secondary transition-colors hover:text-text-primary"
+            className="ml-2 text-text-secondary transition-colors hover:text-text-primary"
             aria-label={copied ? 'Copied' : 'Copy run ID'}
             title={copied ? 'Copied' : 'Copy run ID'}
           >

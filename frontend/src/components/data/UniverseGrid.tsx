@@ -179,12 +179,9 @@ export function UniverseGrid({
 
                   {/* 20D sparkline */}
                   <td className="px-3 py-2.5 text-center">
-                    <Sparkline
-                      values={row.sparklineValues}
-                      tone="auto"
-                      width={80}
-                      height={24}
-                    />
+                    <div className="flex justify-center items-center">
+                      <Sparkline values={row.sparklineValues} tone="auto" width={80} height={24} />
+                    </div>
                   </td>
 
                   {/* HEALTH */}

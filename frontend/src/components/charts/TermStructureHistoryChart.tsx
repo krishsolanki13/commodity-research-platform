@@ -249,7 +249,8 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
               (p: any) => p.seriesIndex === 1 || p.seriesName?.toLowerCase().includes('roll')
             ) ?? items[1]
           const slopeMarker = slopeItem?.marker ?? '● '
-          const rollMarker = rollItem?.marker ?? '● '
+          const rollMarker = rollItem?.marker ??
+            `<span style="display:inline-block;margin-right:4px;border-radius:50%;width:10px;height:10px;background-color:${theme.amber};"></span>`
           return [
             dateLabel,
             `${slopeMarker}Slope %/yr: ${formatPctYr(slope)}`,
