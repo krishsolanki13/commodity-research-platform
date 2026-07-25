@@ -31,7 +31,13 @@ export function UniverseStatsBar() {
   })
 
   const lastIngestionDisplay = lastIngestedAt
-    ? lastIngestedAt.toLocaleTimeString()
+    ? lastIngestedAt.toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
     : (universe?.last_ingestion ?? '—')
 
   const metrics: MetricStatProps[] = [

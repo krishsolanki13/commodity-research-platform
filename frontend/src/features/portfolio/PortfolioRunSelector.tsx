@@ -28,9 +28,9 @@ export function PortfolioRunSelector() {
         {runs.map((run) => {
           const shortName = shortRunName(run.run_id) || run.strategy_name
           return (
-            <SelectItem key={run.run_id} value={run.run_id} className="[&>span:first-child]:hidden [&>span:last-child]:w-full">
-              <div className="flex w-full items-center justify-between gap-3">
-                <span className="max-w-[140px] truncate font-mono text-xs">{shortName}</span>
+            <SelectItem key={run.run_id} value={run.run_id}>
+              <div className="flex w-full items-center justify-between gap-3 [&>span:first-child]:hidden [&>span:last-child]:w-full">
+                <span className="max-w-[160px] truncate font-mono text-xs">{shortName}</span>
                 <span
                   className={cn(
                     'shrink-0 font-mono text-xs',

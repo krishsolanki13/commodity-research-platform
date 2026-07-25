@@ -181,11 +181,19 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           gridIndex: 2,
           min: -1.5,
           max: 1.5,
+          splitNumber: 3,
+          interval: 1,
           axisLabel: {
             color: theme.secondaryText,
+            fontSize: 10,
             fontFamily: theme.monoFont,
-            fontSize: 11,
-            formatter: (v: number) => (v > 0 ? 'Long' : v < 0 ? 'Short' : 'Flat'),
+            formatter: (v: number) => {
+              if (v >= 0.8) return 'Long'
+              if (v <= -0.8) return 'Short'
+              if (Math.abs(v) < 0.2) return 'Flat'
+              return ''
+            },
+            interval: 0,
           },
           splitLine: { show: false },
         },
