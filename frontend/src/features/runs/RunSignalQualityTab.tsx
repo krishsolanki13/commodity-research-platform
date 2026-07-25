@@ -11,7 +11,6 @@ import { EmptyState } from '@/components/layout/EmptyState'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton'
 import { Panel } from '@/ui/Panel'
-import { cn } from '@/lib/cn'
 
 interface RunSignalQualityTabProps {
   runId: string
@@ -60,27 +59,11 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid w-full grid-cols-3 gap-4">
-        <div className="gap-0.5 flex min-w-0 flex-col">
-          <span className="text-xs uppercase tracking-wider text-text-secondary">IC</span>
-          <div className="flex flex-col items-start">
-            <span className="text-2xl font-mono">
-              {evaluation.ic != null ? evaluation.ic.toFixed(3) : '—'}
-            </span>
-            {icBand != null && (
-              <span
-                className={cn(
-                  'mt-0.5 px-1.5 py-0.5 rounded font-mono text-xs',
-                  icBand === 'strong' || icBand === 'inverse_meaningful'
-                    ? 'bg-gain-fill text-gain'
-                    : icBand === 'noise'
-                      ? 'bg-bg-raised text-text-secondary'
-                      : 'bg-accent-fill text-warn'
-                )}
-              >
-                {icBand}
-              </span>
-            )}
-          </div>
+        <div className="flex flex-col gap-0.5">
+          <MetricStat label="IC" value={evaluation.ic} format="ic" tone="auto" />
+          {icBand && (
+            <span className="font-mono text-xs text-text-secondary pl-0">{icBand}</span>
+          )}
         </div>
         <MetricStat label="ICIR" value={evaluation.icir} format="ic" tone="neutral" />
         <MetricStat label="TURNOVER" value={evaluation.turnover} format="percent" tone="neutral" />

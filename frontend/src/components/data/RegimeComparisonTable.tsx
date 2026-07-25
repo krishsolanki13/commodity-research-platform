@@ -40,6 +40,7 @@ export function RegimeComparisonTable({
   }
 
   return (
+    <div className="overflow-hidden rounded border border-border-default">
     <table
       role="grid"
       aria-label="Regime comparison table"
@@ -98,5 +99,6 @@ export function RegimeComparisonTable({
         ))}
       </tbody>
     </table>
+    </div>
   )
 }

@@ -85,8 +85,8 @@ function EquityCurveChartInner({
     const grids = showDrawdown
       ? [
           // Increase gap between panes so $0 / 0.0% labels do not overlap at the seam.
-          { left: 70, right: 16, top: '5%', height: '60%' },
-          { left: 70, right: 16, bottom: 60, height: '18%' },
+          { left: 70, right: 16, top: '5%', height: '56%' },
+          { left: 70, right: 16, bottom: 50, height: '22%' },
         ]
       : [{ left: 70, right: 16, top: '5%', bottom: 60 }]
 
@@ -230,13 +230,7 @@ function EquityCurveChartInner({
             ? {
                 silent: true,
                 symbol: 'none',
-              label: {
-                formatter: () => fmt.compactUsd(baseline),
-                position: 'insideStartTop',
-                color: theme.secondaryText,
-                fontSize: 10,
-                fontFamily: theme.monoFont,
-              },
+              label: { show: false },
                 lineStyle: { type: 'dotted', color: theme.secondaryText, width: 1 },
                 data: [{ yAxis: baseline }],
               }
@@ -396,7 +390,7 @@ export function EquityCurveChart({
   baseline,
   compare,
   title,
-  height = 400,
+  height = 480,
   loading,
   error,
   syncGroup,

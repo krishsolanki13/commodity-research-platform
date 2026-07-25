@@ -112,6 +112,11 @@ function RollingMetricChartInner({
                 fontSize: 11,
                 formatter: (v: number) => v.toFixed(2),
               },
+              axisPointer: {
+                label: {
+                  formatter: (p: { value: number }) => Number(p.value).toFixed(2),
+                },
+              },
               splitLine: { lineStyle: { color: theme.gridlineColor } },
             },
           ]
@@ -129,6 +134,11 @@ function RollingMetricChartInner({
                 fontFamily: theme.monoFont,
                 fontSize: 11,
                 formatter: (v: number) => `${(v * 100).toFixed(1)}%`,
+              },
+              axisPointer: {
+                label: {
+                  formatter: (p: { value: number }) => Number(p.value).toFixed(2),
+                },
               },
               splitLine: { show: false },
             },

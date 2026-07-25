@@ -51,7 +51,7 @@ describe('StrategyBuilder', () => {
       evaluation: goldEmaRunDetailFixture.signal_evaluation,
     })
     renderStrategyBuilder(BASE_URL, qc)
-    await waitFor(() => expect(screen.getByText(/noise/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('ICIR')).toBeInTheDocument())
   })
 
   it('?evalOverride=1 shows IC Gate override notice in EvalSummaryCard', async () => {

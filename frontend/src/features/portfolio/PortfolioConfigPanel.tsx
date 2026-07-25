@@ -1,4 +1,6 @@
 import { fmt } from '@/lib/fmt'
+import { useStrategies } from '@/api/hooks/useStrategies'
+import { Combobox } from '@/ui/Combobox'
 
 interface PortfolioConfigPanelProps {
   strategy: string
@@ -7,7 +9,6 @@ interface PortfolioConfigPanelProps {
   onSizingChange: (s: 'fixed_notional' | 'volatility_scaled') => void
   initialCapital: number
   onCapitalChange: (n: number) => void
-  strategies: string[]
 }
 
 export function PortfolioConfigPanel({
@@ -17,29 +18,25 @@ export function PortfolioConfigPanel({
   onSizingChange,
   initialCapital,
   onCapitalChange,
-  strategies,
 }: PortfolioConfigPanelProps) {
+  const { data: strategiesData } = useStrategies()
+  const strategyOptions = (strategiesData?.strategies ?? []).map((s) => ({
+    value: s.name,
+    label: s.display_name,
+  }))
+
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <label
-          htmlFor="portfolio-strategy"
-          className="mb-1 block font-mono text-xs uppercase text-text-secondary"
-        >
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           Strategy
-        </label>
-        <select
-          id="portfolio-strategy"
-          className="w-full rounded border border-border-default bg-bg-raised px-2 py-1 font-mono text-sm text-text-primary"
+        </span>
+        <Combobox
+          options={strategyOptions}
           value={strategy}
-          onChange={(e) => onStrategyChange(e.target.value)}
-        >
-          {strategies.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+          onChange={onStrategyChange}
+          placeholder="Select a strategy..."
+        />
       </div>
 
       <div>

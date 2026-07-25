@@ -49,7 +49,7 @@ describe('MarketOverviewScreen', () => {
       )
     )
     render(<MarketOverviewScreen />, { wrapper: Wrapper })
-    await waitFor(() => expect(screen.getByText(/no market data|ingest/i)).toBeInTheDocument(), {
+    await waitFor(() => expect(screen.getByText('No market data yet')).toBeInTheDocument(), {
       timeout: 5000,
     })
   })
