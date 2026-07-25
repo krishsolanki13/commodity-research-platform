@@ -188,7 +188,7 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
           type: 'cross',
           lineStyle: { color: theme.gridlineColor },
           label: {
-            backgroundColor: theme.tooltip.backgroundColor ?? '#1a2540',
+            backgroundColor: theme.tooltip.backgroundColor,
             color: theme.secondaryText,
             fontSize: 10,
             fontFamily: theme.monoFont,
