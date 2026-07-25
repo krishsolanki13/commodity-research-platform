@@ -127,7 +127,8 @@ function ICDecayChartInner({ decay, theme }: ICDecayChartInnerProps) {
                 lineStyle: { color: theme.icStrong, type: 'dashed' },
                 label: {
                   formatter: '+0.05',
-                  position: 'insideEndTop',
+                  position: 'end',
+                  offset: [4, -8],
                   color: theme.secondaryText,
                   fontWeight: 'normal',
                   fontSize: 10,
@@ -139,7 +140,8 @@ function ICDecayChartInner({ decay, theme }: ICDecayChartInnerProps) {
                 lineStyle: { color: theme.icWeak, type: 'dashed' },
                 label: {
                   formatter: '+0.02',
-                  position: 'insideEndBottom',
+                  position: 'end',
+                  offset: [4, 8],
                   color: theme.secondaryText,
                   fontWeight: 'normal',
                   fontSize: 10,
@@ -151,7 +153,8 @@ function ICDecayChartInner({ decay, theme }: ICDecayChartInnerProps) {
                 lineStyle: { color: theme.icWeak, type: 'dashed' },
                 label: {
                   formatter: '-0.02',
-                  position: 'insideEndTop',
+                  position: 'end',
+                  offset: [4, -8],
                   color: theme.secondaryText,
                   fontWeight: 'normal',
                   fontSize: 10,
@@ -163,7 +166,8 @@ function ICDecayChartInner({ decay, theme }: ICDecayChartInnerProps) {
                 lineStyle: { color: theme.icStrong, type: 'dashed' },
                 label: {
                   formatter: '-0.05',
-                  position: 'insideEndBottom',
+                  position: 'end',
+                  offset: [4, 8],
                   color: theme.secondaryText,
                   fontWeight: 'normal',
                   fontSize: 10,

@@ -364,7 +364,7 @@ export function DataGrid<T>({
                   <th
                     key={header.id}
                     style={{
-                      width: header.getSize(),
+                      width: `${"$"}{(header.getSize() / totalColWidth) * 100}%`,
                       minWidth: header.getSize(),
                     }}
                     className={cn(
@@ -454,7 +454,7 @@ export function DataGrid<T>({
                         style={{
                           verticalAlign: 'middle',
                           height: rowHeight,
-                          width: cell.column.getSize(),
+                          width: `${"$"}{(cell.column.getSize() / totalColWidth) * 100}%`,
                           minWidth: cell.column.getSize(),
                         }}
                       >

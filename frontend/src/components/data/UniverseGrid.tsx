@@ -190,6 +190,7 @@ export function UniverseGrid({
         onRowClick={(r) => onRowClick(r.name)}
         onHoverRow={onHoverAsset ? (row) => onHoverAsset(row.name) : undefined}
         loading={loading}
+        rowHeight={40}
         toolbar={{ search: false, export: false }}
         emptyState={{ title: 'No market data', body: 'Ingest the universe to begin.' }}
         className={className}

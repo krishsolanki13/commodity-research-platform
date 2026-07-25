@@ -122,6 +122,8 @@ function RollingMetricChartInner({
               type: 'value' as const,
               name: 'Drawdown',
               max: 0,
+              splitNumber: 4,
+              minInterval: 0.02,
               axisLabel: {
                 color: theme.secondaryText,
                 fontFamily: theme.monoFont,
@@ -176,7 +178,20 @@ function RollingMetricChartInner({
       legend: { show: true },
       tooltip: {
         trigger: 'axis',
-        axisPointer: { type: 'cross' },
+        axisPointer: {
+          type: 'cross',
+          lineStyle: { color: theme.gridlineColor },
+          label: {
+            backgroundColor: theme.tooltip.backgroundColor ?? '#1a2540',
+            color: theme.secondaryText,
+            fontSize: 10,
+            fontFamily: theme.monoFont,
+            formatter: (p: { value: number | string }) =>
+              typeof p.value === 'number' && p.value > 1e9
+                ? fmtDate(p.value)
+                : String(p.value),
+          },
+        },
         backgroundColor: theme.tooltip.backgroundColor,
         borderColor: theme.tooltip.borderColor,
         textStyle: {

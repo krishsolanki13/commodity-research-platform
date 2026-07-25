@@ -89,10 +89,9 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       animation: true,
       backgroundColor: 'transparent',
       grid: [
-        { left: 60, right: 16, top: '2%', height: '48%' },
-        { left: 60, right: 16, top: '55%', height: '20%' },
-        // bottom: 60 clears DataZoom slider; height 12% keeps Long/Short bars visible
-        { left: 60, right: 16, bottom: 60, height: '12%' },
+        { left: 60, right: 16, top: '2%',  height: '44%' },
+        { left: 60, right: 16, top: '51%', height: '19%' },
+        { left: 60, right: 16, bottom: 60, height: '18%' },
       ],
       dataZoom: [
         {
@@ -329,7 +328,7 @@ export function SignalOverlayChart({
   raw,
   position,
   title,
-  height = '65vh',
+  height = '75vh',
   loading,
   error,
   syncGroup,

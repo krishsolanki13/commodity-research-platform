@@ -184,7 +184,16 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
         // pane. Resolve both Slope and Roll Yield from snapshots so the card always
         // shows both series for the same date.
         trigger: 'axis',
-        axisPointer: { type: 'cross', lineStyle: { color: theme.gridlineColor } },
+        axisPointer: {
+          type: 'cross',
+          lineStyle: { color: theme.gridlineColor },
+          label: {
+            backgroundColor: theme.tooltip.backgroundColor ?? '#1a2540',
+            color: theme.secondaryText,
+            fontSize: 10,
+            fontFamily: theme.monoFont,
+          },
+        },
         backgroundColor: theme.tooltip.backgroundColor,
         borderColor: theme.tooltip.borderColor,
         textStyle: {
@@ -231,10 +240,12 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
           const slope = byName.get('Slope %/yr') ?? snap?.annualized_slope_pct ?? null
           const roll = byName.get('Roll Yield %/yr') ?? snap?.roll_yield_annualized ?? null
 
+          const slopeMarker = items[0]?.marker ?? ''
+          const rollMarker = items[1]?.marker ?? ''
           return [
             dateLabel,
-            `Slope %/yr: ${formatPctYr(slope)}`,
-            `Roll Yield %/yr: ${formatPctYr(roll)}`,
+            `${slopeMarker}Slope %/yr: ${formatPctYr(slope)}`,
+            `${rollMarker}Roll Yield %/yr: ${formatPctYr(roll)}`,
           ].join('<br/>')
         },
       },

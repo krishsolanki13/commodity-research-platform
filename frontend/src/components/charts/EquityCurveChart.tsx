@@ -149,6 +149,8 @@ function EquityCurveChartInner({
       gridIndex: 0,
       // Autoscale to data range so small equity moves are visible (not flat at $1M).
       min: isCompare ? undefined : ('dataMin' as const),
+      max: isCompare ? undefined : ('dataMax' as const),
+      boundaryGap: isCompare ? undefined : ([0, '10%'] as [number, string]),
       axisLabel: {
         color: theme.secondaryText,
         fontFamily: theme.monoFont,
@@ -170,6 +172,8 @@ function EquityCurveChartInner({
     const drawdownYAxis = {
       gridIndex: 1,
       max: 0,
+      splitNumber: 4,
+      minInterval: 0.02,
       name: 'Drawdown',
       nameLocation: 'middle',
       nameRotate: 90,
@@ -226,10 +230,13 @@ function EquityCurveChartInner({
             ? {
                 silent: true,
                 symbol: 'none',
-                label: {
-                  formatter: () => fmt.compactUsd(baseline),
-                  position: 'insideEndTop',
-                },
+              label: {
+                formatter: () => fmt.compactUsd(baseline),
+                position: 'insideStartTop',
+                color: theme.secondaryText,
+                fontSize: 10,
+                fontFamily: theme.monoFont,
+              },
                 lineStyle: { type: 'dotted', color: theme.secondaryText, width: 1 },
                 data: [{ yAxis: baseline }],
               }
