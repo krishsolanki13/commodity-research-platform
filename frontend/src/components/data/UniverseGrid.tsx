@@ -183,18 +183,20 @@ export function UniverseGrid({
 }: UniverseGridProps) {
   return (
     <TooltipProvider>
-      <DataGrid<AssetRow>
-        columns={columns}
-        data={rows}
-        getRowId={(r) => r.name}
-        onRowClick={(r) => onRowClick(r.name)}
-        onHoverRow={onHoverAsset ? (row) => onHoverAsset(row.name) : undefined}
-        loading={loading}
-        rowHeight={40}
-        toolbar={{ search: false, export: false }}
-        emptyState={{ title: 'No market data', body: 'Ingest the universe to begin.' }}
-        className={className}
-      />
+      <div className="w-full" style={{ minHeight: `${40 * rows.length + 48}px` }}>
+        <DataGrid<AssetRow>
+          columns={columns}
+          data={rows}
+          getRowId={(r) => r.name}
+          onRowClick={(r) => onRowClick(r.name)}
+          onHoverRow={onHoverAsset ? (row) => onHoverAsset(row.name) : undefined}
+          loading={loading}
+          rowHeight={40}
+          toolbar={{ search: false, export: false }}
+          emptyState={{ title: 'No market data', body: 'Ingest the universe to begin.' }}
+          className={className}
+        />
+      </div>
     </TooltipProvider>
   )
 }
