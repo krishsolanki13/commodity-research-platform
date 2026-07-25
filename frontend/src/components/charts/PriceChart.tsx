@@ -108,8 +108,8 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
 
     const grids = showVolume
       ? [
-          { left: 60, right: 16, top: '5%', height: '72%' },
-          { left: 60, right: 16, bottom: 60, height: '14%' },
+          { left: 60, right: 16, top: '5%', height: '68%' },
+          { left: 60, right: 16, bottom: 50, height: '16%' },
         ]
       : [{ left: 60, right: 16, top: '5%', bottom: 60 }]
 
@@ -367,7 +367,7 @@ export function PriceChart({
   volume = true,
   style = 'candle',
   title,
-  height = 300,
+  height = 380,
   loading,
   error,
   empty,

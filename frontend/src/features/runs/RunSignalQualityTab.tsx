@@ -60,27 +60,27 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid w-full grid-cols-3 gap-4">
-        <div className="gap-0.5 flex min-w-0 flex-col">
-          <span className="text-xs uppercase tracking-wider text-text-secondary">IC</span>
-          <div className="flex flex-col items-start">
-            <span className="text-2xl font-mono">
-              {evaluation.ic != null ? evaluation.ic.toFixed(3) : '—'}
-            </span>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="text-xs uppercase tracking-wider text-text-secondary">
+            IC
+          </span>
+          <span
+            className={cn(
+              'font-mono text-2xl',
+              icBand === 'strong' || icBand === 'inverse_meaningful'
+                ? 'text-gain'
+                : icBand === 'noise'
+                  ? 'text-text-secondary'
+                  : 'text-warn'
+            )}
+          >
+            {evaluation.ic != null ? evaluation.ic.toFixed(3) : '—'}
             {icBand != null && (
-              <span
-                className={cn(
-                  'mt-0.5 px-1.5 py-0.5 rounded font-mono text-xs',
-                  icBand === 'strong' || icBand === 'inverse_meaningful'
-                    ? 'bg-gain-fill text-gain'
-                    : icBand === 'noise'
-                      ? 'bg-bg-raised text-text-secondary'
-                      : 'bg-accent-fill text-warn'
-                )}
-              >
-                {icBand}
+              <span className="ml-1.5 font-mono text-sm opacity-70">
+                ({icBand})
               </span>
             )}
-          </div>
+          </span>
         </div>
         <MetricStat label="ICIR" value={evaluation.icir} format="ic" tone="neutral" />
         <MetricStat label="TURNOVER" value={evaluation.turnover} format="percent" tone="neutral" />

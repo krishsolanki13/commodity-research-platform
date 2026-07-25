@@ -248,9 +248,10 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
             items.find(
               (p: any) => p.seriesIndex === 1 || p.seriesName?.toLowerCase().includes('roll')
             ) ?? items[1]
+          const AMBER_HEX = '#e8a33d' // --amber-500 concrete value; CSS vars don't work in ECharts HTML tooltip strings
           const slopeMarker = slopeItem?.marker ?? '● '
           const rollMarker = rollItem?.marker ??
-            `<span style="display:inline-block;margin-right:4px;border-radius:50%;width:10px;height:10px;background-color:${theme.amber};"></span>`
+            `<span style="display:inline-block;margin-right:4px;border-radius:50%;width:10px;height:10px;background-color:${AMBER_HEX};"></span>`
           return [
             dateLabel,
             `${slopeMarker}Slope %/yr: ${formatPctYr(slope)}`,
