@@ -15,7 +15,7 @@
  */
 import { echarts, type ECharts } from '@/lib/echarts-setup'
 import { createContext, useContext, useRef, useEffect, useState } from 'react'
-import { Download, ZoomIn, Maximize } from 'lucide-react'
+import { Download, Maximize } from 'lucide-react'
 import { Panel } from '@/ui/Panel'
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton'
 import { ErrorState } from '@/components/layout/ErrorState'
@@ -106,19 +106,8 @@ export function ChartFrame({
     document.body.removeChild(a)
   }
 
-  function handleZoomReset() {
-    chartRef.current?.dispatchAction({ type: 'restore' })
-  }
-
   const toolbarEl = toolbar ? (
     <div className="flex items-center gap-1">
-      <button
-        onClick={handleZoomReset}
-        aria-label="Reset zoom"
-        className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
-      >
-        <ZoomIn size={14} strokeWidth={1.75} />
-      </button>
       <button
         onClick={handleExport}
         aria-label="Export chart as PNG"

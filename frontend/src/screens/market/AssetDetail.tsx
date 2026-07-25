@@ -53,17 +53,6 @@ export default function AssetDetailScreen() {
       },
       { replace: true }
     )
-
-    return () => {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev)
-          next.delete('asset')
-          return next
-        },
-        { replace: true }
-      )
-    }
   }, [asset, setSearchParams])
 
   if (!asset) return <Navigate to="/market" replace />
