@@ -99,7 +99,16 @@ export function RunExplorer() {
         <RunExplorerFilters
           strategies={strategies}
           filters={{ strategy, asset, q, sort, order }}
-          onChange={(f) => setUrlState({ ...f, page: 1 })}
+          onChange={(f) =>
+            setUrlState({
+              strategy: f.strategy ?? null,
+              asset: f.asset ?? null,
+              q: f.q ?? null,
+              sort: f.sort,
+              order: f.order,
+              page: 1,
+            })
+          }
         />
       </div>
 

@@ -62,21 +62,19 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
       <div className="grid w-full grid-cols-3 gap-4">
         <div className="gap-0.5 flex min-w-0 flex-col">
           <span className="text-xs uppercase tracking-wider text-text-secondary">IC</span>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-start">
             <span className="text-2xl font-mono">
               {evaluation.ic != null ? evaluation.ic.toFixed(3) : '—'}
             </span>
             {icBand != null && (
               <span
                 className={cn(
-                  'px-1.5 py-0.5 rounded font-mono text-xs',
-                  icBand === 'strong'
+                  'mt-0.5 px-1.5 py-0.5 rounded font-mono text-xs',
+                  icBand === 'strong' || icBand === 'inverse_meaningful'
                     ? 'bg-gain-fill text-gain'
-                    : icBand === 'inverse_meaningful'
-                      ? 'bg-loss-fill text-loss'
-                      : icBand === 'noise'
-                        ? 'bg-bg-raised text-text-secondary'
-                        : 'bg-accent-fill text-warn'
+                    : icBand === 'noise'
+                      ? 'bg-bg-raised text-text-secondary'
+                      : 'bg-accent-fill text-warn'
                 )}
               >
                 {icBand}

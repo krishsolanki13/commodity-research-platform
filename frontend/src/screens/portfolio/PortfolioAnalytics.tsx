@@ -74,7 +74,7 @@ export function PortfolioAnalytics() {
     deleteRun.mutate(deleteConfirmId, {
       onSuccess: () => {
         setDeleteConfirmId(null)
-        setUrlState({ run_id: undefined })
+        setUrlState({ run_id: null })
       },
       onError: () => {
         setDeleteConfirmId(null)
@@ -155,7 +155,7 @@ export function PortfolioAnalytics() {
             Delete run
           </button>
           <button
-            onClick={() => setUrlState({ run_id: undefined })}
+            onClick={() => setUrlState({ run_id: null })}
             className="text-xs text-text-accent hover:underline"
           >
             ← New run

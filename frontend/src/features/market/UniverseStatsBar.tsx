@@ -21,7 +21,14 @@ export function UniverseStatsBar() {
   const ingest = useIngestMutation()
   const [{ range }, setUrlState] = useUrlState(rangeSchema, { range: '1Y' })
   // Backend may return last_ingestion: null — stamp local time after a successful re-ingest.
-  const [lastIngestedAt, setLastIngestedAt] = useState<Date | null>(null)
+  const [lastIngestedAt, setLastIngestedAt] = useState<Date | null>(() => {
+    try {
+      const stored = localStorage.getItem('commodity_research_last_ingested')
+      return stored ? new Date(stored) : null
+    } catch {
+      return null
+    }
+  })
 
   const lastIngestionDisplay = lastIngestedAt
     ? lastIngestedAt.toLocaleTimeString()
@@ -94,7 +101,13 @@ export function UniverseStatsBar() {
                 { asset: null },
                 {
                   onSuccess: () => {
-                    setLastIngestedAt(new Date())
+                    const now = new Date()
+                    setLastIngestedAt(now)
+                    try {
+                      localStorage.setItem('commodity_research_last_ingested', now.toISOString())
+                    } catch {
+                      // localStorage not available — session-only fallback
+                    }
                   },
                 }
               )
