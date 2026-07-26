@@ -19,6 +19,7 @@ import { PortfolioRollingCorrelationPanel } from '@/features/portfolio/Portfolio
 import { PortfolioRunSelector } from '@/features/portfolio/PortfolioRunSelector'
 import { portfolioUrlDefaults, portfolioUrlSchema } from '@/features/portfolio/portfolioUrlState'
 import { EmptyState } from '@/components/layout/EmptyState'
+import { Panel } from '@/ui/Panel'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,8 +30,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/ui/alert-dialog'
-
-const STRATEGIES = ['ema_crossover', 'momentum', 'rsi_reversion', 'donchian_breakout']
 
 const DEFAULT_PARAMS: Record<string, Record<string, unknown>> = {
   ema_crossover: { fast_period: 50, slow_period: 200 },
@@ -91,32 +90,37 @@ export function PortfolioAnalytics() {
 
   if (!run_id) {
     return (
-      <div className="flex gap-6 p-6">
-        <div className="w-80 flex shrink-0 flex-col gap-4">
-          <p className="font-mono text-sm uppercase text-text-secondary">Portfolio Configuration</p>
-          <PortfolioConfigPanel
-            strategy={strategy}
-            onStrategyChange={setStrategy}
-            sizingMethod={sizingMethod}
-            onSizingChange={setSizingMethod}
-            initialCapital={initialCapital}
-            onCapitalChange={setInitialCapital}
-            strategies={STRATEGIES}
-          />
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="shrink-0 border-b border-border-default px-6 py-4">
+          <h1 className="text-xl font-semibold text-text-primary">Portfolio Analytics</h1>
         </div>
-        <div className="flex flex-1 flex-col gap-4">
-          <PortfolioLaunchPanel
-            strategy={strategy}
-            params={params}
-            sizingMethod={sizingMethod}
-            initialCapital={initialCapital}
-            onLaunched={(id) => setUrlState({ run_id: id })}
-          />
-          <EmptyState
-            title="No portfolio run selected"
-            body="Launch a portfolio backtest to see analytics."
-            className="h-48 rounded border border-border-default bg-bg-raised"
-          />
+        <div className="flex gap-6 p-6 flex-1 overflow-hidden">
+          <div className="w-80 flex shrink-0 flex-col gap-4 overflow-y-auto">
+            <Panel title="Portfolio Configuration">
+              <PortfolioConfigPanel
+                strategy={strategy}
+                onStrategyChange={setStrategy}
+                sizingMethod={sizingMethod}
+                onSizingChange={setSizingMethod}
+                initialCapital={initialCapital}
+                onCapitalChange={setInitialCapital}
+              />
+            </Panel>
+          </div>
+          <div className="flex flex-1 flex-col gap-4">
+            <PortfolioLaunchPanel
+              strategy={strategy}
+              params={params}
+              sizingMethod={sizingMethod}
+              initialCapital={initialCapital}
+              onLaunched={(id) => setUrlState({ run_id: id })}
+            />
+            <EmptyState
+              title="No portfolio run selected"
+              body="Launch a portfolio backtest to see analytics."
+              className="h-48 rounded border border-border-default bg-bg-raised"
+            />
+          </div>
         </div>
       </div>
     )
@@ -158,7 +162,7 @@ export function PortfolioAnalytics() {
             onClick={() => setUrlState({ run_id: null })}
             className="text-xs text-text-accent hover:underline"
           >
-            ← New run
+            New run
           </button>
         </div>
       </div>

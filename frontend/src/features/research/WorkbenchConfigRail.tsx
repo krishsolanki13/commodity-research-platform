@@ -10,7 +10,6 @@ import { DateRangePicker } from '@/components/inputs/DateRangePicker'
 import { StrategyPicker } from '@/components/inputs/StrategyPicker'
 import { IndicatorPicker } from '@/components/inputs/IndicatorPicker'
 import { ParamForm } from '@/components/inputs/ParamForm'
-import { Button } from '@/ui/button'
 import { Panel } from '@/ui/Panel'
 import type { components } from '@/api/schema'
 
@@ -50,8 +49,8 @@ export interface EvaluateProgress {
 
 interface WorkbenchConfigRailProps {
   onEvaluate: (params: EvaluateParams) => void
-  evaluating: boolean
-  evaluateProgress: EvaluateProgress | null
+  onCanEvaluateChange: (canEvaluate: boolean, reason: string | null) => void
+  onEvaluateReady?: (trigger: () => void) => void
 }
 
 /** Maps strategy + params → feature specs required by the signal. Uses live API indicator names. */
@@ -83,8 +82,8 @@ function specsMatch(a: FeatureSpecRequest, b: FeatureSpecRequest): boolean {
 
 export function WorkbenchConfigRail({
   onEvaluate,
-  evaluating,
-  evaluateProgress,
+  onCanEvaluateChange,
+  onEvaluateReady,
 }: WorkbenchConfigRailProps) {
   const [urlState, setUrlState] = useUrlState(workbenchSchema, defaults)
 
@@ -134,14 +133,10 @@ export function WorkbenchConfigRail({
         ? `Add ${missingLabel} to evaluate this signal`
         : null
 
-  const progressLabel =
-    evaluateProgress?.stepIndex === 1
-      ? 'Computing features...'
-      : evaluateProgress?.stepIndex === 2
-        ? 'Generating signal...'
-        : evaluateProgress?.stepIndex === 3
-          ? 'Evaluating signal...'
-          : 'Evaluating...'
+  // Notify parent whenever evaluate readiness changes
+  useEffect(() => {
+    onCanEvaluateChange(canEvaluate, evaluateDisabledReason)
+  }, [canEvaluate, evaluateDisabledReason, onCanEvaluateChange])
 
   // Sync required feature specs into URL when strategy/params imply missing ones
   // (shareable URLs may omit features; strategy change handler also writes them).
@@ -179,6 +174,14 @@ export function WorkbenchConfigRail({
       toDate: urlState.to_date ?? defaults.to_date,
     })
   }
+
+  // Register the evaluate trigger with the parent so the button in ResearchWorkbench
+  // can call handleEvaluateClick without duplicating param-building logic here.
+  useEffect(() => {
+    onEvaluateReady?.(() => handleEvaluateClick())
+    // Re-register whenever params change so the trigger captures fresh state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canEvaluate, urlState])
 
   const fromDate = urlState.from_date ?? defaults.from_date
   const toDate = urlState.to_date ?? defaults.to_date
@@ -223,22 +226,6 @@ export function WorkbenchConfigRail({
           requiredSpecs={requiredSpecs}
         />
       </Panel>
-
-      <Button
-        disabled={!canEvaluate || evaluating}
-        onClick={handleEvaluateClick}
-      >
-        {evaluating ? progressLabel : 'Evaluate signal'}
-      </Button>
-
-      {evaluateDisabledReason && !evaluating && (
-        <p className="text-xs text-text-secondary">
-          {evaluateDisabledReason}
-        </p>
-      )}
-      {evaluating && evaluateProgress && (
-        <p className="text-xs text-text-secondary">{progressLabel}</p>
-      )}
     </div>
   )
 }

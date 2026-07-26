@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { cn } from '@/lib/cn'
 import { safeJsonParse } from '@/lib/json'
 import { useEvaluateChainMutation } from '@/api/hooks/useEvaluateChainMutation'
 import {
@@ -22,6 +23,12 @@ export default function ResearchWorkbenchScreen() {
   const [evaluating, setEvaluating] = useState(false)
   const [evaluateProgress, setEvaluateProgress] = useState<EvaluateProgress | null>(null)
   const [lastEvaluatedConfigHash, setLastEvaluatedConfigHash] = useState<string | null>(null)
+  const [canEvaluate, setCanEvaluate] = useState(false)
+  const [evaluateReason, setEvaluateReason] = useState<string | null>(null)
+
+  // Ref to trigger evaluate from the button in the right half, while all param
+  // building logic stays inside WorkbenchConfigRail.
+  const evaluateTriggerRef = useRef<(() => void) | null>(null)
 
   // R-Q7: onProgress is a hook parameter — mutateAsync receives only serializable params
   const evaluateChain = useEvaluateChainMutation((progress) => setEvaluateProgress(progress))
@@ -36,6 +43,15 @@ export default function ResearchWorkbenchScreen() {
   // R-Q8: safeJsonParse from '@/lib/json'
   const parsedParams = safeJsonParse<Record<string, unknown>>(paramsJson, {})
   const parsedFeatures = safeJsonParse<FeatureSpecRequest[]>(featuresJson, [])
+
+  const progressLabel =
+    evaluateProgress?.stepIndex === 1
+      ? 'Computing features...'
+      : evaluateProgress?.stepIndex === 2
+        ? 'Generating signal...'
+        : evaluateProgress?.stepIndex === 3
+          ? 'Evaluating signal...'
+          : 'Evaluating...'
 
   async function handleEvaluate(p: EvaluateParams) {
     const configHash = JSON.stringify({
@@ -69,27 +85,64 @@ export default function ResearchWorkbenchScreen() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
+      {/* Page title — full width above both halves */}
+      <div className="shrink-0 border-b border-border-default px-6 py-4">
+        <h1 className="text-xl font-semibold text-text-primary">Research Workbench</h1>
+      </div>
+
       <div className="flex min-h-0 flex-1 overflow-hidden">
+        {/* Left rail — scrolls independently */}
         <WorkbenchConfigRail
           onEvaluate={(p) => {
             void handleEvaluate(p)
           }}
-          evaluating={evaluating}
-          evaluateProgress={evaluateProgress}
+          onCanEvaluateChange={(can, reason) => {
+            setCanEvaluate(can)
+            setEvaluateReason(reason)
+          }}
+          onEvaluateReady={(trigger) => {
+            evaluateTriggerRef.current = trigger
+          }}
         />
-        <div className="relative flex-1 overflow-y-auto p-4">
-          <WorkbenchEvidenceCanvas
-            asset={asset}
-            strategy={strategy}
-            params={parsedParams}
-            featureSpecs={parsedFeatures}
-            fromDate={fromDate}
-            toDate={toDate}
-            lastEvaluatedConfigHash={lastEvaluatedConfigHash}
-            evaluationResult={evaluationResult}
-          />
+
+        {/* Right half */}
+        <div className="relative flex flex-1 flex-col overflow-hidden">
+          {/* Evaluate button — always at top of right half */}
+          <div className="shrink-0 border-b border-border-default p-4">
+            <button
+              disabled={!canEvaluate || evaluating}
+              onClick={() => evaluateTriggerRef.current?.()}
+              className={cn(
+                'w-full rounded-md px-4 py-2.5 font-mono text-sm font-medium',
+                'transition-colors duration-fast',
+                canEvaluate && !evaluating
+                  ? 'bg-accent text-bg-app hover:bg-accent-hover cursor-pointer'
+                  : 'bg-bg-raised text-text-disabled cursor-not-allowed'
+              )}
+            >
+              {evaluating ? progressLabel : 'Evaluate signal'}
+            </button>
+            {evaluateReason && !evaluating && (
+              <p className="mt-1 text-xs text-text-secondary">{evaluateReason}</p>
+            )}
+          </div>
+
+          {/* Results */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <WorkbenchEvidenceCanvas
+              asset={asset}
+              strategy={strategy}
+              params={parsedParams}
+              featureSpecs={parsedFeatures}
+              fromDate={fromDate}
+              toDate={toDate}
+              lastEvaluatedConfigHash={lastEvaluatedConfigHash}
+              evaluationResult={evaluationResult}
+            />
+          </div>
         </div>
       </div>
+
       <div className="shrink-0 border-t border-border-default">
         <WorkbenchICGateStrip
           evaluation={evaluationResult?.evaluation.evaluation ?? null}

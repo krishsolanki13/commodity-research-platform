@@ -1,9 +1,10 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { cn } from '@/lib/cn'
 import { rangeToDateParams } from '@/lib/date-range'
 import { useUrlState } from '@/lib/useUrlState'
 import { useCurveAvailableAssets } from '@/api/hooks/useCurveAvailableAssets'
 import { useCurveSnapshot } from '@/api/hooks/useCurveSnapshot'
-import { EmptyState } from '@/components/layout/EmptyState'
 import {
   IntelligenceConfigRail,
   intelligenceSchema,
@@ -21,6 +22,8 @@ export function FuturesCurve() {
   const [urlState] = useUrlState(intelligenceSchema, intelligenceDefaults)
   const { asset, n_contracts, lookback, observation_date } = urlState
 
+  const [launched, setLaunched] = useState(false)
+
   const { data: available, isLoading: availableLoading } = useCurveAvailableAssets()
 
   const {
@@ -33,62 +36,98 @@ export function FuturesCurve() {
   // KPI row uses useCurveSnapshot(observation_date) and is intentionally independent.
   const dateParams = rangeToDateParams(lookback ?? '3Y')
 
-  return (
-    <div className="flex gap-6 p-6">
-      {/* Left sidebar — config card */}
-      <div className="w-80 flex shrink-0 flex-col gap-4">
-        <Panel title="Futures Curve">
-          <div className="flex flex-col gap-4">
-            <IntelligenceConfigRail
-              availableAssets={available?.assets ?? []}
-              loading={availableLoading}
-            />
-            <CurveDateControl />
-          </div>
-        </Panel>
-      </div>
+  // Reset launched view when asset changes so user always sees fresh config
+  useEffect(() => {
+    setLaunched(false)
+  }, [asset])
 
-      {/* Right content */}
-      <div className="flex flex-1 flex-col gap-6">
-        {!asset && (
-          <EmptyState
-            title="Select an asset to view the futures curve"
-            body="Choose a commodity from the selector to load term structure analytics."
-          />
-        )}
+  if (!launched) {
+    return (
+      <div className="flex flex-col gap-0 h-full overflow-hidden">
+        {/* Title */}
+        <div className="shrink-0 border-b border-border-default px-6 py-4">
+          <h1 className="text-xl font-semibold text-text-primary">Futures Curve</h1>
+        </div>
 
-        {asset && (
-          <>
-            {asset && (
-              <div className="flex items-center justify-between">
-                <Link
-                  to={`/intelligence/compare?assets=${asset}&n_contracts=${n_contracts}`}
-                  className="font-mono text-xs text-text-accent hover:underline"
-                >
-                  Compare assets →
-                </Link>
+        <div className="flex min-h-0 flex-1 gap-6 overflow-hidden p-6">
+          {/* Left panel */}
+          <div className="w-80 shrink-0 overflow-y-auto">
+            <Panel title="Futures Curve">
+              <div className="flex flex-col gap-4">
+                <IntelligenceConfigRail
+                  availableAssets={available?.assets ?? []}
+                  loading={availableLoading}
+                />
+                <CurveDateControl />
               </div>
+            </Panel>
+          </div>
+
+          {/* Right half — View Curve button */}
+          <div className="flex flex-1 flex-col gap-4 pt-0">
+            <button
+              disabled={!asset}
+              onClick={() => setLaunched(true)}
+              className={cn(
+                'w-full rounded-md px-4 py-2.5 font-mono text-sm font-medium',
+                'transition-colors duration-fast',
+                asset
+                  ? 'bg-accent text-bg-app hover:bg-accent-hover cursor-pointer'
+                  : 'bg-bg-raised text-text-disabled cursor-not-allowed'
+              )}
+            >
+              View Curve
+            </button>
+            {!asset && (
+              <p className="text-xs text-text-secondary">
+                Select an asset to view the futures curve
+              </p>
             )}
-            <CurveKPIRow snapshot={snapshot ?? null} loading={snapshotLoading} />
-            <div className="grid grid-cols-2 gap-6">
-              <CurvePanel
-                snapshot={snapshot ?? null}
-                loading={snapshotLoading}
-                error={snapshotError instanceof Error ? snapshotError : null}
-              />
-              <BasisPanel snapshot={snapshot ?? null} loading={snapshotLoading} />
-            </div>
-            <HistoryPanel
-              key={`${asset}-${dateParams.from_date}-${dateParams.to_date}-${n_contracts}`}
-              asset={asset}
-              fromDate={dateParams.from_date}
-              toDate={dateParams.to_date}
-              nContracts={n_contracts}
-            />
-            <ContractInventoryPanel snapshot={snapshot ?? null} loading={snapshotLoading} />
-          </>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-6 p-6 overflow-y-auto">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold text-text-primary">Futures Curve</h1>
+        {asset && (
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setLaunched(false)}
+              className="font-mono text-xs text-text-secondary hover:text-text-primary"
+            >
+              ← Change config
+            </button>
+            <Link
+              to={`/intelligence/compare?assets=${asset}&n_contracts=${n_contracts}`}
+              className="font-mono text-xs text-text-accent hover:underline"
+            >
+              Compare assets →
+            </Link>
+          </div>
         )}
       </div>
+
+      <CurveKPIRow snapshot={snapshot ?? null} loading={snapshotLoading} />
+      <div className="grid grid-cols-2 gap-6">
+        <CurvePanel
+          snapshot={snapshot ?? null}
+          loading={snapshotLoading}
+          error={snapshotError instanceof Error ? snapshotError : null}
+        />
+        <BasisPanel snapshot={snapshot ?? null} loading={snapshotLoading} />
+      </div>
+      <HistoryPanel
+        key={`${asset}-${dateParams.from_date}-${dateParams.to_date}-${n_contracts}`}
+        asset={asset ?? ''}
+        fromDate={dateParams.from_date}
+        toDate={dateParams.to_date}
+        nContracts={n_contracts}
+      />
+      <ContractInventoryPanel snapshot={snapshot ?? null} loading={snapshotLoading} />
     </div>
   )
 }
