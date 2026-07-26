@@ -99,7 +99,7 @@ export function IntelligenceConfigRail({ availableAssets, loading }: Intelligenc
         <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           History
         </span>
-        <div className="inline-flex overflow-hidden rounded border border-border-strong">
+        <div className="flex w-fit overflow-hidden rounded border border-border-strong">
           {LOOKBACK_OPTIONS.map((opt) => {
             const active = urlState.lookback === opt
             return (
