@@ -60,8 +60,8 @@ export function IntelligenceConfigRail({ availableAssets, loading }: Intelligenc
   })
 
   return (
-    <div className="flex flex-wrap items-end gap-6">
-      <div className="gap-1.5 flex flex-col">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           Asset
         </span>
@@ -73,7 +73,7 @@ export function IntelligenceConfigRail({ availableAssets, loading }: Intelligenc
         />
       </div>
 
-      <div className="gap-1.5 flex flex-col">
+      <div className="flex flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           Contracts
         </span>
@@ -82,7 +82,7 @@ export function IntelligenceConfigRail({ availableAssets, loading }: Intelligenc
           onValueChange={(v) => setUrlState({ n_contracts: Number(v) })}
           disabled={loading}
         >
-          <SelectTrigger className="w-36 font-mono text-sm" aria-label="Number of contracts">
+          <SelectTrigger className="w-full font-mono text-sm" aria-label="Number of contracts">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -95,7 +95,7 @@ export function IntelligenceConfigRail({ availableAssets, loading }: Intelligenc
         </Select>
       </div>
 
-      <div className="gap-1.5 flex flex-col">
+      <div className="flex flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           History
         </span>
@@ -109,7 +109,7 @@ export function IntelligenceConfigRail({ availableAssets, loading }: Intelligenc
                 aria-pressed={active}
                 onClick={() => setUrlState({ lookback: opt })}
                 className={cn(
-                  'py-1.5 border-r border-border-strong px-3 font-mono text-xs',
+                  'flex-1 py-1.5 border-r border-border-strong px-3 font-mono text-xs',
                   'transition-colors last:border-r-0',
                   active
                     ? 'bg-bg-raised font-semibold text-text-emphasis'

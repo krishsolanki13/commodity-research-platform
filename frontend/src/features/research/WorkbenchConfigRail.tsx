@@ -10,8 +10,8 @@ import { DateRangePicker } from '@/components/inputs/DateRangePicker'
 import { StrategyPicker } from '@/components/inputs/StrategyPicker'
 import { IndicatorPicker } from '@/components/inputs/IndicatorPicker'
 import { ParamForm } from '@/components/inputs/ParamForm'
-import { Separator } from '@/ui/separator'
 import { Button } from '@/ui/button'
+import { Panel } from '@/ui/Panel'
 import type { components } from '@/api/schema'
 
 type FeatureSpecRequest = components['schemas']['FeatureSpecRequest']
@@ -185,41 +185,56 @@ export function WorkbenchConfigRail({
 
   return (
     <div className="w-80 flex shrink-0 flex-col gap-4 overflow-y-auto border-r border-border-default p-4">
-      <AssetSelector
-        value={urlState.asset ?? null}
-        onChange={(asset) => setUrlState({ asset })}
-        assets={assets ?? []}
-        aria-label="Select asset"
-      />
-      <DateRangePicker
-        value={{ from: fromDate, to: toDate }}
-        onChange={({ from, to }) => setUrlState({ from_date: from, to_date: to })}
-      />
-      <StrategyPicker
-        strategies={strategies ?? []}
-        value={strategy ?? null}
-        onChange={handleStrategyChange}
-      />
-      {strategy && (
-        <ParamForm
-          schema={selectedStrategy?.params_schema ?? []}
-          values={parsedParams}
-          onChange={(newParams) => setUrlState({ params: JSON.stringify(newParams) })}
+      <Panel title="Asset & Strategy">
+        <div className="flex flex-col gap-4">
+          <AssetSelector
+            value={urlState.asset ?? null}
+            onChange={(asset) => setUrlState({ asset })}
+            assets={assets ?? []}
+            aria-label="Select asset"
+          />
+          <DateRangePicker
+            value={{ from: fromDate, to: toDate }}
+            onChange={({ from, to }) =>
+              setUrlState({ from_date: from, to_date: to })}
+          />
+          <StrategyPicker
+            strategies={strategies ?? []}
+            value={strategy ?? null}
+            onChange={handleStrategyChange}
+          />
+          {strategy && (
+            <ParamForm
+              schema={selectedStrategy?.params_schema ?? []}
+              values={parsedParams}
+              onChange={(newParams) =>
+                setUrlState({ params: JSON.stringify(newParams) })}
+            />
+          )}
+        </div>
+      </Panel>
+
+      <Panel title="Indicators">
+        <IndicatorPicker
+          catalog={indicators ?? []}
+          selected={parsedFeatures}
+          onChange={(newSpecs) =>
+            setUrlState({ features: JSON.stringify(newSpecs) })}
+          requiredSpecs={requiredSpecs}
         />
-      )}
-      <Separator />
-      <IndicatorPicker
-        catalog={indicators ?? []}
-        selected={parsedFeatures}
-        onChange={(newSpecs) => setUrlState({ features: JSON.stringify(newSpecs) })}
-        requiredSpecs={requiredSpecs}
-      />
-      <Separator />
-      <Button disabled={!canEvaluate || evaluating} onClick={handleEvaluateClick}>
+      </Panel>
+
+      <Button
+        disabled={!canEvaluate || evaluating}
+        onClick={handleEvaluateClick}
+      >
         {evaluating ? progressLabel : 'Evaluate signal'}
       </Button>
+
       {evaluateDisabledReason && !evaluating && (
-        <p className="text-xs text-text-secondary">{evaluateDisabledReason}</p>
+        <p className="text-xs text-text-secondary">
+          {evaluateDisabledReason}
+        </p>
       )}
       {evaluating && evaluateProgress && (
         <p className="text-xs text-text-secondary">{progressLabel}</p>
