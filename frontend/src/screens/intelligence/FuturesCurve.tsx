@@ -45,14 +45,14 @@ export function FuturesCurve() {
     return (
       <div className="flex flex-col gap-0 h-full overflow-hidden">
         {/* Title */}
-        <div className="shrink-0 border-b border-border-default px-6 py-4">
+        <div className="shrink-0 px-6 pt-6 pb-4">
           <h1 className="text-xl font-semibold text-text-primary">Futures Curve</h1>
         </div>
 
-        <div className="flex min-h-0 flex-1 gap-6 overflow-hidden p-6">
+        <div className="flex min-h-0 flex-1 gap-6 overflow-hidden px-6 pb-6">
           {/* Left panel */}
           <div className="w-96 shrink-0 overflow-y-auto">
-            <Panel title="Futures Curve">
+            <Panel title="Configuration">
               <div className="flex flex-col gap-4">
                 <IntelligenceConfigRail
                   availableAssets={available?.assets ?? []}
@@ -64,20 +64,24 @@ export function FuturesCurve() {
           </div>
 
           {/* Right half — View Curve button */}
-          <div className="flex flex-1 flex-col gap-4 pt-0">
-            <Button
-              variant="primary"
-              disabled={!asset}
-              onClick={() => setLaunched(true)}
-              className="w-full"
-            >
-              View Curve
-            </Button>
-            {!asset && (
-              <p className="text-xs text-text-secondary">
-                Select an asset to view the futures curve
-              </p>
-            )}
+          <div className="flex flex-1 flex-col pt-0">
+            <Panel title="View">
+              <div className="flex flex-col gap-4">
+                <Button
+                  variant="primary"
+                  disabled={!asset}
+                  onClick={() => setLaunched(true)}
+                  className="w-full"
+                >
+                  View Curve
+                </Button>
+                {!asset && (
+                  <p className="text-xs text-text-secondary">
+                    Select an asset to view the futures curve
+                  </p>
+                )}
+              </div>
+            </Panel>
           </div>
         </div>
       </div>

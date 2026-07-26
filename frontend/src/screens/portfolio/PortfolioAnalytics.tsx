@@ -91,10 +91,10 @@ export function PortfolioAnalytics() {
   if (!run_id) {
     return (
       <div className="flex flex-col h-full overflow-hidden">
-        <div className="shrink-0 border-b border-border-default px-6 py-4">
+        <div className="shrink-0 px-6 pt-6 pb-4">
           <h1 className="text-xl font-semibold text-text-primary">Portfolio Analytics</h1>
         </div>
-        <div className="flex gap-6 p-6 flex-1 overflow-hidden">
+        <div className="flex min-h-0 flex-1 gap-6 overflow-hidden px-6 pb-6">
           <div className="w-96 flex shrink-0 flex-col gap-4 overflow-y-auto">
             <Panel title="Portfolio Configuration">
               <PortfolioConfigPanel
@@ -108,13 +108,15 @@ export function PortfolioAnalytics() {
             </Panel>
           </div>
           <div className="flex flex-1 flex-col gap-4">
-            <PortfolioLaunchPanel
-              strategy={strategy}
-              params={params}
-              sizingMethod={sizingMethod}
-              initialCapital={initialCapital}
-              onLaunched={(id) => setUrlState({ run_id: id })}
-            />
+            <Panel title="Launch">
+              <PortfolioLaunchPanel
+                strategy={strategy}
+                params={params}
+                sizingMethod={sizingMethod}
+                initialCapital={initialCapital}
+                onLaunched={(id) => setUrlState({ run_id: id })}
+              />
+            </Panel>
             <EmptyState
               title="No portfolio run selected"
               body="Launch a portfolio backtest to see analytics."

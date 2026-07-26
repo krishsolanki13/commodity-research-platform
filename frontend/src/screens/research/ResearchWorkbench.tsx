@@ -12,6 +12,7 @@ import {
   type WorkbenchEvaluationResult,
 } from '@/features/research/WorkbenchEvidenceCanvas'
 import { WorkbenchICGateStrip } from '@/features/research/WorkbenchICGateStrip'
+import { Panel } from '@/ui/Panel'
 import { Button } from '@/ui/button'
 import type { components } from '@/api/schema'
 
@@ -90,7 +91,7 @@ export default function ResearchWorkbenchScreen() {
         <h1 className="text-xl font-semibold text-text-primary">Research Workbench</h1>
       </div>
 
-      <div className="flex min-h-0 flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 gap-6 overflow-hidden px-6 pb-6">
         {/* Left rail — scrolls independently */}
         <WorkbenchConfigRail
           onEvaluate={(p) => {
@@ -106,24 +107,24 @@ export default function ResearchWorkbenchScreen() {
         />
 
         {/* Right half */}
-        <div className="relative flex flex-1 flex-col overflow-hidden">
-          {/* Evaluate button — always at top of right half */}
-          <div className="shrink-0 border-b border-border-default p-4">
-            <Button
-              variant="primary"
-              disabled={!canEvaluate || evaluating}
-              onClick={() => evaluateTriggerRef.current?.()}
-              className="w-full"
-            >
-              {evaluating ? progressLabel : 'Evaluate signal'}
-            </Button>
-            {evaluateReason && !evaluating && (
-              <p className="mt-1 text-xs text-text-secondary">{evaluateReason}</p>
-            )}
-          </div>
+        <div className="relative flex flex-1 flex-col overflow-hidden p-6 pt-0">
+          <Panel title="Evaluate" padding={false}>
+            <div className="flex flex-col gap-4 p-4">
+              <Button
+                variant="primary"
+                disabled={!canEvaluate || evaluating}
+                onClick={() => evaluateTriggerRef.current?.()}
+                className="w-full"
+              >
+                {evaluating ? progressLabel : 'Evaluate signal'}
+              </Button>
+              {evaluateReason && !evaluating && (
+                <p className="text-xs text-text-secondary">{evaluateReason}</p>
+              )}
+            </div>
+          </Panel>
 
-          {/* Results */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto mt-4">
             <WorkbenchEvidenceCanvas
               asset={asset}
               strategy={strategy}
