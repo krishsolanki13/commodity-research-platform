@@ -25,30 +25,29 @@ export function PortfolioRunSelector() {
         <SelectValue placeholder="Select a recent run" />
       </SelectTrigger>
       <SelectContent>
-        {runs.map((run) => {
-          const shortName = shortRunName(run.run_id) || run.strategy_name
-          return (
-            <SelectItem key={run.run_id} value={run.run_id}>
-              <div className="flex w-full items-center justify-between gap-3 [&>span:first-child]:hidden [&>span:last-child]:w-full">
-                <span className="max-w-[160px] truncate font-mono text-xs">{shortName}</span>
-                <span
-                  className={cn(
-                    'shrink-0 font-mono text-xs',
-                    run.total_return == null
-                      ? 'text-text-secondary'
-                      : run.total_return >= 0
-                        ? 'text-gain'
-                        : 'text-loss'
-                  )}
-                >
-                  {run.total_return != null
-                    ? `${run.total_return >= 0 ? '+' : ''}${(run.total_return * 100).toFixed(2)}%`
-                    : '—'}
-                </span>
-              </div>
-            </SelectItem>
-          )
-        })}
+        {runs.map((run) => (
+          <SelectItem
+            key={run.run_id}
+            value={run.run_id}
+            className="[&>span:first-child]:hidden [&>span:last-child]:w-full"
+          >
+            <div className="flex w-full items-center justify-between gap-3">
+              <span className="max-w-[160px] truncate font-mono text-xs">
+                {run.strategy_name ?? shortRunName(run.run_id)}
+              </span>
+              <span
+                className={cn(
+                  'shrink-0 font-mono text-xs',
+                  (run.total_return ?? 0) >= 0 ? 'text-gain' : 'text-loss'
+                )}
+              >
+                {run.total_return != null
+                  ? `${run.total_return >= 0 ? '+' : ''}${(run.total_return * 100).toFixed(2)}%`
+                  : '—'}
+              </span>
+            </div>
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   )
