@@ -165,6 +165,7 @@ export default function ResearchWorkbenchScreen() {
               toDate={toDate}
               lastEvaluatedConfigHash={lastEvaluatedConfigHash}
               evaluationResult={evaluationResult}
+              evaluating={evaluating}
             />
           </div>
         </div>

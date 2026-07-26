@@ -31,6 +31,7 @@ interface WorkbenchEvidenceCanvasProps {
   toDate: string
   lastEvaluatedConfigHash: string | null
   evaluationResult: WorkbenchEvaluationResult | null
+  evaluating?: boolean
 }
 
 const EMPTY_SERIES: ColumnarSeries = { index: [], columns: {} }
@@ -51,12 +52,15 @@ export function WorkbenchEvidenceCanvas({
   toDate,
   lastEvaluatedConfigHash,
   evaluationResult,
+  evaluating,
 }: WorkbenchEvidenceCanvasProps) {
   const currentConfigHash = useMemo(
     () => JSON.stringify({ asset, strategy, params, featureSpecs, fromDate, toDate }),
     [asset, strategy, params, featureSpecs, fromDate, toDate]
   )
-  const isStale = lastEvaluatedConfigHash !== null && currentConfigHash !== lastEvaluatedConfigHash
+  const isStale = lastEvaluatedConfigHash !== null &&
+    currentConfigHash !== lastEvaluatedConfigHash &&
+    !evaluating
 
   const { data: ohlcv, isLoading: ohlcvLoading } = useAssetOhlcv(asset, {
     from_date: fromDate,

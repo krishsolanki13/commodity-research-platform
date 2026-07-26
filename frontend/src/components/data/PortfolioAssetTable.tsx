@@ -71,7 +71,7 @@ export function PortfolioAssetTable({
           const runId = assetRunIds?.[asset]
 
           return (
-            <tr key={asset} className="border-border-subtle border-b">
+            <tr key={asset} className="border-border-default border-b">
               <td className="px-3 py-2 text-left font-medium text-text-primary">
                 {displayName(asset)}
               </td>

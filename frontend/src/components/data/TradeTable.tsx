@@ -142,7 +142,7 @@ export function TradeTable({
                         trade.exit_price,
                         trade.net_pnl,
                       ].join('|')}
-                      className="border-b border-border-subtle"
+                      className="border-b border-border-default"
                     >
                       <td className="px-2 py-1.5 font-mono text-xs text-text-secondary">{rowNum}</td>
                       <td className="px-2 py-1.5">
