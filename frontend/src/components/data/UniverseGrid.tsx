@@ -64,8 +64,9 @@ export function UniverseGrid({
   return (
     <TooltipProvider>
       <div className={cn('w-full overflow-x-auto', className)}>
+        <div className="overflow-hidden rounded border border-border-default">
         <table
-          className="w-full border-collapse text-sm"
+          className="w-full table-fixed border-collapse text-sm"
           style={{ tableLayout: 'auto' }}
         >
           <thead>
@@ -237,6 +238,7 @@ export function UniverseGrid({
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </TooltipProvider>
   )

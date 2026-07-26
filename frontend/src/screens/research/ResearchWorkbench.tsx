@@ -45,6 +45,21 @@ export default function ResearchWorkbenchScreen() {
   const parsedParams = safeJsonParse<Record<string, unknown>>(paramsJson, {})
   const parsedFeatures = safeJsonParse<FeatureSpecRequest[]>(featuresJson, [])
 
+  const currentConfigHash = JSON.stringify({
+    asset, strategy,
+    params: paramsJson,
+    featureSpecs: featuresJson,
+    fromDate, toDate,
+  })
+
+  const hasFreshResults =
+    evaluationResult !== null &&
+    lastEvaluatedConfigHash === currentConfigHash
+
+  const showEvaluateButton = !hasFreshResults
+  const blurResults =
+    evaluationResult !== null && !hasFreshResults
+
   const progressLabel =
     evaluateProgress?.stepIndex === 1
       ? 'Computing features...'
@@ -91,7 +106,7 @@ export default function ResearchWorkbenchScreen() {
         <h1 className="text-xl font-semibold text-text-primary">Research Workbench</h1>
       </div>
 
-      <div className="flex min-h-0 flex-1 gap-6 overflow-hidden px-6 pb-6">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Left rail — scrolls independently */}
         <WorkbenchConfigRail
           onEvaluate={(p) => {
@@ -107,24 +122,40 @@ export default function ResearchWorkbenchScreen() {
         />
 
         {/* Right half */}
-        <div className="relative flex flex-1 flex-col overflow-hidden">
-          <Panel title="Evaluate" padding={false}>
-            <div className="flex flex-col gap-4 p-4">
-              <Button
-                variant="primary"
-                disabled={!canEvaluate || evaluating}
-                onClick={() => evaluateTriggerRef.current?.()}
-                className="w-full"
-              >
-                {evaluating ? progressLabel : 'Evaluate signal'}
-              </Button>
-              {evaluateReason && !evaluating && (
-                <p className="text-xs text-text-secondary">{evaluateReason}</p>
-              )}
-            </div>
-          </Panel>
+        <div className="relative flex flex-1 flex-col overflow-hidden px-6 pb-6">
 
-          <div className="flex-1 overflow-y-auto mt-4">
+          {/* Evaluate button — hidden when results are fresh */}
+          {showEvaluateButton && (
+            <div className="shrink-0 mb-4">
+              <Panel title="Evaluate">
+                <div className="flex flex-col gap-3">
+                  <Button
+                    variant="primary"
+                    disabled={!canEvaluate || evaluating}
+                    onClick={() => evaluateTriggerRef.current?.()}
+                    className="w-full"
+                  >
+                    {evaluating ? progressLabel : 'Evaluate signal'}
+                  </Button>
+                  {evaluateReason && !evaluating && (
+                    <p className="text-xs text-text-secondary">
+                      {evaluateReason}
+                    </p>
+                  )}
+                </div>
+              </Panel>
+            </div>
+          )}
+
+          {/* Results area */}
+          <div className="relative min-h-0 flex-1 overflow-y-auto">
+            {blurResults && (
+              <div className="absolute inset-0 z-10 flex items-start justify-center pt-8 backdrop-blur-sm bg-bg-app/40 rounded">
+                <span className="rounded border border-border-default bg-bg-raised px-3 py-1.5 text-xs text-text-secondary">
+                  Config changed — click Evaluate to update
+                </span>
+              </div>
+            )}
             <WorkbenchEvidenceCanvas
               asset={asset}
               strategy={strategy}

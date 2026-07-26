@@ -12,9 +12,10 @@ interface FeatureSpecTableProps {
 export function FeatureSpecTable({ specs, className }: FeatureSpecTableProps) {
   if (!specs || specs.length === 0) return null
   return (
+    <div className={cn('overflow-hidden rounded border border-border-default', className)}>
     <table
       role="grid"
-      className={cn('w-full table-fixed border-collapse text-sm', className)}
+      className="w-full table-fixed border-collapse text-sm"
     >
       <thead className="bg-bg-raised">
         <tr>
@@ -51,5 +52,6 @@ export function FeatureSpecTable({ specs, className }: FeatureSpecTableProps) {
         ))}
       </tbody>
     </table>
+    </div>
   )
 }

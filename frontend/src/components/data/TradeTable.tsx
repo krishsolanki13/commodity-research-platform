@@ -1,4 +1,4 @@
-﻿import { AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { MetricStat } from '@/components/data/MetricStat'
 import { fmt } from '@/lib/fmt'
 import { tone } from '@/lib/tone'
@@ -26,7 +26,7 @@ interface TradeTableProps {
 
 const DIRECTION_OPTIONS: Array<'all' | 'long' | 'short'> = ['all', 'long', 'short']
 
-const COLUMNS = ['#', 'DIRECTION', 'ENTRY', 'EXIT', 'DURATION', 'ENTRY PX', 'EXIT PX', 'GROSS P&L', 'COST', 'NET P&L', 'RETURN', '⚠']
+const COLUMNS = ['#', 'DIRECTION', 'ENTRY', 'EXIT', 'DURATION', 'ENTRY PX', 'EXIT PX', 'GROSS P&L', 'COST', 'NET P&L', 'RETURN', '?']
 const COL_WIDTHS = [48, 90, 110, 110, 90, 100, 100, 110, 90, 100, 90, 40]
 
 export function TradeTable({
@@ -102,6 +102,7 @@ export function TradeTable({
         </div>
       ) : (
         <div className="overflow-x-auto">
+          <div className="overflow-hidden rounded border border-border-default">
           <table className="w-full table-fixed border-collapse text-sm">
             <colgroup>
               {COL_WIDTHS.map((w, i) => (
@@ -125,7 +126,7 @@ export function TradeTable({
               {loading ? (
                 <tr>
                   <td colSpan={COLUMNS.length} className="py-8 text-center text-xs text-text-disabled">
-                    Loading…
+                    Loading.
                   </td>
                 </tr>
               ) : (
@@ -190,6 +191,7 @@ export function TradeTable({
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

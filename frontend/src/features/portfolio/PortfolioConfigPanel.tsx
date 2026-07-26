@@ -23,7 +23,6 @@ export function PortfolioConfigPanel({
   const strategyOptions = (strategiesData?.strategies ?? []).map((s) => ({
     value: s.name,
     label: s.display_name,
-    meta: s.description,
   }))
 
   return (
