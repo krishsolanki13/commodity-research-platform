@@ -59,10 +59,10 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid w-full grid-cols-3 gap-4">
-        <div className="flex flex-col items-start gap-0.5">
+        <div className="flex flex-col gap-0.5">
           <MetricStat label="IC" value={evaluation.ic} format="ic" tone="auto" />
           {icBand && (
-            <span className="font-mono text-xs text-text-secondary">{icBand}</span>
+            <span className="font-mono text-xs text-text-secondary pl-0">{icBand}</span>
           )}
         </div>
         <MetricStat label="ICIR" value={evaluation.icir} format="ic" tone="neutral" />
