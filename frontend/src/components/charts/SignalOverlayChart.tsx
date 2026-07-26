@@ -233,38 +233,45 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           const axisRaw = items[0]?.axisValue ?? items[0]?.name
           const axisMs = typeof axisRaw === 'number' ? axisRaw : Number(axisRaw)
           const dateLabel = Number.isFinite(axisMs) ? fmtDate(axisMs) : String(axisRaw ?? '')
-          const lines = items.map((p) => {
-            const marker = p.marker ?? ''
-            if (p.seriesType === 'candlestick') {
-              // ECharts candlestick value: [open, close, low, high] (or [idx, open, close, low, high])
-              const rawVal = (Array.isArray(p.value) ? p.value : p.data) as number[] | undefined
-              if (!rawVal || rawVal.length < 4) return `${marker}—`
+
+          const candleItem = items.find((p) => p.seriesType === 'candlestick')
+          const signalItem = items.find((p) => p.seriesName === 'Signal')
+          const positionItem = items.find((p) => p.seriesName === 'Position')
+
+          const lines: string[] = [dateLabel]
+
+          if (candleItem) {
+            const rawVal = (Array.isArray(candleItem.value) ? candleItem.value : candleItem.data) as number[] | undefined
+            if (rawVal && rawVal.length >= 4) {
               const prices = rawVal.length >= 5 ? rawVal.slice(1, 5) : rawVal.slice(0, 4)
-              const [open, close, low, high] = prices
-              return [
-                `${marker}O: ${Number(open).toFixed(2)}`,
-                `C: ${Number(close).toFixed(2)}`,
-                `L: ${Number(low).toFixed(2)}`,
-                `H: ${Number(high).toFixed(2)}`,
-              ].join('<br/>')
+              const [o, c, l, h] = prices
+              lines.push(
+                `O: ${Number(o).toFixed(2)}`,
+                `C: ${Number(c).toFixed(2)}`,
+                `L: ${Number(l).toFixed(2)}`,
+                `H: ${Number(h).toFixed(2)}`,
+              )
             }
-            let v: unknown = p.value
-            if (Array.isArray(p.value)) {
-              const arr = p.value as unknown[]
-              v = arr[arr.length - 1]
+          }
+
+          if (signalItem) {
+            const sv = Array.isArray(signalItem.value)
+              ? (signalItem.value as unknown[])[1]
+              : signalItem.value
+            if (sv != null) {
+              lines.push(`${signalItem.marker ?? ''}Signal: ${Number(sv).toFixed(2)}`)
             }
-            if (typeof v !== 'number' && typeof v !== 'string') {
-              return `${marker}${p.seriesName ?? ''}: —`
-            }
-            const num = Number(v)
-            if (p.seriesType === 'bar' && Number.isFinite(num)) {
-              const label = num > 0 ? 'Long' : num < 0 ? 'Short' : 'Flat'
-              return `${marker}${p.seriesName ?? 'Position'}: ${label}`
-            }
-            const formatted = Number.isFinite(num) ? num.toFixed(2) : v
-            return `${marker}${p.seriesName ?? ''}: ${formatted}`
-          })
-          return [dateLabel, ...lines].join('<br/>')
+          }
+
+          if (positionItem) {
+            const pv = Array.isArray(positionItem.value)
+              ? (positionItem.value as unknown[])[1]
+              : positionItem.value
+            const label = Number(pv) >= 0.8 ? 'Long' : Number(pv) <= -0.8 ? 'Short' : 'Flat'
+            lines.push(`Position: ${label}`)
+          }
+
+          return lines.join('<br/>')
         },
       },
       series: [

@@ -230,13 +230,7 @@ function EquityCurveChartInner({
             ? {
                 silent: true,
                 symbol: 'none',
-              label: {
-                formatter: () => fmt.compactUsd(baseline),
-                position: 'insideStartTop',
-                color: theme.secondaryText,
-                fontSize: 10,
-                fontFamily: theme.monoFont,
-              },
+              label: { show: false },
                 lineStyle: { type: 'dotted', color: theme.secondaryText, width: 1 },
                 data: [{ yAxis: baseline }],
               }

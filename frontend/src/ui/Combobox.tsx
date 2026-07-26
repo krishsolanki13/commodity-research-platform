@@ -78,7 +78,7 @@ export function Combobox({
                     value === option.value ? 'opacity-100' : 'opacity-0'
                   )}
                 />
-                <span className="flex-1 truncate font-mono text-sm">{option.label}</span>
+                <span className="flex-1 font-mono text-sm">{option.label}</span>
                 {option.meta && (
                   <span className="ml-2 text-xs text-text-secondary">{option.meta}</span>
                 )}

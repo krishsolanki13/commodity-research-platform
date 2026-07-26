@@ -319,7 +319,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
               const prices = raw.length >= 5 ? raw.slice(1, 5) : raw.slice(0, 4)
               const [open, close, low, high] = prices
               return [
-                `${marker}O: ${Number(open).toFixed(2)}`,
+                `O: ${Number(open).toFixed(2)}`,
                 `C: ${Number(close).toFixed(2)}`,
                 `L: ${Number(low).toFixed(2)}`,
                 `H: ${Number(high).toFixed(2)}`,
@@ -331,11 +331,11 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
               v = arr[arr.length - 1]
             }
             if (typeof v !== 'number' && typeof v !== 'string') {
-              return `${marker}${p.seriesName ?? ''}: —`
+              return `${p.seriesName ?? ''}: —`
             }
             const num = Number(v)
             const formatted = Number.isFinite(num) ? num.toFixed(2) : v
-            return `${marker}${p.seriesName ?? ''}: ${formatted}`
+            return `${p.seriesName ?? ''}: ${formatted}`
           })
           return [dateLabel, ...lines].join('<br/>')
         },
