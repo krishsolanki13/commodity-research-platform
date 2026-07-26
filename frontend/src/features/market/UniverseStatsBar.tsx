@@ -5,6 +5,7 @@ import { useIngestMutation } from '@/api/hooks/useIngestMutation'
 import { MetricGrid } from '@/components/data/MetricGrid'
 import type { MetricStatProps } from '@/components/data/MetricStat'
 import { Button } from '@/ui/button'
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/ui/tooltip'
 import { RANGE_PRESETS } from '@/lib/date-range'
 import type { RangePreset } from '@/lib/date-range'
 import { useUrlState } from '@/lib/useUrlState'
@@ -99,29 +100,38 @@ export function UniverseStatsBar() {
               </button>
             ))}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              ingest.mutate(
-                { asset: null },
-                {
-                  onSuccess: () => {
-                    const now = new Date()
-                    setLastIngestedAt(now)
-                    try {
-                      localStorage.setItem('commodity_research_last_ingested', now.toISOString())
-                    } catch {
-                      // localStorage not available — session-only fallback
-                    }
-                  },
-                }
-              )
-            }
-            disabled={ingest.isPending}
-          >
-            {ingest.isPending ? 'Ingesting…' : 'Re-ingest all'}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    ingest.mutate(
+                      { asset: null },
+                      {
+                        onSuccess: () => {
+                          const now = new Date()
+                          setLastIngestedAt(now)
+                          try {
+                            localStorage.setItem('commodity_research_last_ingested', now.toISOString())
+                          } catch {
+                            // localStorage not available — session-only fallback
+                          }
+                        },
+                      }
+                    )
+                  }
+                  disabled={ingest.isPending}
+                >
+                  {ingest.isPending ? 'Ingesting…' : 'Reload data'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Loads from local Parquet files. To download fresh data, run acquire_data.py from the terminal.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           {ingest.isSuccess && (
             <span className="ml-2 text-xs text-text-secondary">
               {ingest.data?.assets_ingested?.length ?? 6} assets ingested
