@@ -116,9 +116,9 @@ export function WorkbenchEvidenceCanvas({
             loading={ohlcvLoading}
           />
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <ICDecayChart decay={evalData.decay} height={200} title="IC Decay" />
+          <div className="flex flex-col gap-4">
             <MetricGrid metrics={metrics} columns={4} className="w-full" />
+            <ICDecayChart decay={evalData.decay} height={220} title="IC Decay" />
           </div>
 
           <FeatureSpecTable specs={evaluationResult.features.specs} className="w-full" />

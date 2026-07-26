@@ -4,7 +4,6 @@
  */
 import { AlertTriangle } from 'lucide-react'
 import { EmptyState } from '@/components/layout/EmptyState'
-import { ICBandBadge } from '@/components/data/ICBandBadge'
 import { MetricStat } from '@/components/data/MetricStat'
 import { ICDecayChart } from '@/components/charts/ICDecayChart'
 import { Panel } from '@/ui/Panel'
@@ -57,7 +56,6 @@ export function EvalSummaryCard({
     <Panel title="Signal Evaluation">
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-4">
-          <ICBandBadge ic={evaluation.ic} />
           <MetricStat label="IC" value={evaluation.ic} format="ic" />
           <MetricStat label="ICIR" value={evaluation.icir} format="ic" />
           <MetricStat label="TURNOVER" value={evaluation.turnover} format="percent" />
