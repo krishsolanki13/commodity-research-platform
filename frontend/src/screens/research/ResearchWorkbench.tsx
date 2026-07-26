@@ -107,7 +107,7 @@ export default function ResearchWorkbenchScreen() {
         />
 
         {/* Right half */}
-        <div className="relative flex flex-1 flex-col overflow-hidden pt-4">
+        <div className="relative flex flex-1 flex-col overflow-hidden">
           <Panel title="Evaluate" padding={false}>
             <div className="flex flex-col gap-4 p-4">
               <Button

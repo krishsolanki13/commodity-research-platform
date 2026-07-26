@@ -99,7 +99,7 @@ export function IntelligenceConfigRail({ availableAssets, loading }: Intelligenc
         <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           History
         </span>
-        <div className="flex overflow-hidden rounded border border-border-strong">
+        <div className="inline-flex overflow-hidden rounded border border-border-strong">
           {LOOKBACK_OPTIONS.map((opt) => {
             const active = urlState.lookback === opt
             return (
@@ -109,7 +109,7 @@ export function IntelligenceConfigRail({ availableAssets, loading }: Intelligenc
                 aria-pressed={active}
                 onClick={() => setUrlState({ lookback: opt })}
                 className={cn(
-                  'flex-1 py-1.5 border-r border-border-strong px-3 font-mono text-xs',
+                  'py-1.5 border-r border-border-strong px-3 font-mono text-xs',
                   'transition-colors last:border-r-0',
                   active
                     ? 'bg-bg-raised font-semibold text-text-emphasis'
