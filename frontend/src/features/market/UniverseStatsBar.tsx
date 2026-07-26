@@ -49,7 +49,7 @@ export function UniverseStatsBar() {
       tone: 'neutral',
     },
     {
-      label: 'LAST INGESTION',
+      label: 'LAST RELOAD',
       value: lastIngestionDisplay,
       format: 'raw',
       tone: 'neutral',

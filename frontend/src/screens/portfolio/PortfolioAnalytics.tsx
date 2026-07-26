@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Trash2, ClipboardCopy, Check } from 'lucide-react'
 import { usePortfolioSummary } from '@/api/hooks/usePortfolioSummary'
 import { usePortfolioEquity } from '@/api/hooks/usePortfolioEquity'
@@ -50,12 +50,6 @@ export function PortfolioAnalytics() {
   const [copied, setCopied] = useState(false)
   const deleteRun = usePortfolioDelete()
   const portfolioRuns = usePortfolioRuns()
-
-  useEffect(() => {
-    if (!run_id && (portfolioRuns.data?.runs?.length ?? 0) > 0) {
-      setUrlState({ run_id: portfolioRuns.data!.runs[0].run_id })
-    }
-  }, [run_id, portfolioRuns.data?.runs, setUrlState])
 
   const params = DEFAULT_PARAMS[strategy] ?? {}
   const cleanRunId = (run_id ?? '').replace(/^poll_/, '')
