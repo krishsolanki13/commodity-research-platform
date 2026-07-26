@@ -94,8 +94,8 @@ export function PortfolioAnalytics() {
         <div className="shrink-0 px-6 pt-6 pb-4">
           <h1 className="text-xl font-semibold text-text-primary">Portfolio Analytics</h1>
         </div>
-        <div className="flex min-h-0 flex-1 gap-6 overflow-hidden px-6 pb-6">
-          <div className="w-96 flex shrink-0 flex-col gap-4 overflow-y-auto">
+        <div className="grid min-h-0 flex-1 grid-cols-2 gap-6 overflow-hidden px-6 pb-6">
+          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
             <Panel title="Portfolio Configuration">
               <PortfolioConfigPanel
                 strategy={strategy}
@@ -107,7 +107,7 @@ export function PortfolioAnalytics() {
               />
             </Panel>
           </div>
-          <div className="flex flex-1 flex-col gap-4">
+          <div className="flex min-h-0 flex-col gap-4">
             <Panel title="Launch">
               <PortfolioLaunchPanel
                 strategy={strategy}

@@ -49,9 +49,9 @@ export function FuturesCurve() {
           <h1 className="text-xl font-semibold text-text-primary">Futures Curve</h1>
         </div>
 
-        <div className="flex min-h-0 flex-1 gap-6 overflow-hidden px-6 pb-6">
+        <div className="grid min-h-0 flex-1 grid-cols-2 gap-6 overflow-hidden px-6 pb-6">
           {/* Left panel */}
-          <div className="w-96 shrink-0 overflow-y-auto">
+          <div className="min-h-0 overflow-y-auto">
             <Panel title="Configuration">
               <div className="flex flex-col gap-4">
                 <IntelligenceConfigRail
@@ -64,7 +64,7 @@ export function FuturesCurve() {
           </div>
 
           {/* Right half — View Curve button */}
-          <div className="flex flex-1 flex-col pt-0">
+          <div className="min-h-0">
             <Panel title="View">
               <div className="flex flex-col gap-4">
                 <Button
