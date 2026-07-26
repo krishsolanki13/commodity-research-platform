@@ -1,16 +1,15 @@
-import { Sun, Moon, AlignJustify, Search } from 'lucide-react'
+import { Sun, Moon, AlignJustify } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useWorkspace } from '@/stores/workspace'
 import { cn } from '@/lib/cn'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
 import { client } from '@/api/client'
-import { Kbd } from '@/ui/Kbd'
 
 interface TopBarProps {
   onOpenPalette: () => void
 }
 
-export function TopBar({ onOpenPalette }: TopBarProps) {
+export function TopBar({ onOpenPalette: _onOpenPalette }: TopBarProps) {
   const { theme, density, setTheme, setDensity } = useWorkspace()
 
   const {
@@ -41,17 +40,6 @@ export function TopBar({ onOpenPalette }: TopBarProps) {
     <TooltipProvider delayDuration={300}>
       <header className="h-12 z-40 flex shrink-0 items-center border-b border-border-default bg-bg-panel px-4">
         <span className="text-lg font-semibold text-text-emphasis">Commodity Research</span>
-
-        <div className="mx-auto max-w-lg flex-1 px-8">
-          <button
-            onClick={onOpenPalette}
-            className="py-1.5 flex w-full items-center gap-2 rounded-md border border-border-default bg-bg-app px-3 text-sm text-text-secondary transition-colors duration-fast hover:border-border-strong hover:text-text-primary"
-          >
-            <Search size={14} strokeWidth={1.75} />
-            <span className="flex-1 text-left">Search or jump to...</span>
-            <Kbd>⌘K</Kbd>
-          </button>
-        </div>
 
         <div className="flex items-center gap-2">
           <Tooltip>
