@@ -54,7 +54,7 @@ export default function ResearchWorkbenchScreen() {
 
   const hasFreshResults =
     evaluationResult !== null &&
-    lastEvaluatedConfigHash === currentConfigHash
+    (lastEvaluatedConfigHash === currentConfigHash || evaluating)
 
   const showEvaluateButton = !hasFreshResults
   const blurResults =

@@ -36,6 +36,7 @@ export function PortfolioAssetTable({
   }
 
   return (
+    <div className="overflow-hidden rounded border border-border-default">
     <table
       role="grid"
       aria-label="Per-asset performance"
@@ -135,5 +136,6 @@ export function PortfolioAssetTable({
         })}
       </tbody>
     </table>
+    </div>
   )
 }
