@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { cn } from '@/lib/cn'
 import { rangeToDateParams } from '@/lib/date-range'
 import { useUrlState } from '@/lib/useUrlState'
 import { useCurveAvailableAssets } from '@/api/hooks/useCurveAvailableAssets'
@@ -17,6 +16,7 @@ import { BasisPanel } from '@/features/intelligence/BasisPanel'
 import { HistoryPanel } from '@/features/intelligence/HistoryPanel'
 import { ContractInventoryPanel } from '@/features/intelligence/ContractInventoryPanel'
 import { Panel } from '@/ui/Panel'
+import { Button } from '@/ui/button'
 
 export function FuturesCurve() {
   const [urlState] = useUrlState(intelligenceSchema, intelligenceDefaults)
@@ -51,7 +51,7 @@ export function FuturesCurve() {
 
         <div className="flex min-h-0 flex-1 gap-6 overflow-hidden p-6">
           {/* Left panel */}
-          <div className="w-80 shrink-0 overflow-y-auto">
+          <div className="w-96 shrink-0 overflow-y-auto">
             <Panel title="Futures Curve">
               <div className="flex flex-col gap-4">
                 <IntelligenceConfigRail
@@ -65,19 +65,14 @@ export function FuturesCurve() {
 
           {/* Right half — View Curve button */}
           <div className="flex flex-1 flex-col gap-4 pt-0">
-            <button
+            <Button
+              variant="primary"
               disabled={!asset}
               onClick={() => setLaunched(true)}
-              className={cn(
-                'w-full rounded-md px-4 py-2.5 font-mono text-sm font-medium',
-                'transition-colors duration-fast',
-                asset
-                  ? 'bg-accent text-bg-app hover:bg-accent-hover cursor-pointer'
-                  : 'bg-bg-raised text-text-disabled cursor-not-allowed'
-              )}
+              className="w-full"
             >
               View Curve
-            </button>
+            </Button>
             {!asset && (
               <p className="text-xs text-text-secondary">
                 Select an asset to view the futures curve

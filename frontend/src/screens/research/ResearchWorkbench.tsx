@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { cn } from '@/lib/cn'
 import { safeJsonParse } from '@/lib/json'
 import { useEvaluateChainMutation } from '@/api/hooks/useEvaluateChainMutation'
 import {
@@ -13,6 +12,7 @@ import {
   type WorkbenchEvaluationResult,
 } from '@/features/research/WorkbenchEvidenceCanvas'
 import { WorkbenchICGateStrip } from '@/features/research/WorkbenchICGateStrip'
+import { Button } from '@/ui/button'
 import type { components } from '@/api/schema'
 
 type FeatureSpecRequest = components['schemas']['FeatureSpecRequest']
@@ -85,8 +85,8 @@ export default function ResearchWorkbenchScreen() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      {/* Page title — full width above both halves */}
-      <div className="shrink-0 border-b border-border-default px-6 py-4">
+      {/* Title — fixed, does not scroll */}
+      <div className="shrink-0 px-6 pt-6 pb-4">
         <h1 className="text-xl font-semibold text-text-primary">Research Workbench</h1>
       </div>
 
@@ -109,19 +109,14 @@ export default function ResearchWorkbenchScreen() {
         <div className="relative flex flex-1 flex-col overflow-hidden">
           {/* Evaluate button — always at top of right half */}
           <div className="shrink-0 border-b border-border-default p-4">
-            <button
+            <Button
+              variant="primary"
               disabled={!canEvaluate || evaluating}
               onClick={() => evaluateTriggerRef.current?.()}
-              className={cn(
-                'w-full rounded-md px-4 py-2.5 font-mono text-sm font-medium',
-                'transition-colors duration-fast',
-                canEvaluate && !evaluating
-                  ? 'bg-accent text-bg-app hover:bg-accent-hover cursor-pointer'
-                  : 'bg-bg-raised text-text-disabled cursor-not-allowed'
-              )}
+              className="w-full"
             >
               {evaluating ? progressLabel : 'Evaluate signal'}
-            </button>
+            </Button>
             {evaluateReason && !evaluating && (
               <p className="mt-1 text-xs text-text-secondary">{evaluateReason}</p>
             )}

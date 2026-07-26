@@ -120,13 +120,19 @@ export default function StrategyBuilder() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <div className="mb-2">
-        <h1 className="text-xl font-semibold text-text-primary">Strategy Builder</h1>
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Title — fixed, does not scroll */}
+      <div className="shrink-0 px-6 pt-6 pb-4">
+        <h1 className="text-xl font-semibold text-text-primary">
+          Strategy Builder
+        </h1>
       </div>
 
-      <div className="flex gap-6">
-        <div className="w-96 flex shrink-0 flex-col gap-4">
+      {/* Two-column body — fills remaining height */}
+      <div className="flex min-h-0 flex-1 gap-6 overflow-hidden px-6 pb-6">
+
+        {/* Left column — scrolls independently */}
+        <div className="w-96 shrink-0 overflow-y-auto flex flex-col gap-4">
           <Panel title="Strategy">
             <div className="flex flex-col gap-4">
               <AssetSelector
@@ -144,7 +150,8 @@ export default function StrategyBuilder() {
                 <ParamForm
                   schema={selectedStrategy?.params_schema ?? []}
                   values={parsedParams}
-                  onChange={(newParams) => patchParams({ params: JSON.stringify(newParams) })}
+                  onChange={(newParams) =>
+                    patchParams({ params: JSON.stringify(newParams) })}
                 />
               )}
             </div>
@@ -163,7 +170,9 @@ export default function StrategyBuilder() {
             onChange={setConfig}
           />
         </div>
-        <div className="flex-1">
+
+        {/* Right column — does NOT scroll, stays fixed */}
+        <div className="flex-1 overflow-hidden">
           <LaunchPanel
             config={config}
             evalSummary={evaluation}

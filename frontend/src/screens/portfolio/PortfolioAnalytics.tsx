@@ -95,7 +95,7 @@ export function PortfolioAnalytics() {
           <h1 className="text-xl font-semibold text-text-primary">Portfolio Analytics</h1>
         </div>
         <div className="flex gap-6 p-6 flex-1 overflow-hidden">
-          <div className="w-80 flex shrink-0 flex-col gap-4 overflow-y-auto">
+          <div className="w-96 flex shrink-0 flex-col gap-4 overflow-y-auto">
             <Panel title="Portfolio Configuration">
               <PortfolioConfigPanel
                 strategy={strategy}
