@@ -87,10 +87,12 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
 
     // Compute contiguous Long and Short periods from position data.
     // Threshold 0.5: catches +1 as Long, -1 as Short; treats 0 as Flat (no band).
-    const longPeriods: [number, number][] = []
-    const shortPeriods: [number, number][] = []
+    // Values stored as strings: ECharts category axis matches markArea xAxis values
+    // by string equality internally, so String() is required for bands to render.
+    const longPeriods: [string, string][] = []
+    const shortPeriods: [string, string][] = []
 
-    let periodStart: number | null = null
+    let periodStart: string | null = null
     let periodType: 'long' | 'short' | null = null
 
     for (let i = 0; i < posValues.length; i++) {
@@ -100,18 +102,18 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       if (currentType !== periodType) {
         if (periodType !== null && periodStart !== null) {
           const endIdx = Math.max(0, i - 1)
-          if (periodType === 'long') longPeriods.push([periodStart, position.index[endIdx]])
-          if (periodType === 'short') shortPeriods.push([periodStart, position.index[endIdx]])
+          if (periodType === 'long') longPeriods.push([periodStart, String(position.index[endIdx])])
+          if (periodType === 'short') shortPeriods.push([periodStart, String(position.index[endIdx])])
         }
-        periodStart = currentType !== null ? position.index[i] : null
+        periodStart = currentType !== null ? String(position.index[i]) : null
         periodType = currentType
       }
     }
     // Close final open period
     if (periodType !== null && periodStart !== null) {
       const lastIdx = position.index.length - 1
-      if (periodType === 'long') longPeriods.push([periodStart, position.index[lastIdx]])
-      if (periodType === 'short') shortPeriods.push([periodStart, position.index[lastIdx]])
+      if (periodType === 'long') longPeriods.push([periodStart, String(position.index[lastIdx])])
+      if (periodType === 'short') shortPeriods.push([periodStart, String(position.index[lastIdx])])
     }
 
     // theme.gainFill / lossFill resolve --gain-900a / --loss-900a
@@ -185,7 +187,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           gridIndex: 0,
           min: null, // ← auto-scale: required for negative prices (WTI)
           scale: true,
-          boundaryGap: ['5%', '5%'],
+          boundaryGap: ['2%', '2%'],
           axisLabel: {
             color: theme.secondaryText,
             fontFamily: theme.monoFont,
@@ -205,6 +207,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             fontFamily: theme.monoFont,
             fontSize: 11,
             formatter: (v: number) => Number(v).toFixed(2),
+            showMinLabel: false,
             showMaxLabel: false,
           },
           splitLine: { lineStyle: { color: theme.gridlineColor } },
