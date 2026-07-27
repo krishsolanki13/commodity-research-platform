@@ -4,7 +4,7 @@
  * Layout:
  *   grid[0] price pane    top: 2%,  height: 44%
  *   grid[1] signal pane   top: 49%, height: 18%
- *   grid[2] position pane top: 70%, bottom: 55
+ *   grid[2] position pane top: 76%, bottom: 45
  *
  * CRITICAL constraints:
  *   - Price yAxis: min: null (NEVER min: 0 — WTI negative price)
@@ -21,6 +21,7 @@ import { useChartTheme, type EChartsTheme } from '@/lib/chart-theme'
 import { fmtDate } from '@/lib/fmt'
 import type { ApiClientError } from '@/api/client'
 import type { components } from '@/api/schema'
+import { RegimeContextChip } from '@/features/intelligence/RegimeContextChip'
 
 type ColumnarSeries = components['schemas']['ColumnarSeries']
 
@@ -44,6 +45,7 @@ interface SignalOverlayChartProps {
   loading?: boolean
   error?: ApiClientError | Error | null
   syncGroup?: string
+  asset?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -91,13 +93,13 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       grid: [
         { left: 60, right: 24, top: '2%',  height: '44%' },
         { left: 60, right: 24, top: '49%', height: '18%' },
-        { left: 60, right: 24, top: '70%', bottom: 55 },
+        { left: 60, right: 24, top: '76%', bottom: 45 },
       ],
       dataZoom: [
         {
           type: 'inside',
           xAxisIndex: [0, 1, 2],
-          zoomOnMouseWheel: false,
+          zoomOnMouseWheel: 'ctrl',
           moveOnMouseWheel: false,
           zoomLock: false,
         },
@@ -367,11 +369,19 @@ export function SignalOverlayChart({
   loading,
   error,
   syncGroup,
+  asset,
 }: SignalOverlayChartProps) {
   const theme = useChartTheme()
 
   return (
-    <ChartFrame title={title} height={height} loading={loading} error={error} syncGroup={syncGroup}>
+    <ChartFrame
+      title={title}
+      height={height}
+      loading={loading}
+      error={error}
+      syncGroup={syncGroup}
+      actions={asset ? <RegimeContextChip asset={asset} compact={true} /> : undefined}
+    >
       <SignalOverlayChartInner ohlcv={ohlcv} raw={raw} position={position} theme={theme} />
     </ChartFrame>
   )

@@ -48,6 +48,7 @@ interface ChartFrameProps {
   error?: ApiClientError | Error | null
   empty?: { message: string; action?: { label: string; onClick: () => void } }
   toolbar?: boolean // default true
+  actions?: React.ReactNode
   syncGroup?: string
   onRetry?: () => void
   className?: string
@@ -65,6 +66,7 @@ export function ChartFrame({
   error,
   empty,
   toolbar = true,
+  actions,
   syncGroup,
   onRetry,
   className,
@@ -106,22 +108,27 @@ export function ChartFrame({
     document.body.removeChild(a)
   }
 
-  const toolbarEl = toolbar ? (
-    <div className="flex items-center gap-1">
-      <button
-        onClick={handleExport}
-        aria-label="Export chart as PNG"
-        className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
-      >
-        <Download size={14} strokeWidth={1.75} />
-      </button>
-      <button
-        onClick={() => setIsFullscreen(true)}
-        aria-label="View fullscreen"
-        className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
-      >
-        <Maximize size={14} strokeWidth={1.75} />
-      </button>
+  const toolbarEl = (toolbar || actions) ? (
+    <div className="flex items-center gap-2">
+      {actions}
+      {toolbar && (
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleExport}
+            aria-label="Export chart as PNG"
+            className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
+          >
+            <Download size={14} strokeWidth={1.75} />
+          </button>
+          <button
+            onClick={() => setIsFullscreen(true)}
+            aria-label="View fullscreen"
+            className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
+          >
+            <Maximize size={14} strokeWidth={1.75} />
+          </button>
+        </div>
+      )}
     </div>
   ) : undefined
 

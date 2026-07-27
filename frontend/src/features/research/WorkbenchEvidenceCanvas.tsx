@@ -6,8 +6,6 @@ import { MetricGrid } from '@/components/data/MetricGrid'
 import { FeatureSpecTable } from '@/components/data/FeatureSpecTable'
 import type { MetricStatProps } from '@/components/data/MetricStat'
 import type { components } from '@/api/schema'
-import { RegimeContextChip } from '@/features/intelligence/RegimeContextChip'
-
 type FeatureComputeResponse = components['schemas']['FeatureComputeResponse']
 type SignalGenerateResponse = components['schemas']['SignalGenerateResponse']
 type SignalEvaluateResponse = components['schemas']['SignalEvaluateResponse']
@@ -89,9 +87,6 @@ export function WorkbenchEvidenceCanvas({
     <div className="relative min-h-full">
       <div>
           <div className="flex flex-col gap-3">
-          {/* Regime context — supplementary intelligence; renders null if no curve data */}
-          <RegimeContextChip asset={asset} compact={false} />
-
           <SignalOverlayChart
             ohlcv={priceSeries}
             raw={evaluationResult.signal.raw_signal}
@@ -99,6 +94,7 @@ export function WorkbenchEvidenceCanvas({
             title={`Signal — ${asset} · ${strategy}`}
             syncGroup="workbench"
             loading={ohlcvLoading}
+            asset={asset}
           />
 
           <div className="flex flex-col gap-4">
