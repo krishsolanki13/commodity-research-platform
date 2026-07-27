@@ -190,7 +190,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           min: -1.5,
           max: 1.5,
           splitNumber: 3,
-          interval: 1.5,
+          interval: 1,
           axisLabel: {
             color: theme.secondaryText,
             fontSize: 10,
@@ -316,7 +316,6 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           xAxisIndex: 2,
           yAxisIndex: 2,
           data: posValues,
-          barMaxWidth: 6,
           tooltip: { show: false },
           itemStyle: {
             // ECharts callback param typing is incomplete — cast from unknown per §17
