@@ -79,8 +79,6 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
 
     const rawCols = raw.columns as Record<string, (number | null)[]>
     const rawValues = rawCols['raw'] ?? []
-    const rawAbs = rawValues.filter((v): v is number => v !== null).map(Math.abs)
-    const absMax = rawAbs.length > 0 ? Math.max(...rawAbs) : 1
 
     const posCols = position.columns as Record<string, (number | null)[]>
     const posValues = posCols['position'] ?? []
@@ -171,8 +169,6 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         },
         {
           gridIndex: 1,
-          min: -absMax,
-          max: absMax,
           scale: true,
           splitNumber: 3,
           axisLabel: {
@@ -186,9 +182,9 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         },
         {
           gridIndex: 2,
-          min: -1.5,
-          max: 1.5,
-          interval: 0.5,
+          min: -3,
+          max: 3,
+          interval: 1,
           axisLabel: {
             color: theme.secondaryText,
             fontSize: 10,
