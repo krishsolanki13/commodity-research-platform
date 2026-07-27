@@ -3,7 +3,7 @@
  *
  * Layout:
  *   grid[0] price pane    top: 2%,  height: 58%
- *   grid[1] signal pane   top: 63%, bottom: 36
+ *   grid[1] signal pane   top: 63%, bottom: 48
  *
  * Long/Short periods from position data are rendered as markArea bands on
  * the signal pane only (green = Long, red = Short). The position pane is removed.
@@ -131,7 +131,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       backgroundColor: 'transparent',
       grid: [
         { left: 60, right: 24, top: '2%',  height: '58%' },  // price pane
-        { left: 60, right: 24, top: '63%', bottom: 36 },      // signal pane (now bottom)
+        { left: 60, right: 24, top: '63%', bottom: 48 },      // signal pane (now bottom)
       ],
       dataZoom: [
         {
