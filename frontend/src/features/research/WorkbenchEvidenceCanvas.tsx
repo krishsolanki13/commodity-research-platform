@@ -88,11 +88,9 @@ export function WorkbenchEvidenceCanvas({
   return (
     <div className="relative min-h-full">
       <div>
-        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3">
           {/* Regime context — supplementary intelligence; renders null if no curve data */}
-          <div className="mb-4">
-            <RegimeContextChip asset={asset} compact={false} />
-          </div>
+          <RegimeContextChip asset={asset} compact={false} />
 
           <SignalOverlayChart
             ohlcv={priceSeries}
