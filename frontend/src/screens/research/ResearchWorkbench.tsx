@@ -46,10 +46,12 @@ export default function ResearchWorkbenchScreen() {
   const parsedFeatures = safeJsonParse<FeatureSpecRequest[]>(featuresJson, [])
 
   const currentConfigHash = JSON.stringify({
-    asset, strategy,
+    asset,
+    strategy,
     params: paramsJson,
-    featureSpecs: featuresJson,
-    fromDate, toDate,
+    features: featuresJson,
+    fromDate,
+    toDate,
   })
 
   const hasFreshResults =
@@ -73,8 +75,8 @@ export default function ResearchWorkbenchScreen() {
     const configHash = JSON.stringify({
       asset: p.asset,
       strategy: p.strategy,
-      params: p.params,
-      featureSpecs: p.featureSpecs,
+      params: paramsJson,
+      features: featuresJson,
       fromDate: p.fromDate,
       toDate: p.toDate,
     })
