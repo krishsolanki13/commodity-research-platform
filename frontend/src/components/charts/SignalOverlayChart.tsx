@@ -88,8 +88,8 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       backgroundColor: 'transparent',
       grid: [
         { left: 60, right: 24, top: '2%',  height: '44%' },
-        { left: 60, right: 24, top: '46%', height: '18%' },
-        { left: 60, right: 24, top: '64%', bottom: 45 },
+        { left: 60, right: 24, top: '46%', height: '18%', containLabel: false },
+        { left: 60, right: 24, top: '64%', bottom: 30, containLabel: false },
       ],
       dataZoom: [
         {
