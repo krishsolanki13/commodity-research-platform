@@ -2,9 +2,9 @@
  * SignalOverlayChart — three-pane signal visualization.
  *
  * Layout:
- *   grid[0] price pane    top: 2%,  height: 48%
- *   grid[1] signal pane   top: 52%, height: 18%
- *   grid[2] position pane top: 73%, bottom: 60
+ *   grid[0] price pane    top: 2%,  height: 50%
+ *   grid[1] signal pane   top: 55%, height: 18%
+ *   grid[2] position pane top: 76%, bottom: 55
  *
  * CRITICAL constraints:
  *   - Price yAxis: min: null (NEVER min: 0 — WTI negative price)
@@ -89,19 +89,15 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       animation: true,
       backgroundColor: 'transparent',
       grid: [
-        { left: 60, right: 24, top: '2%',  height: '48%' },
-        { left: 60, right: 24, top: '52%', height: '18%' },
-        { left: 60, right: 24, top: '73%', bottom: 60 },
+        { left: 60, right: 24, top: '2%',  height: '50%' },
+        { left: 60, right: 24, top: '55%', height: '18%' },
+        { left: 60, right: 24, top: '76%', bottom: 55 },
       ],
       dataZoom: [
         {
-          type: 'inside',
-          xAxisIndex: [0, 1, 2],
-        },
-        {
           type: 'slider',
           xAxisIndex: [0, 1, 2],
-          bottom: 20,
+          bottom: 10,
           height: 18,
         },
       ],
@@ -347,7 +343,7 @@ export function SignalOverlayChart({
   raw,
   position,
   title,
-  height = '75vh',
+  height = '65vh',
   loading,
   error,
   syncGroup,
