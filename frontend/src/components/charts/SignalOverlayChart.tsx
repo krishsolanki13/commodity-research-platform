@@ -4,7 +4,7 @@
  * Layout:
  *   grid[0] price pane    top: 2%,  height: 44%
  *   grid[1] signal pane   top: 49%, height: 18%
- *   grid[2] position pane top: 76%, bottom: 45
+ *   grid[2] position pane top: 68%, bottom: 45
  *
  * CRITICAL constraints:
  *   - Price yAxis: min: null (NEVER min: 0 — WTI negative price)
@@ -93,7 +93,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       grid: [
         { left: 60, right: 24, top: '2%',  height: '44%' },
         { left: 60, right: 24, top: '49%', height: '18%' },
-        { left: 60, right: 24, top: '76%', bottom: 45 },
+        { left: 60, right: 24, top: '68%', bottom: 45 },
       ],
       dataZoom: [
         {
@@ -162,6 +162,8 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         {
           gridIndex: 0,
           min: null, // ← auto-scale: required for negative prices (WTI)
+          scale: true,
+          boundaryGap: ['5%', '5%'],
           axisLabel: {
             color: theme.secondaryText,
             fontFamily: theme.monoFont,
@@ -306,7 +308,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           endLabel: { show: false },
           markLine: {
             silent: true,
-            data: [{ yAxis: 0 }],
+            data: [{ yAxis: 0, label: { show: false } }],
             lineStyle: { color: theme.secondaryText, type: 'dashed' },
           },
         },
@@ -380,7 +382,7 @@ export function SignalOverlayChart({
       loading={loading}
       error={error}
       syncGroup={syncGroup}
-      actions={asset ? <RegimeContextChip asset={asset} compact={true} /> : undefined}
+      titleExtra={asset ? <RegimeContextChip asset={asset} compact={false} /> : undefined}
     >
       <SignalOverlayChartInner ohlcv={ohlcv} raw={raw} position={position} theme={theme} />
     </ChartFrame>

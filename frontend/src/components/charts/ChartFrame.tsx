@@ -43,6 +43,7 @@ export function useChartFrame() {
 
 interface ChartFrameProps {
   title?: string
+  titleExtra?: React.ReactNode
   height: number | string
   loading?: boolean
   error?: ApiClientError | Error | null
@@ -61,6 +62,7 @@ interface ChartFrameProps {
 
 export function ChartFrame({
   title,
+  titleExtra,
   height,
   loading,
   error,
@@ -144,7 +146,7 @@ export function ChartFrame({
 
   return (
     <ChartFrameCtx.Provider value={{ onChartReady }}>
-      <Panel title={title} actions={toolbarEl} padding={false} className={className}>
+      <Panel title={title} titleExtra={titleExtra} actions={toolbarEl} padding={false} className={className}>
         <div
           role="img"
           aria-label={title ? `${title} chart` : 'Chart'}
