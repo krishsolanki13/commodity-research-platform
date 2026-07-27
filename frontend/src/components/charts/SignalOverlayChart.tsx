@@ -2,14 +2,14 @@
  * SignalOverlayChart — two-pane signal visualization.
  *
  * Layout:
- *   grid[0] price pane    top: 2%,  height: 52%
- *   grid[1] signal pane   top: 57%, bottom: 45
+ *   grid[0] price pane    top: 2%,  height: 58%
+ *   grid[1] signal pane   top: 63%, bottom: 45
  *
  * Long/Short periods from position data are rendered as markArea bands on
  * both panes (green = Long, red = Short). The position pane is removed.
  *
  * CRITICAL constraints:
- *   - Price yAxis: min: null (NEVER min: 0 — WTI negative price)
+ *   - Price yAxis: min/max callbacks (supports negative prices; WTI)
  *   - All line series: connectNulls: false
  *   - Shared crosshair: axisPointer link xAxisIndex: 'all'
  *
@@ -116,17 +116,22 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       if (periodType === 'short') shortPeriods.push([periodStart, String(position.index[lastIdx])])
     }
 
-    // theme.gainFill / lossFill resolve --gain-900a / --loss-900a
-    // = rgba(63,182,139,0.12) / rgba(224,93,93,0.12) — correct subtle tint
-    const longColor = theme.gainFill
-    const shortColor = theme.lossFill
+    // Rebuild band colors at 8% opacity — bands are background context only,
+    // candlesticks must remain the primary visual element.
+    const toRgba = (color: string, alpha: number): string => {
+      const match = color.match(/[\d.]+/g)
+      if (!match || match.length < 3) return color
+      return `rgba(${match[0]}, ${match[1]}, ${match[2]}, ${alpha})`
+    }
+    const longColor = toRgba(theme.gainFill, 0.08)
+    const shortColor = toRgba(theme.lossFill, 0.08)
 
     chart.setOption({
       animation: true,
       backgroundColor: 'transparent',
       grid: [
-        { left: 60, right: 24, top: '2%',  height: '52%' },  // price pane
-        { left: 60, right: 24, top: '57%', bottom: 45 },      // signal pane (now bottom)
+        { left: 60, right: 24, top: '2%',  height: '58%' },  // price pane
+        { left: 60, right: 24, top: '63%', bottom: 45 },      // signal pane (now bottom)
       ],
       dataZoom: [
         {
@@ -167,7 +172,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             color: theme.secondaryText,
             fontFamily: theme.monoFont,
             fontSize: 11,
-            margin: 4,
+            margin: 8,
             formatter: (v: number | string) => {
               const ms = typeof v === 'string' ? Number(v) : v
               return fmtDate(ms)
@@ -185,9 +190,10 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         {
           // yAxis[0] — price pane
           gridIndex: 0,
-          min: null, // ← auto-scale: required for negative prices (WTI)
           scale: true,
-          boundaryGap: ['2%', '2%'],
+          boundaryGap: ['1%', '1%'],
+          min: (value: { min: number }) => Math.floor(value.min * 0.99),
+          max: (value: { max: number }) => Math.ceil(value.max * 1.01),
           axisLabel: {
             color: theme.secondaryText,
             fontFamily: theme.monoFont,
