@@ -169,9 +169,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         },
         {
           gridIndex: 1,
-          scale: true,
-          // Clamp axis exactly to data extent — prevents scale: true from adding
-          // an extra unlabeled tick and empty space beyond the lowest value.
+          // Callbacks clamp axis exactly to data extent — no extra padding or unlabeled ticks.
           min: (value: { min: number }) => Math.floor(value.min),
           max: (value: { max: number }) => Math.ceil(value.max),
           splitNumber: 3,
@@ -188,7 +186,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           gridIndex: 2,
           min: -1.5,
           max: 1.5,
-          interval: 1.5,
+          interval: 1,
           axisLabel: {
             color: theme.secondaryText,
             fontSize: 10,
