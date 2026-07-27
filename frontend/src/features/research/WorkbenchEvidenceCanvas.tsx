@@ -94,17 +94,14 @@ export function WorkbenchEvidenceCanvas({
             <RegimeContextChip asset={asset} compact={false} />
           </div>
 
-          <div style={{ minHeight: '110vh' }}>
-            <SignalOverlayChart
-              ohlcv={priceSeries}
-              raw={evaluationResult.signal.raw_signal}
-              position={evaluationResult.signal.position_signal}
-              title={`Signal — ${asset} · ${strategy}`}
-              syncGroup="workbench"
-              height="45vh"
-              loading={ohlcvLoading}
-            />
-          </div>
+          <SignalOverlayChart
+            ohlcv={priceSeries}
+            raw={evaluationResult.signal.raw_signal}
+            position={evaluationResult.signal.position_signal}
+            title={`Signal — ${asset} · ${strategy}`}
+            syncGroup="workbench"
+            loading={ohlcvLoading}
+          />
 
           <div className="flex flex-col gap-4">
             <MetricGrid metrics={metrics} columns={4} className="w-full" />
