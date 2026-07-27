@@ -89,7 +89,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       grid: [
         { left: 60, right: 24, top: '2%',  height: '44%' },
         { left: 60, right: 24, top: '46%', height: '18%', containLabel: false },
-        { left: 60, right: 24, top: '64%', bottom: 28, containLabel: false },
+        { left: 60, right: 24, top: '64%', bottom: 45, containLabel: false },
       ],
       dataZoom: [
         {
@@ -102,7 +102,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         {
           type: 'slider',
           xAxisIndex: [0, 1, 2],
-          bottom: 4,
+          bottom: 10,
           height: 18,
         },
       ],
@@ -174,15 +174,13 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           min: (value: { min: number }) => Math.floor(value.min),
           max: (value: { max: number }) => Math.ceil(value.max),
           splitNumber: 3,
-          axisLabel: { show: false },
-          name: 'Signal',
-          nameLocation: 'middle',
-          nameRotate: 90,
-          nameGap: 8,
-          nameTextStyle: {
+          axisLabel: {
             color: theme.secondaryText,
-            fontSize: 10,
             fontFamily: theme.monoFont,
+            fontSize: 11,
+            formatter: (v: number) => Number(v).toFixed(2),
+            showMinLabel: false,
+            showMaxLabel: false,
           },
           splitLine: { lineStyle: { color: theme.gridlineColor } },
         },
@@ -195,7 +193,6 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             color: theme.secondaryText,
             fontSize: 10,
             fontFamily: theme.monoFont,
-            inside: true,
             interval: 0,
             showMinLabel: false,
             showMaxLabel: false,
