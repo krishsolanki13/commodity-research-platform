@@ -1,10 +1,12 @@
 /**
- * SignalOverlayChart — three-pane signal visualization.
+ * SignalOverlayChart — two-pane signal visualization.
  *
  * Layout:
- *   grid[0] price pane    top: 2%,  height: 44%
- *   grid[1] signal pane   top: 46%, height: 18%
- *   grid[2] position pane top: 64%, bottom: 45
+ *   grid[0] price pane    top: 2%,  height: 52%
+ *   grid[1] signal pane   top: 57%, bottom: 45
+ *
+ * Long/Short periods from position data are rendered as markArea bands on
+ * both panes (green = Long, red = Short). The position pane is removed.
  *
  * CRITICAL constraints:
  *   - Price yAxis: min: null (NEVER min: 0 — WTI negative price)
@@ -83,31 +85,65 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
     const posCols = position.columns as Record<string, (number | null)[]>
     const posValues = posCols['position'] ?? []
 
+    // Compute contiguous Long and Short periods from position data.
+    // Threshold 0.5: catches +1 as Long, -1 as Short; treats 0 as Flat (no band).
+    const longPeriods: [number, number][] = []
+    const shortPeriods: [number, number][] = []
+
+    let periodStart: number | null = null
+    let periodType: 'long' | 'short' | null = null
+
+    for (let i = 0; i < posValues.length; i++) {
+      const v = Number(posValues[i])
+      const currentType = v > 0.5 ? 'long' : v < -0.5 ? 'short' : null
+
+      if (currentType !== periodType) {
+        if (periodType !== null && periodStart !== null) {
+          const endIdx = Math.max(0, i - 1)
+          if (periodType === 'long') longPeriods.push([periodStart, position.index[endIdx]])
+          if (periodType === 'short') shortPeriods.push([periodStart, position.index[endIdx]])
+        }
+        periodStart = currentType !== null ? position.index[i] : null
+        periodType = currentType
+      }
+    }
+    // Close final open period
+    if (periodType !== null && periodStart !== null) {
+      const lastIdx = position.index.length - 1
+      if (periodType === 'long') longPeriods.push([periodStart, position.index[lastIdx]])
+      if (periodType === 'short') shortPeriods.push([periodStart, position.index[lastIdx]])
+    }
+
+    // theme.gainFill / lossFill resolve --gain-900a / --loss-900a
+    // = rgba(63,182,139,0.12) / rgba(224,93,93,0.12) — correct subtle tint
+    const longColor = theme.gainFill
+    const shortColor = theme.lossFill
+
     chart.setOption({
       animation: true,
       backgroundColor: 'transparent',
       grid: [
-        { left: 60, right: 24, top: '2%',  height: '44%' },
-        { left: 60, right: 24, top: '46%', height: '18%', containLabel: false },
-        { left: 60, right: 24, top: '59%', bottom: 40, containLabel: false },
+        { left: 60, right: 24, top: '2%',  height: '52%' },  // price pane
+        { left: 60, right: 24, top: '57%', bottom: 45 },      // signal pane (now bottom)
       ],
       dataZoom: [
         {
           type: 'inside',
-          xAxisIndex: [0, 1, 2],
+          xAxisIndex: [0, 1],
           zoomOnMouseWheel: 'ctrl',
           moveOnMouseWheel: false,
           zoomLock: false,
         },
         {
           type: 'slider',
-          xAxisIndex: [0, 1, 2],
+          xAxisIndex: [0, 1],
           bottom: 10,
           height: 18,
         },
       ],
       xAxis: [
         {
+          // xAxis[0] — price pane — hidden labels (not bottom pane)
           gridIndex: 0,
           type: 'category' as const,
           data: index,
@@ -120,24 +156,10 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           },
         },
         {
+          // xAxis[1] — signal pane — now the bottom pane, shows date labels
           gridIndex: 1,
           type: 'category' as const,
           data: raw.index,
-          axisLabel: {
-            show: false,
-            formatter: (v: number | string) => fmtDate(typeof v === 'string' ? Number(v) : v),
-          },
-          axisLine: { show: false },
-          axisTick: { show: false },
-          splitLine: { show: false },
-          axisPointer: {
-            label: { formatter: (p: { value: number }) => fmtDate(p.value) },
-          },
-        },
-        {
-          gridIndex: 2,
-          type: 'category' as const,
-          data: position.index,
           axisLabel: {
             show: true,
             color: theme.secondaryText,
@@ -149,6 +171,8 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
               return fmtDate(ms)
             },
           },
+          axisLine: { show: false },
+          axisTick: { show: false },
           splitLine: { show: false },
           axisPointer: {
             label: { formatter: (p: { value: number }) => fmtDate(p.value) },
@@ -157,6 +181,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       ],
       yAxis: [
         {
+          // yAxis[0] — price pane
           gridIndex: 0,
           min: null, // ← auto-scale: required for negative prices (WTI)
           scale: true,
@@ -169,8 +194,9 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           splitLine: { lineStyle: { color: theme.gridlineColor } },
         },
         {
-          gridIndex: 1,
+          // yAxis[1] — signal pane
           // Callbacks clamp axis exactly to data extent — no extra padding or unlabeled ticks.
+          gridIndex: 1,
           min: (value: { min: number }) => Math.floor(value.min),
           max: (value: { max: number }) => Math.ceil(value.max),
           splitNumber: 3,
@@ -182,27 +208,6 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             showMaxLabel: false,
           },
           splitLine: { lineStyle: { color: theme.gridlineColor } },
-        },
-        {
-          gridIndex: 2,
-          min: -4,
-          max: 4,
-          interval: 1,
-          axisLabel: {
-            color: theme.secondaryText,
-            fontSize: 10,
-            fontFamily: theme.monoFont,
-            interval: 0,
-            showMinLabel: false,
-            showMaxLabel: false,
-            formatter: (v: number) => {
-              if (Math.abs(v - 1) < 0.01)  return 'Long'
-              if (Math.abs(v) < 0.01)      return 'Flat'
-              if (Math.abs(v + 1) < 0.01)  return 'Short'
-              return ''
-            },
-          },
-          splitLine: { show: false },
         },
       ],
       axisPointer: {
@@ -240,7 +245,6 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
 
           const candleItem = items.find((p) => p.seriesType === 'candlestick')
           const signalItem = items.find((p) => p.seriesName === 'Signal')
-          const positionItem = items.find((p) => p.seriesName === 'Position')
 
           const lines: string[] = [dateLabel]
 
@@ -267,19 +271,12 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             }
           }
 
-          if (positionItem) {
-            const pv = Array.isArray(positionItem.value)
-              ? (positionItem.value as unknown[])[1]
-              : positionItem.value
-            const label = Number(pv) >= 0.8 ? 'Long' : Number(pv) <= -0.8 ? 'Short' : 'Flat'
-            lines.push(`Position: ${label}`)
-          }
-
           return lines.join('<br/>')
         },
       },
       series: [
         {
+          // Candlestick — markArea bands show Long (green) / Short (red) periods
           type: 'candlestick' as const,
           xAxisIndex: 0,
           yAxisIndex: 0,
@@ -291,8 +288,22 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             borderColor: theme.gain,
             borderColor0: theme.loss,
           },
+          markArea: {
+            silent: true,
+            data: [
+              ...longPeriods.map(([start, end]) => [
+                { xAxis: start, itemStyle: { color: longColor } },
+                { xAxis: end },
+              ]),
+              ...shortPeriods.map(([start, end]) => [
+                { xAxis: start, itemStyle: { color: shortColor } },
+                { xAxis: end },
+              ]),
+            ],
+          },
         },
         {
+          // Signal line — same Long/Short bands mirrored on signal pane
           type: 'line' as const,
           name: 'Signal',
           xAxisIndex: 1,
@@ -308,23 +319,18 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             data: [{ yAxis: 0, label: { show: false } }],
             lineStyle: { color: theme.secondaryText, type: 'dashed' },
           },
-        },
-        {
-          type: 'bar' as const,
-          name: 'Position',
-          xAxisIndex: 2,
-          yAxisIndex: 2,
-          data: posValues,
-          tooltip: { show: false },
-          itemStyle: {
-            // ECharts callback param typing is incomplete — cast from unknown per §17
-            color: (params: unknown) => {
-              const p = params as { value: [number, number] | number }
-              const v = Array.isArray(p.value) ? p.value[1] : p.value
-              if (v > 0) return theme.gainFill
-              if (v < 0) return theme.lossFill
-              return theme.gridlineColor
-            },
+          markArea: {
+            silent: true,
+            data: [
+              ...longPeriods.map(([start, end]) => [
+                { xAxis: start, itemStyle: { color: longColor } },
+                { xAxis: end },
+              ]),
+              ...shortPeriods.map(([start, end]) => [
+                { xAxis: start, itemStyle: { color: shortColor } },
+                { xAxis: end },
+              ]),
+            ],
           },
         },
       ],
@@ -372,9 +378,25 @@ export function SignalOverlayChart({
 }: SignalOverlayChartProps) {
   const theme = useChartTheme()
 
+  // Inline legend: swatches rendered on the right side of the header row
+  // via ChartFrame's `actions` prop (Panel places actions after justify-between)
+  const legend = (
+    <div className="flex items-center gap-3 text-xs text-text-secondary font-mono">
+      <span className="flex items-center gap-1">
+        <span className="inline-block h-3 w-4 rounded-sm bg-gain-fill opacity-70" />
+        Long
+      </span>
+      <span className="flex items-center gap-1">
+        <span className="inline-block h-3 w-4 rounded-sm bg-loss-fill opacity-70" />
+        Short
+      </span>
+    </div>
+  )
+
   return (
     <ChartFrame
-      title={title}
+      title={title ?? 'Signal'}
+      actions={legend}
       height={height}
       loading={loading}
       error={error}
