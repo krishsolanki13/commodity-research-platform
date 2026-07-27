@@ -21,8 +21,6 @@ import { useChartTheme, type EChartsTheme } from '@/lib/chart-theme'
 import { fmtDate } from '@/lib/fmt'
 import type { ApiClientError } from '@/api/client'
 import type { components } from '@/api/schema'
-import { RegimeContextChip } from '@/features/intelligence/RegimeContextChip'
-
 type ColumnarSeries = components['schemas']['ColumnarSeries']
 
 // ---------------------------------------------------------------------------
@@ -189,8 +187,8 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         {
           // Dedicated position axis: padding beyond ±1 so Long/Short bars are not clipped
           gridIndex: 2,
-          min: -1.5,
-          max: 1.5,
+          min: -2,
+          max: 2,
           splitNumber: 3,
           interval: 1,
           axisLabel: {
@@ -371,7 +369,7 @@ export function SignalOverlayChart({
   loading,
   error,
   syncGroup,
-  asset,
+  asset: _asset,
 }: SignalOverlayChartProps) {
   const theme = useChartTheme()
 
@@ -382,7 +380,6 @@ export function SignalOverlayChart({
       loading={loading}
       error={error}
       syncGroup={syncGroup}
-      titleExtra={asset ? <RegimeContextChip asset={asset} compact={false} /> : undefined}
     >
       <SignalOverlayChartInner ohlcv={ohlcv} raw={raw} position={position} theme={theme} />
     </ChartFrame>

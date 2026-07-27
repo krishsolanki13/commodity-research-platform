@@ -1,6 +1,7 @@
 import { useAssetOhlcv } from '@/api/hooks/useAssetOhlcv'
 import { EmptyState } from '@/components/layout/EmptyState'
 import { SignalOverlayChart } from '@/components/charts/SignalOverlayChart'
+import { RegimeContextChip } from '@/features/intelligence/RegimeContextChip'
 import { ICDecayChart } from '@/components/charts/ICDecayChart'
 import { MetricGrid } from '@/components/data/MetricGrid'
 import { FeatureSpecTable } from '@/components/data/FeatureSpecTable'
@@ -87,6 +88,7 @@ export function WorkbenchEvidenceCanvas({
     <div className="relative min-h-full">
       <div>
           <div className="flex flex-col gap-3">
+          <RegimeContextChip asset={asset} compact={false} />
           <SignalOverlayChart
             ohlcv={priceSeries}
             raw={evaluationResult.signal.raw_signal}

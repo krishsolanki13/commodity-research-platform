@@ -122,7 +122,7 @@ describe('SignalOverlayChart', () => {
     expect(values).toContain(1)
     expect(values).toContain(-1)
     const posAxis = option.yAxis?.[2]
-    expect(posAxis?.min).toBe(-1.5)
-    expect(posAxis?.max).toBe(1.5)
+    expect(posAxis?.min).toBe(-2)
+    expect(posAxis?.max).toBe(2)
   })
 })
