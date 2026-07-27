@@ -104,7 +104,7 @@ describe('SignalOverlayChart', () => {
     ).not.toThrow()
   })
 
-  it('markArea data is populated on candlestick series for Long/Short periods', () => {
+  it('markArea bands are on signal series only — candlestick has no markArea', () => {
     const mixedPosition: ColumnarSeries = {
       index: [1609459200000, 1609545600000, 1609632000000],
       columns: { position: [1, -1, 1] },
@@ -114,10 +114,14 @@ describe('SignalOverlayChart', () => {
       { wrapper: Wrapper }
     )
     const option = lastChartOption()
-    const candlestick = option.series?.find((s) => s.name === undefined || s.name !== 'Signal')
-    expect(candlestick?.markArea).toBeDefined()
-    expect(Array.isArray(candlestick?.markArea?.data)).toBe(true)
-    expect((candlestick?.markArea?.data ?? []).length).toBeGreaterThan(0)
+    const candlestick = option.series?.find((s) => s.name !== 'Signal')
+    const signal = option.series?.find((s) => s.name === 'Signal')
+    // Price pane: candlestick must have NO markArea (no background tints)
+    expect(candlestick?.markArea).toBeUndefined()
+    // Signal pane: signal series must have markArea with Long/Short band data
+    expect(signal?.markArea).toBeDefined()
+    expect(Array.isArray(signal?.markArea?.data)).toBe(true)
+    expect((signal?.markArea?.data ?? []).length).toBeGreaterThan(0)
   })
 
   it('chart uses two-pane layout — only two yAxis entries', () => {
