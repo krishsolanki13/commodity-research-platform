@@ -3,8 +3,8 @@
  *
  * Layout:
  *   grid[0] price pane    top: 2%,  height: 44%
- *   grid[1] signal pane   top: 49%, height: 18%
- *   grid[2] position pane top: 68%, bottom: 45
+ *   grid[1] signal pane   top: 46%, height: 18%
+ *   grid[2] position pane top: 64%, bottom: 45
  *
  * CRITICAL constraints:
  *   - Price yAxis: min: null (NEVER min: 0 — WTI negative price)
@@ -88,8 +88,8 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       backgroundColor: 'transparent',
       grid: [
         { left: 60, right: 24, top: '2%',  height: '44%' },
-        { left: 60, right: 24, top: '49%', height: '18%' },
-        { left: 60, right: 24, top: '67%', bottom: 45 },
+        { left: 60, right: 24, top: '46%', height: '18%' },
+        { left: 60, right: 24, top: '64%', bottom: 45 },
       ],
       dataZoom: [
         {
@@ -143,6 +143,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             color: theme.secondaryText,
             fontFamily: theme.monoFont,
             fontSize: 11,
+            margin: 4,
             formatter: (v: number | string) => {
               const ms = typeof v === 'string' ? Number(v) : v
               return fmtDate(ms)
