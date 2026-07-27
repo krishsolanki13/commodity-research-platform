@@ -89,7 +89,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       grid: [
         { left: 60, right: 24, top: '2%',  height: '44%' },
         { left: 60, right: 24, top: '49%', height: '18%' },
-        { left: 60, right: 24, top: '68%', bottom: 45 },
+        { left: 60, right: 24, top: '67%', bottom: 45 },
       ],
       dataZoom: [
         {
@@ -184,8 +184,8 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         },
         {
           gridIndex: 2,
-          min: -1.5,
-          max: 1.5,
+          min: -2,
+          max: 2,
           interval: 1,
           axisLabel: {
             color: theme.secondaryText,
