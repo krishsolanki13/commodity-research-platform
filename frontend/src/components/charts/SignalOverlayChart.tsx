@@ -185,8 +185,8 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         },
         {
           gridIndex: 2,
-          min: -2,
-          max: 2,
+          min: -3,
+          max: 3,
           interval: 1,
           axisLabel: {
             color: theme.secondaryText,
