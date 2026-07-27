@@ -41,7 +41,7 @@ export function TopBar({ onOpenPalette: _onOpenPalette }: TopBarProps) {
       <header className="h-12 z-40 flex shrink-0 items-center border-b border-border-default bg-bg-panel px-4">
         <span className="text-lg font-semibold text-text-emphasis">Commodity Research</span>
 
-        <div className="flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger>
               <span

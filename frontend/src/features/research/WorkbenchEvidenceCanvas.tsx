@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { useAssetOhlcv } from '@/api/hooks/useAssetOhlcv'
 import { EmptyState } from '@/components/layout/EmptyState'
 import { SignalOverlayChart } from '@/components/charts/SignalOverlayChart'
@@ -46,22 +45,14 @@ const EMPTY_SERIES: ColumnarSeries = { index: [], columns: {} }
 export function WorkbenchEvidenceCanvas({
   asset,
   strategy,
-  params,
-  featureSpecs,
+  params: _params,
+  featureSpecs: _featureSpecs,
   fromDate,
   toDate,
-  lastEvaluatedConfigHash,
+  lastEvaluatedConfigHash: _lastEvaluatedConfigHash,
   evaluationResult,
-  evaluating,
+  evaluating: _evaluating,
 }: WorkbenchEvidenceCanvasProps) {
-  const currentConfigHash = useMemo(
-    () => JSON.stringify({ asset, strategy, params, featureSpecs, fromDate, toDate }),
-    [asset, strategy, params, featureSpecs, fromDate, toDate]
-  )
-  const isStale = lastEvaluatedConfigHash !== null &&
-    currentConfigHash !== lastEvaluatedConfigHash &&
-    !evaluating
-
   const { data: ohlcv, isLoading: ohlcvLoading } = useAssetOhlcv(asset, {
     from_date: fromDate,
     to_date: toDate,
@@ -96,14 +87,7 @@ export function WorkbenchEvidenceCanvas({
 
   return (
     <div className="relative min-h-full">
-      {isStale && (
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-start justify-center">
-          <div className="py-1.5 pointer-events-auto mt-8 flex items-center gap-2 rounded-md border border-warn bg-bg-raised px-3 text-xs text-warn opacity-100">
-            Configuration changed — re-evaluate
-          </div>
-        </div>
-      )}
-      <div className={isStale ? 'pointer-events-none opacity-60' : ''}>
+      <div>
         <div className="flex flex-col gap-6">
           {/* Regime context — supplementary intelligence; renders null if no curve data */}
           <div className="mb-4">
