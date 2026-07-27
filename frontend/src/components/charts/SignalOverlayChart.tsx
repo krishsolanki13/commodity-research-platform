@@ -89,7 +89,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       grid: [
         { left: 60, right: 24, top: '2%',  height: '44%' },
         { left: 60, right: 24, top: '46%', height: '18%', containLabel: false },
-        { left: 60, right: 24, top: '64%', bottom: 45, containLabel: false },
+        { left: 60, right: 24, top: '61%', bottom: 45, containLabel: false },
       ],
       dataZoom: [
         {
@@ -179,7 +179,6 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
             fontFamily: theme.monoFont,
             fontSize: 11,
             formatter: (v: number) => Number(v).toFixed(2),
-            showMinLabel: false,
             showMaxLabel: false,
           },
           splitLine: { lineStyle: { color: theme.gridlineColor } },
