@@ -338,6 +338,19 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
     }
   }, [ohlcv, raw, position, theme, ctx])
 
+  // Pinch (ctrlKey=true) → let ECharts zoom. Normal scroll → page scrolls.
+  useEffect(() => {
+    const el = divRef.current
+    if (!el) return
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.stopPropagation()
+      }
+    }
+    el.addEventListener('wheel', handleWheel, { passive: true })
+    return () => el.removeEventListener('wheel', handleWheel)
+  }, [])
+
   return <div ref={divRef} style={{ width: '100%', height: '100%' }} />
 }
 
