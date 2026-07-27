@@ -3,8 +3,8 @@
  *
  * Layout:
  *   grid[0] price pane    top: 2%,  height: 48%
- *   grid[1] signal pane   top: 54%, height: 18%
- *   grid[2] position pane top: 76%, bottom: 70
+ *   grid[1] signal pane   top: 52%, height: 18%
+ *   grid[2] position pane top: 73%, bottom: 60
  *
  * CRITICAL constraints:
  *   - Price yAxis: min: null (NEVER min: 0 — WTI negative price)
@@ -90,8 +90,8 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       backgroundColor: 'transparent',
       grid: [
         { left: 60, right: 24, top: '2%',  height: '48%' },
-        { left: 60, right: 24, top: '54%', height: '18%' },
-        { left: 60, right: 24, top: '76%', bottom: 70 },
+        { left: 60, right: 24, top: '52%', height: '18%' },
+        { left: 60, right: 24, top: '73%', bottom: 60 },
       ],
       dataZoom: [
         {
