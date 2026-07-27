@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { cn } from '@/lib/cn'
 import { rangeToDateParams } from '@/lib/date-range'
 import { useUrlState } from '@/lib/useUrlState'
 import { useCurveAvailableAssets } from '@/api/hooks/useCurveAvailableAssets'
@@ -19,7 +20,9 @@ import { Panel } from '@/ui/Panel'
 import { Button } from '@/ui/button'
 
 export function FuturesCurve() {
-  const [urlState] = useUrlState(intelligenceSchema, intelligenceDefaults)
+  const [urlState, setUrlState] = useUrlState(
+    intelligenceSchema, intelligenceDefaults
+  )
   const { asset, n_contracts, lookback, observation_date } = urlState
 
   const [launched, setLaunched] = useState(false)
@@ -118,6 +121,31 @@ export function FuturesCurve() {
           error={snapshotError instanceof Error ? snapshotError : null}
         />
         <BasisPanel snapshot={snapshot ?? null} loading={snapshotLoading} />
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-xs text-text-secondary uppercase tracking-wider">
+          History
+        </span>
+        <div className="flex w-fit overflow-hidden rounded border border-border-strong">
+          {(['1Y', '3Y', '5Y', 'MAX'] as const).map((opt) => {
+            const active = (lookback ?? '3Y') === opt
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => setUrlState({ lookback: opt })}
+                className={cn(
+                  'border-r border-border-strong px-3 py-1.5 font-mono text-xs transition-colors last:border-r-0',
+                  active
+                    ? 'bg-bg-raised font-semibold text-text-emphasis'
+                    : 'bg-bg-surface text-text-secondary hover:bg-bg-raised'
+                )}
+              >
+                {opt}
+              </button>
+            )
+          })}
+        </div>
       </div>
       <HistoryPanel
         key={`${asset}-${dateParams.from_date}-${dateParams.to_date}-${n_contracts}`}
