@@ -185,23 +185,23 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           splitLine: { lineStyle: { color: theme.gridlineColor } },
         },
         {
-          // Dedicated position axis: padding beyond ±1 so Long/Short bars are not clipped
           gridIndex: 2,
           min: -1.5,
           max: 1.5,
-          splitNumber: 3,
-          interval: 1,
+          interval: 0.5,
           axisLabel: {
             color: theme.secondaryText,
             fontSize: 10,
             fontFamily: theme.monoFont,
+            interval: 0,
+            showMinLabel: false,
+            showMaxLabel: false,
             formatter: (v: number) => {
-              if (v >= 0.8) return 'Long'
-              if (v <= -0.8) return 'Short'
-              if (Math.abs(v) < 0.2) return 'Flat'
+              if (Math.abs(v - 1) < 0.01)  return 'Long'
+              if (Math.abs(v) < 0.01)      return 'Flat'
+              if (Math.abs(v + 1) < 0.01)  return 'Short'
               return ''
             },
-            interval: 0,
           },
           splitLine: { show: false },
         },
