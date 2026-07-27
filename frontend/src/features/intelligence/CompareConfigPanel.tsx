@@ -23,7 +23,7 @@ export function CompareConfigPanel() {
       : assetList.length >= 4
         ? assetList
         : [...assetList, name]
-    setUrlState({ assets: updated.length > 0 ? updated.join(',') : undefined })
+    setUrlState({ assets: updated.length > 0 ? updated.join(',') : null })
   }
 
   return (

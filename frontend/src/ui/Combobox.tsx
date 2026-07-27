@@ -56,7 +56,7 @@ export function Combobox({
           />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="max-h-60 w-full overflow-y-auto p-0">
+      <PopoverContent className="max-h-60 w-[var(--radix-popover-trigger-width)] overflow-y-auto p-0">
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
           <CommandEmpty>No results found.</CommandEmpty>
@@ -69,6 +69,7 @@ export function Combobox({
                   onChange(option.value)
                   setOpen(false)
                 }}
+                className="border-b border-border-default last:border-b-0"
               >
                 <Check
                   size={14}
@@ -78,10 +79,14 @@ export function Combobox({
                     value === option.value ? 'opacity-100' : 'opacity-0'
                   )}
                 />
-                <span className="flex-1 truncate font-mono text-sm">{option.label}</span>
-                {option.meta && (
-                  <span className="ml-2 text-xs text-text-secondary">{option.meta}</span>
-                )}
+                <div className="flex w-full items-center justify-between gap-2">
+                  <span className="font-medium text-text-primary">{option.label}</span>
+                  {option.meta && (
+                    <span className="shrink-0 font-mono text-xs text-text-secondary">
+                      {option.meta}
+                    </span>
+                  )}
+                </div>
               </CommandItem>
             ))}
           </CommandGroup>

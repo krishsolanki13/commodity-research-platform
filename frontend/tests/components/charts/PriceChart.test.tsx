@@ -1,9 +1,10 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/app/queryClient'
 import { PriceChart } from '@/components/charts/PriceChart'
+import { mockChartInstance } from '../../setup'
 import type { components } from '@/api/schema'
 
 type ColumnarSeries = components['schemas']['ColumnarSeries']
@@ -41,6 +42,10 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 }
 
 describe('PriceChart', () => {
+  beforeEach(() => {
+    mockChartInstance.setOption.mockClear()
+  })
+
   it('renders without errors with Gold OHLCV fixture', () => {
     render(<PriceChart ohlcv={goldOhlcv} height={300} />, { wrapper: Wrapper })
     expect(document.body).not.toBeEmptyDOMElement()
@@ -73,5 +78,16 @@ describe('PriceChart', () => {
         wrapper: Wrapper,
       })
     ).not.toThrow()
+  })
+
+  it('volume series is named Volume', () => {
+    render(<PriceChart ohlcv={goldOhlcv} height={300} volume={true} />, { wrapper: Wrapper })
+    const calls = mockChartInstance.setOption.mock.calls
+    expect(calls.length).toBeGreaterThan(0)
+    const option = calls[calls.length - 1][0] as {
+      series?: Array<{ name?: string }>
+    }
+    const volume = option.series?.find((s) => s.name === 'Volume')
+    expect(volume).toBeDefined()
   })
 })

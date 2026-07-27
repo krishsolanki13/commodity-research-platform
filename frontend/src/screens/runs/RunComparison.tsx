@@ -11,8 +11,8 @@ import type { components } from '@/api/schema'
 
 type CompareRunSummary = components['schemas']['CompareRunSummary']
 
-function buildLabel(run: CompareRunSummary): string {
-  return `${run.asset.toUpperCase()} · ${run.strategy} · …${run.run_id.slice(-8)}`
+export function buildLabel(run: Pick<CompareRunSummary, 'asset' | 'strategy'>): string {
+  return `${run.asset.toUpperCase()} · ${run.strategy}`
 }
 
 export function RunComparison() {

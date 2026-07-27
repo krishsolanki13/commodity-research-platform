@@ -28,7 +28,7 @@ function deltaColor(higherIsBetter: boolean, delta: number): string {
 }
 
 function formatMetricValue(format: MetricRowDef['format'], value: number | null): string {
-  if (value === null) return '—'
+  if (value === null) return '-'
   switch (format) {
     case 'ratio':
       return fmt.ratio(value)
@@ -55,7 +55,7 @@ function formatDelta(format: MetricRowDef['format'], delta: number): string {
       body = `${(abs * 100).toFixed(2)}%`
       break
     case 'compactUsd':
-      body = fmt.compactUsd(abs).replace(/^[+$−\u2212-]*/, '')
+      body = fmt.compactUsd(abs).replace(/^[+$\-\u2212-]*/, '')
       break
     case 'integer':
       body = Math.round(abs).toString()
@@ -72,8 +72,8 @@ interface MetricDeltaTableProps {
   className?: string
 }
 
-function shortRunId(runId: string): string {
-  return runId.length > 16 ? runId.slice(-16) : runId
+function columnName(run: CompareRunSummary): string {
+  return `${run.asset.toUpperCase()} \u00b7 ${run.strategy}`
 }
 
 export function MetricDeltaTable({
@@ -86,15 +86,15 @@ export function MetricDeltaTable({
   const baseRun = runs.find((r) => r.run_id === resolvedBaseId) ?? runs[0]
 
   return (
-    <table role="grid" className={cn('w-full border-collapse text-sm', className)}>
+    <div className={cn('overflow-hidden rounded border border-border-default', className)}>
+    <table className="w-full table-fixed border-collapse text-sm">
       <thead>
         <tr>
           <th className="border-b border-border-default px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">
             METRIC
           </th>
           {runs.map((run) => {
-            const isBase = run.run_id === resolvedBaseId
-            const label = isBase ? `${shortRunId(run.run_id)} ★` : shortRunId(run.run_id)
+            const label = columnName(run)
             return (
               <th
                 key={run.run_id}
@@ -139,5 +139,6 @@ export function MetricDeltaTable({
         ))}
       </tbody>
     </table>
+    </div>
   )
 }

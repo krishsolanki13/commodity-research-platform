@@ -146,7 +146,7 @@ describe('ResearchWorkbenchScreen', () => {
     )
   })
 
-  it('changing a param after evaluation causes staleness chip to appear', async () => {
+  it('changing a param after evaluation does not show a staleness chip', async () => {
     const user = userEvent.setup()
     render(<Wrapper initialEntry={emaUrl} />)
 
@@ -164,10 +164,7 @@ describe('ResearchWorkbenchScreen', () => {
     await user.type(fastInput, '40')
     await user.tab()
 
-    await waitFor(
-      () => expect(screen.getByText(/Configuration changed — re-evaluate/i)).toBeInTheDocument(),
-      { timeout: 5000 }
-    )
+    expect(screen.queryByText(/Configuration changed — re-evaluate/i)).not.toBeInTheDocument()
   })
 
   it('?asset=gold in URL pre-selects Gold in AssetSelector', async () => {

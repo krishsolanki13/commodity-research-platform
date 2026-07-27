@@ -1,9 +1,6 @@
-import { useMemo } from 'react'
-import { createColumnHelper } from '@tanstack/react-table'
-import { DataGrid } from '@/components/data/DataGrid'
+import type { components } from '@/api/schema'
 import { fmt } from '@/lib/fmt'
 import { cn } from '@/lib/cn'
-import type { components } from '@/api/schema'
 
 type FeatureSpecResponse = components['schemas']['FeatureSpecResponse']
 
@@ -12,48 +9,49 @@ interface FeatureSpecTableProps {
   className?: string
 }
 
-const colHelper = createColumnHelper<FeatureSpecResponse>()
-
 export function FeatureSpecTable({ specs, className }: FeatureSpecTableProps) {
-  const columns = useMemo(
-    () => [
-      colHelper.accessor('indicator_name', {
-        header: 'INDICATOR',
-        enableSorting: false,
-        cell: (info) => <span className="text-sm">{info.getValue()}</span>,
-      }),
-      colHelper.accessor('params', {
-        header: 'PARAMS',
-        enableSorting: false,
-        cell: (info) => (
-          <span className="font-mono text-xs">{JSON.stringify(info.getValue())}</span>
-        ),
-      }),
-      colHelper.accessor('column_name', {
-        header: 'COLUMN',
-        enableSorting: false,
-        cell: (info) => <span className="font-mono text-xs text-accent">{info.getValue()}</span>,
-      }),
-      colHelper.accessor('computed_at', {
-        header: 'COMPUTED',
-        enableSorting: false,
-        cell: (info) => (
-          <span className="text-xs text-text-secondary">
-            {fmt.isoDate(new Date(info.getValue()))}
-          </span>
-        ),
-      }),
-    ],
-    []
-  )
-
+  if (!specs || specs.length === 0) return null
   return (
-    <DataGrid
-      columns={columns}
-      data={specs}
-      getRowId={(row) => row.column_name}
-      virtualized={false}
-      className={cn(className)}
-    />
+    <div className={cn('overflow-hidden rounded border border-border-default', className)}>
+    <table
+      role="grid"
+      className="w-full table-fixed border-collapse text-sm"
+    >
+      <thead className="bg-bg-raised">
+        <tr>
+          {['INDICATOR', 'PARAMS', 'COLUMN', 'COMPUTED'].map((h) => (
+            <th
+              key={h}
+              className="px-3 py-2 text-left text-xs font-medium
+                uppercase tracking-wider text-text-secondary"
+            >
+              {h}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {specs.map((spec) => (
+          <tr
+            key={spec.column_name}
+            className="border-b border-border-default"
+          >
+            <td className="px-3 py-2 font-mono text-xs text-text-primary">
+              {spec.indicator_name}
+            </td>
+            <td className="px-3 py-2 font-mono text-xs text-text-secondary">
+              {JSON.stringify(spec.params)}
+            </td>
+            <td className="px-3 py-2 font-mono text-xs text-accent">
+              {spec.column_name}
+            </td>
+            <td className="px-3 py-2 font-mono text-xs text-text-secondary">
+              {spec.computed_at ? fmt.isoDate(spec.computed_at) : '—'}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
   )
 }

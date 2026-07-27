@@ -15,7 +15,7 @@
  */
 import { echarts, type ECharts } from '@/lib/echarts-setup'
 import { createContext, useContext, useRef, useEffect, useState } from 'react'
-import { Download, ZoomIn, Maximize } from 'lucide-react'
+import { Download, Maximize } from 'lucide-react'
 import { Panel } from '@/ui/Panel'
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton'
 import { ErrorState } from '@/components/layout/ErrorState'
@@ -43,11 +43,13 @@ export function useChartFrame() {
 
 interface ChartFrameProps {
   title?: string
+  titleExtra?: React.ReactNode
   height: number | string
   loading?: boolean
   error?: ApiClientError | Error | null
   empty?: { message: string; action?: { label: string; onClick: () => void } }
   toolbar?: boolean // default true
+  actions?: React.ReactNode
   syncGroup?: string
   onRetry?: () => void
   className?: string
@@ -60,11 +62,13 @@ interface ChartFrameProps {
 
 export function ChartFrame({
   title,
+  titleExtra,
   height,
   loading,
   error,
   empty,
   toolbar = true,
+  actions,
   syncGroup,
   onRetry,
   className,
@@ -106,33 +110,27 @@ export function ChartFrame({
     document.body.removeChild(a)
   }
 
-  function handleZoomReset() {
-    chartRef.current?.dispatchAction({ type: 'restore' })
-  }
-
-  const toolbarEl = toolbar ? (
-    <div className="flex items-center gap-1">
-      <button
-        onClick={handleZoomReset}
-        aria-label="Reset zoom"
-        className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
-      >
-        <ZoomIn size={14} strokeWidth={1.75} />
-      </button>
-      <button
-        onClick={handleExport}
-        aria-label="Export chart as PNG"
-        className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
-      >
-        <Download size={14} strokeWidth={1.75} />
-      </button>
-      <button
-        onClick={() => setIsFullscreen(true)}
-        aria-label="View fullscreen"
-        className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
-      >
-        <Maximize size={14} strokeWidth={1.75} />
-      </button>
+  const toolbarEl = (toolbar || actions) ? (
+    <div className="flex items-center gap-2">
+      {actions}
+      {toolbar && (
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleExport}
+            aria-label="Export chart as PNG"
+            className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
+          >
+            <Download size={14} strokeWidth={1.75} />
+          </button>
+          <button
+            onClick={() => setIsFullscreen(true)}
+            aria-label="View fullscreen"
+            className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
+          >
+            <Maximize size={14} strokeWidth={1.75} />
+          </button>
+        </div>
+      )}
     </div>
   ) : undefined
 
@@ -148,7 +146,7 @@ export function ChartFrame({
 
   return (
     <ChartFrameCtx.Provider value={{ onChartReady }}>
-      <Panel title={title} actions={toolbarEl} padding={false} className={className}>
+      <Panel title={title} titleExtra={titleExtra} actions={toolbarEl} padding={false} className={className}>
         <div
           role="img"
           aria-label={title ? `${title} chart` : 'Chart'}

@@ -91,7 +91,7 @@ export function RunExplorer() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b px-6 py-4">
-        <h1 className="font-mono text-lg font-semibold text-text-emphasis">Run Explorer</h1>
+        <h1 className="text-xl font-semibold text-text-primary">Run Explorer</h1>
         <span className="font-mono text-xs text-text-secondary">{data?.total ?? 0} runs total</span>
       </div>
 
@@ -99,7 +99,16 @@ export function RunExplorer() {
         <RunExplorerFilters
           strategies={strategies}
           filters={{ strategy, asset, q, sort, order }}
-          onChange={(f) => setUrlState({ ...f, page: 1 })}
+          onChange={(f) =>
+            setUrlState({
+              strategy: f.strategy ?? null,
+              asset: f.asset ?? null,
+              q: f.q ?? null,
+              sort: f.sort,
+              order: f.order,
+              page: 1,
+            })
+          }
         />
       </div>
 

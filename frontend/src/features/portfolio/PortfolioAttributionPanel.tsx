@@ -46,12 +46,14 @@ export function PortfolioAttributionPanel({
         <p className="mb-2 font-mono text-xs uppercase text-text-secondary">
           Asset P&L Attribution (USD)
         </p>
-        <AssetAttributionTable
-          absolutePnlByAsset={summary?.absolute_pnl_by_asset ?? {}}
-          assets={assets}
-          initialCapitalPerAsset={summary?.initial_capital_per_asset ?? 1_000_000}
-          loading={loading}
-        />
+        <div className="overflow-hidden rounded border border-border-default">
+          <AssetAttributionTable
+            absolutePnlByAsset={summary?.absolute_pnl_by_asset ?? {}}
+            assets={assets}
+            initialCapitalPerAsset={summary?.initial_capital_per_asset ?? 1_000_000}
+            loading={loading}
+          />
+        </div>
       </div>
       {assetsData?.asset_metrics && assets.length > 0 && (
         <AssetSharpeBarChart

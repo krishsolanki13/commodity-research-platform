@@ -288,7 +288,7 @@ export function DataGrid<T>({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className={cn('flex h-full w-full flex-col', className)}>
+    <div className={cn('flex min-h-0 w-full flex-col', className)}>
       {/* Toolbar */}
       {toolbar && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border-default px-3 py-2">
@@ -342,9 +342,9 @@ export function DataGrid<T>({
       {/* Scrollable table container */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-auto"
+        className="overflow-auto"
         tabIndex={0}
-        style={{ outline: 'none' }}
+        style={{ flex: '1 1 0%', minHeight: 0, outline: 'none' }}
       >
         <table
           role="grid"
@@ -364,7 +364,7 @@ export function DataGrid<T>({
                   <th
                     key={header.id}
                     style={{
-                      width: header.getSize(),
+                      width: `${"$"}{(header.getSize() / totalColWidth) * 100}%`,
                       minWidth: header.getSize(),
                     }}
                     className={cn(
@@ -454,7 +454,7 @@ export function DataGrid<T>({
                         style={{
                           verticalAlign: 'middle',
                           height: rowHeight,
-                          width: cell.column.getSize(),
+                          width: `${"$"}{(cell.column.getSize() / totalColWidth) * 100}%`,
                           minWidth: cell.column.getSize(),
                         }}
                       >

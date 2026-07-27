@@ -1,14 +1,12 @@
-import { useMemo } from 'react'
 import { useAssetOhlcv } from '@/api/hooks/useAssetOhlcv'
 import { EmptyState } from '@/components/layout/EmptyState'
 import { SignalOverlayChart } from '@/components/charts/SignalOverlayChart'
+import { RegimeContextChip } from '@/features/intelligence/RegimeContextChip'
 import { ICDecayChart } from '@/components/charts/ICDecayChart'
 import { MetricGrid } from '@/components/data/MetricGrid'
 import { FeatureSpecTable } from '@/components/data/FeatureSpecTable'
 import type { MetricStatProps } from '@/components/data/MetricStat'
 import type { components } from '@/api/schema'
-import { RegimeContextChip } from '@/features/intelligence/RegimeContextChip'
-
 type FeatureComputeResponse = components['schemas']['FeatureComputeResponse']
 type SignalGenerateResponse = components['schemas']['SignalGenerateResponse']
 type SignalEvaluateResponse = components['schemas']['SignalEvaluateResponse']
@@ -31,6 +29,7 @@ interface WorkbenchEvidenceCanvasProps {
   toDate: string
   lastEvaluatedConfigHash: string | null
   evaluationResult: WorkbenchEvaluationResult | null
+  evaluating?: boolean
 }
 
 const EMPTY_SERIES: ColumnarSeries = { index: [], columns: {} }
@@ -45,19 +44,14 @@ const EMPTY_SERIES: ColumnarSeries = { index: [], columns: {} }
 export function WorkbenchEvidenceCanvas({
   asset,
   strategy,
-  params,
-  featureSpecs,
+  params: _params,
+  featureSpecs: _featureSpecs,
   fromDate,
   toDate,
-  lastEvaluatedConfigHash,
+  lastEvaluatedConfigHash: _lastEvaluatedConfigHash,
   evaluationResult,
+  evaluating: _evaluating,
 }: WorkbenchEvidenceCanvasProps) {
-  const currentConfigHash = useMemo(
-    () => JSON.stringify({ asset, strategy, params, featureSpecs, fromDate, toDate }),
-    [asset, strategy, params, featureSpecs, fromDate, toDate]
-  )
-  const isStale = lastEvaluatedConfigHash !== null && currentConfigHash !== lastEvaluatedConfigHash
-
   const { data: ohlcv, isLoading: ohlcvLoading } = useAssetOhlcv(asset, {
     from_date: fromDate,
     to_date: toDate,
@@ -92,33 +86,22 @@ export function WorkbenchEvidenceCanvas({
 
   return (
     <div className="relative min-h-full">
-      {isStale && (
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-start justify-center">
-          <div className="py-1.5 pointer-events-auto mt-8 flex items-center gap-2 rounded-md border border-warn bg-bg-raised px-3 text-xs text-warn opacity-100">
-            Configuration changed — re-evaluate
-          </div>
-        </div>
-      )}
-      <div className={isStale ? 'pointer-events-none opacity-60' : ''}>
-        <div className="flex flex-col gap-6">
-          {/* Regime context — supplementary intelligence; renders null if no curve data */}
-          <div className="mb-4">
-            <RegimeContextChip asset={asset} compact={false} />
-          </div>
-
+      <div>
+          <div className="flex flex-col gap-3">
+          <RegimeContextChip asset={asset} compact={false} />
           <SignalOverlayChart
             ohlcv={priceSeries}
             raw={evaluationResult.signal.raw_signal}
             position={evaluationResult.signal.position_signal}
             title={`Signal — ${asset} · ${strategy}`}
             syncGroup="workbench"
-            height="45vh"
             loading={ohlcvLoading}
+            asset={asset}
           />
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <ICDecayChart decay={evalData.decay} height={200} title="IC Decay" />
+          <div className="flex flex-col gap-4">
             <MetricGrid metrics={metrics} columns={4} className="w-full" />
+            <ICDecayChart decay={evalData.decay} height={220} title="IC Decay" />
           </div>
 
           <FeatureSpecTable specs={evaluationResult.features.specs} className="w-full" />

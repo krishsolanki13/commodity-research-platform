@@ -6,8 +6,7 @@
  */
 import { useRunDetail } from '@/api/hooks'
 import { ICDecayChart } from '@/components/charts/ICDecayChart'
-import { ICBandBadge } from '@/components/data/ICBandBadge'
-import { MetricGrid } from '@/components/data/MetricGrid'
+import { MetricStat } from '@/components/data/MetricStat'
 import { EmptyState } from '@/components/layout/EmptyState'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton'
@@ -55,18 +54,19 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
   }
 
   // STATE B — signal_evaluation present
+  const icBand = evaluation.ic_band
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4">
-        <ICBandBadge ic={evaluation.ic} />
-        <MetricGrid
-          columns={3}
-          metrics={[
-            { label: 'IC', value: evaluation.ic, format: 'ic', tone: 'neutral' },
-            { label: 'ICIR', value: evaluation.icir, format: 'ic', tone: 'neutral' },
-            { label: 'TURNOVER', value: evaluation.turnover, format: 'percent', tone: 'neutral' },
-          ]}
-        />
+      <div className="grid w-full grid-cols-3 gap-4">
+        <div className="flex flex-col gap-0.5">
+          <MetricStat label="IC" value={evaluation.ic} format="ic" tone="auto" />
+          {icBand && (
+            <span className="font-mono text-xs text-text-secondary pl-0">{icBand}</span>
+          )}
+        </div>
+        <MetricStat label="ICIR" value={evaluation.icir} format="ic" tone="neutral" />
+        <MetricStat label="TURNOVER" value={evaluation.turnover} format="percent" tone="neutral" />
       </div>
 
       <ICDecayChart decay={evaluation.decay} height={250} title="IC Decay at Horizons" />

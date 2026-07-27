@@ -36,10 +36,11 @@ export function PortfolioAssetTable({
   }
 
   return (
+    <div className="overflow-hidden rounded border border-border-default">
     <table
       role="grid"
       aria-label="Per-asset performance"
-      className={cn('w-full border-collapse text-sm', className)}
+      className={cn('w-full table-fixed border-collapse text-sm', className)}
     >
       <thead className="bg-bg-raised">
         <tr>
@@ -70,7 +71,7 @@ export function PortfolioAssetTable({
           const runId = assetRunIds?.[asset]
 
           return (
-            <tr key={asset} className="border-border-subtle border-b">
+            <tr key={asset} className="border-border-default border-b">
               <td className="px-3 py-2 text-left font-medium text-text-primary">
                 {displayName(asset)}
               </td>
@@ -135,5 +136,6 @@ export function PortfolioAssetTable({
         })}
       </tbody>
     </table>
+    </div>
   )
 }

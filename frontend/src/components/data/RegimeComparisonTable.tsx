@@ -40,10 +40,11 @@ export function RegimeComparisonTable({
   }
 
   return (
+    <div className="overflow-hidden rounded border border-border-default">
     <table
       role="grid"
       aria-label="Regime comparison table"
-      className={cn('w-full border-collapse text-sm', className)}
+      className={cn('w-full table-fixed border-collapse text-sm', className)}
     >
       <thead className="bg-bg-raised">
         <tr>
@@ -98,5 +99,6 @@ export function RegimeComparisonTable({
         ))}
       </tbody>
     </table>
+    </div>
   )
 }

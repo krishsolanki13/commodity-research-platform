@@ -154,6 +154,19 @@ function AlignedCurvesChartInner({
           fontFamily: theme.monoFont,
           fontSize: 12,
         },
+        formatter: (params: unknown) => {
+          const items = (Array.isArray(params) ? params : [params]) as Array<{
+            marker?: string
+            seriesName?: string
+            value?: number | (number | string | null)[]
+          }>
+          return items
+            .map((p) => {
+              const raw = Array.isArray(p.value) ? (p.value[1] ?? p.value) : p.value
+              return `${p.marker ?? ''}${p.seriesName}: ${Number(raw).toFixed(3)}`
+            })
+            .join('<br/>')
+        },
       },
       dataZoom: [
         { type: 'slider' as const, bottom: 8, xAxisIndex: [0], height: 20 },

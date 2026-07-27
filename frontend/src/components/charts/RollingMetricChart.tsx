@@ -112,6 +112,11 @@ function RollingMetricChartInner({
                 fontSize: 11,
                 formatter: (v: number) => v.toFixed(2),
               },
+              axisPointer: {
+                label: {
+                  formatter: (p: { value: number }) => Number(p.value).toFixed(2),
+                },
+              },
               splitLine: { lineStyle: { color: theme.gridlineColor } },
             },
           ]
@@ -122,11 +127,18 @@ function RollingMetricChartInner({
               type: 'value' as const,
               name: 'Drawdown',
               max: 0,
+              splitNumber: 4,
+              minInterval: 0.02,
               axisLabel: {
                 color: theme.secondaryText,
                 fontFamily: theme.monoFont,
                 fontSize: 11,
                 formatter: (v: number) => `${(v * 100).toFixed(1)}%`,
+              },
+              axisPointer: {
+                label: {
+                  formatter: (p: { value: number }) => Number(p.value).toFixed(2),
+                },
               },
               splitLine: { show: false },
             },
@@ -176,7 +188,20 @@ function RollingMetricChartInner({
       legend: { show: true },
       tooltip: {
         trigger: 'axis',
-        axisPointer: { type: 'cross' },
+        axisPointer: {
+          type: 'cross',
+          lineStyle: { color: theme.gridlineColor },
+          label: {
+            backgroundColor: theme.tooltip.backgroundColor,
+            color: theme.secondaryText,
+            fontSize: 10,
+            fontFamily: theme.monoFont,
+            formatter: (p: { value: number | string }) =>
+              typeof p.value === 'number' && p.value > 1e9
+                ? fmtDate(p.value)
+                : String(p.value),
+          },
+        },
         backgroundColor: theme.tooltip.backgroundColor,
         borderColor: theme.tooltip.borderColor,
         textStyle: {
@@ -189,6 +214,7 @@ function RollingMetricChartInner({
             seriesName?: string
             axisValue?: string | number
             value?: number | [number, number] | null
+            marker?: string
           }>
           const axisRaw =
             items[0]?.axisValue ?? (Array.isArray(items[0]?.value) ? items[0]?.value[0] : undefined)
@@ -196,7 +222,7 @@ function RollingMetricChartInner({
           const date = Number.isFinite(axisMs) ? fmtDate(axisMs) : String(axisRaw ?? '')
           const lines = items.map((p) => {
             const raw = Array.isArray(p.value) ? p.value[1] : p.value
-            return `${p.seriesName}: ${Number(raw ?? 0).toFixed(3)}`
+            return `${p.marker ?? ''}${p.seriesName}: ${Number(raw ?? 0).toFixed(3)}`
           })
           return [date, ...lines].join('<br/>')
         },
@@ -209,6 +235,9 @@ function RollingMetricChartInner({
           fontFamily: theme.monoFont,
           fontSize: 11,
           formatter: (value: number) => fmtDate(value),
+        },
+        axisPointer: {
+          label: { formatter: (p: { value: number }) => fmtDate(p.value) },
         },
       },
       yAxis: yAxes,

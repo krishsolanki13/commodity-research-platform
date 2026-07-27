@@ -100,13 +100,15 @@ function ICDecayChartInner({ decay, theme }: ICDecayChartInnerProps) {
             name?: string
             value?: number | [number, number | null]
             seriesType?: string
+            marker?: string
           }>
           // Prefer the scatter/line point that carries [idx, ic]
           const point = items.find((p) => Array.isArray(p.value)) ?? items[0]
           const raw = Array.isArray(point?.value) ? point.value[1] : point?.value
           const label = point?.name ?? items[0]?.name ?? ''
-          if (raw == null) return `${label}<br/>IC: —`
-          return `${label}<br/>IC: ${Number(raw).toFixed(3)}`
+          const marker = point?.marker ?? ''
+          if (raw == null) return `${label}<br/>${marker}IC: —`
+          return `${label}<br/>${marker}IC: ${Number(raw).toFixed(3)}`
         },
       },
       series: [
@@ -124,8 +126,9 @@ function ICDecayChartInner({ decay, theme }: ICDecayChartInnerProps) {
                 yAxis: 0.05,
                 lineStyle: { color: theme.icStrong, type: 'dashed' },
                 label: {
-                  formatter: '0.05',
+                  formatter: '+0.05',
                   position: 'end',
+                  offset: [4, -8],
                   color: theme.secondaryText,
                   fontWeight: 'normal',
                   fontSize: 10,
@@ -136,8 +139,9 @@ function ICDecayChartInner({ decay, theme }: ICDecayChartInnerProps) {
                 yAxis: 0.02,
                 lineStyle: { color: theme.icWeak, type: 'dashed' },
                 label: {
-                  formatter: '0.02',
+                  formatter: '+0.02',
                   position: 'end',
+                  offset: [4, 8],
                   color: theme.secondaryText,
                   fontWeight: 'normal',
                   fontSize: 10,
@@ -150,6 +154,7 @@ function ICDecayChartInner({ decay, theme }: ICDecayChartInnerProps) {
                 label: {
                   formatter: '-0.02',
                   position: 'end',
+                  offset: [4, -8],
                   color: theme.secondaryText,
                   fontWeight: 'normal',
                   fontSize: 10,
@@ -162,6 +167,7 @@ function ICDecayChartInner({ decay, theme }: ICDecayChartInnerProps) {
                 label: {
                   formatter: '-0.05',
                   position: 'end',
+                  offset: [4, 8],
                   color: theme.secondaryText,
                   fontWeight: 'normal',
                   fontSize: 10,

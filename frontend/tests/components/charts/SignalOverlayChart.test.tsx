@@ -38,12 +38,14 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 }
 
 function lastChartOption(): {
-  series?: Array<{ name?: string; tooltip?: { show?: boolean } }>
+  series?: Array<{ name?: string; tooltip?: { show?: boolean }; markArea?: { data?: unknown[] } }>
+  yAxis?: Array<{ min?: number | null; max?: number | null; gridIndex?: number }>
 } {
   const calls = mockChartInstance.setOption.mock.calls
   expect(calls.length).toBeGreaterThan(0)
   return calls[calls.length - 1][0] as {
-    series?: Array<{ name?: string; tooltip?: { show?: boolean } }>
+    series?: Array<{ name?: string; tooltip?: { show?: boolean }; markArea?: { data?: unknown[] } }>
+    yAxis?: Array<{ min?: number | null; max?: number | null; gridIndex?: number }>
   }
 }
 
@@ -62,14 +64,14 @@ describe('SignalOverlayChart', () => {
     expect(signal).toBeDefined()
   })
 
-  it('position series tooltip is suppressed', () => {
+  it('position series is removed — markArea used instead of dedicated pane', () => {
     render(
       <SignalOverlayChart ohlcv={ohlcvFixture} raw={rawFixture} position={positionFixture} />,
       { wrapper: Wrapper }
     )
     const option = lastChartOption()
     const position = option.series?.find((s) => s.name === 'Position')
-    expect(position?.tooltip?.show).toBe(false)
+    expect(position).toBeUndefined()
   })
 
   it('renders ChartFrame wrapper without errors with fixture data', () => {
@@ -100,5 +102,34 @@ describe('SignalOverlayChart', () => {
         { wrapper: Wrapper }
       )
     ).not.toThrow()
+  })
+
+  it('markArea bands are on signal series only — candlestick has no markArea', () => {
+    const mixedPosition: ColumnarSeries = {
+      index: [1609459200000, 1609545600000, 1609632000000],
+      columns: { position: [1, -1, 1] },
+    }
+    render(
+      <SignalOverlayChart ohlcv={ohlcvFixture} raw={rawFixture} position={mixedPosition} />,
+      { wrapper: Wrapper }
+    )
+    const option = lastChartOption()
+    const candlestick = option.series?.find((s) => s.name !== 'Signal')
+    const signal = option.series?.find((s) => s.name === 'Signal')
+    // Price pane: candlestick must have NO markArea (no background tints)
+    expect(candlestick?.markArea).toBeUndefined()
+    // Signal pane: signal series must have markArea with Long/Short band data
+    expect(signal?.markArea).toBeDefined()
+    expect(Array.isArray(signal?.markArea?.data)).toBe(true)
+    expect((signal?.markArea?.data ?? []).length).toBeGreaterThan(0)
+  })
+
+  it('chart uses two-pane layout — only two yAxis entries', () => {
+    render(
+      <SignalOverlayChart ohlcv={ohlcvFixture} raw={rawFixture} position={positionFixture} />,
+      { wrapper: Wrapper }
+    )
+    const option = lastChartOption()
+    expect(option.yAxis?.length).toBe(2)
   })
 })

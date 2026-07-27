@@ -21,12 +21,12 @@ export function AssetMetadataPanel({ metadata }: AssetMetadataPanelProps) {
 
   return (
     <Panel title="Contract Specs">
-      <table className="w-full text-xs">
+      <table className="w-full table-fixed text-xs">
         <tbody>
           {rows.map(({ label, value }) => (
             <tr key={label} className="border-b border-border-default last:border-b-0">
-              <td className="py-1.5 pr-4 text-text-secondary">{label}</td>
-              <td className="py-1.5 font-mono text-text-primary">{value}</td>
+              <td className="py-3 pr-4 text-text-secondary">{label}</td>
+              <td className="py-3 font-mono text-text-primary">{value}</td>
             </tr>
           ))}
         </tbody>

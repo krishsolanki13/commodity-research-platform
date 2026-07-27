@@ -1,32 +1,46 @@
+import { useState } from 'react'
 import { useAssets } from '@/api/hooks/useAssets'
 import { useDataStatus } from '@/api/hooks/useDataStatus'
 import { useIngestMutation } from '@/api/hooks/useIngestMutation'
 import { MetricGrid } from '@/components/data/MetricGrid'
 import type { MetricStatProps } from '@/components/data/MetricStat'
 import { Button } from '@/ui/button'
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/ui/tooltip'
 import { RANGE_PRESETS } from '@/lib/date-range'
 import type { RangePreset } from '@/lib/date-range'
 import { useUrlState } from '@/lib/useUrlState'
 import { z } from 'zod'
-import { fmt } from '@/lib/fmt'
 import { cn } from '@/lib/cn'
 
 const rangeSchema = z.object({
   range: z.enum(['1M', '3M', '6M', '1Y', '3Y', '5Y', 'MAX']).default('1Y'),
 })
 
-function daysSinceIngest(iso: string): number {
-  return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000))
-}
-
 export function UniverseStatsBar() {
   const { data: universe, isLoading: universeLoading } = useAssets()
   const { data: status } = useDataStatus()
   const ingest = useIngestMutation()
   const [{ range }, setUrlState] = useUrlState(rangeSchema, { range: '1Y' })
+  // Backend may return last_ingestion: null — stamp local time after a successful re-ingest.
+  const [lastIngestedAt, setLastIngestedAt] = useState<Date | null>(() => {
+    try {
+      const stored = localStorage.getItem('commodity_research_last_ingested')
+      return stored ? new Date(stored) : null
+    } catch {
+      return null
+    }
+  })
 
-  // MetricStat requires { label, value: number|null, format }. LAST INGESTION is a
-  // date string in the API — surface days-since as the value with ISO date in hint.
+  const lastIngestionDisplay = lastIngestedAt
+    ? lastIngestedAt.toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+    : (universe?.last_ingestion ?? '—')
+
   const metrics: MetricStatProps[] = [
     {
       label: 'ASSETS TRACKED',
@@ -35,13 +49,15 @@ export function UniverseStatsBar() {
       tone: 'neutral',
     },
     {
-      label: 'LAST INGESTION',
-      value: universe?.last_ingestion ? daysSinceIngest(universe.last_ingestion) : null,
-      format: 'integer',
+      label: 'LAST RELOAD',
+      value: lastIngestionDisplay,
+      format: 'raw',
       tone: 'neutral',
-      hint: universe?.last_ingestion
-        ? `Last ingested ${fmt.isoDate(universe.last_ingestion)} (days ago)`
-        : 'Never ingested',
+      hint: lastIngestedAt
+        ? `Ingested at ${lastIngestedAt.toLocaleString()}`
+        : universe?.last_ingestion
+          ? `Last ingested ${universe.last_ingestion}`
+          : 'Never ingested',
     },
     {
       label: 'FLAGGED ANOMALIES',
@@ -84,14 +100,38 @@ export function UniverseStatsBar() {
               </button>
             ))}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => ingest.mutate({ asset: null })}
-            disabled={ingest.isPending}
-          >
-            {ingest.isPending ? 'Ingesting…' : 'Re-ingest all'}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    ingest.mutate(
+                      { asset: null },
+                      {
+                        onSuccess: () => {
+                          const now = new Date()
+                          setLastIngestedAt(now)
+                          try {
+                            localStorage.setItem('commodity_research_last_ingested', now.toISOString())
+                          } catch {
+                            // localStorage not available — session-only fallback
+                          }
+                        },
+                      }
+                    )
+                  }
+                  disabled={ingest.isPending}
+                >
+                  {ingest.isPending ? 'Ingesting…' : 'Reload data'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Loads from local Parquet files. To download fresh data, run acquire_data.py from the terminal.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           {ingest.isSuccess && (
             <span className="ml-2 text-xs text-text-secondary">
               {ingest.data?.assets_ingested?.length ?? 6} assets ingested

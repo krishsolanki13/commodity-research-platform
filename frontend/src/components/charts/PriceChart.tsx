@@ -108,10 +108,14 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
 
     const grids = showVolume
       ? [
-          { left: 60, right: 16, top: '5%', height: '72%' },
-          { left: 60, right: 16, bottom: 60, height: '14%' },
+          { left: 60, right: 16, top: '5%', height: '65%' },
+          { left: 60, right: 16, bottom: 50, height: '14%' },
         ]
       : [{ left: 60, right: 16, top: '5%', bottom: 60 }]
+
+    const axisPointerLabel = {
+      label: { formatter: (p: { value: number }) => fmtDate(p.value) },
+    }
 
     const xAxes = showVolume
       ? [
@@ -123,6 +127,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
             axisLine: { show: false },
             axisTick: { show: false },
             splitLine: { show: false },
+            axisPointer: axisPointerLabel,
           },
           {
             gridIndex: 1,
@@ -135,6 +140,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
               formatter: (value: number) => fmtDate(value),
             },
             splitLine: { show: false },
+            axisPointer: axisPointerLabel,
           },
         ]
       : [
@@ -147,6 +153,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
               fontSize: 11,
               formatter: (value: number) => fmtDate(value),
             },
+            axisPointer: axisPointerLabel,
           },
         ]
 
@@ -224,6 +231,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
       ? [
           {
             type: 'bar' as const,
+            name: 'Volume',
             xAxisIndex: 1,
             yAxisIndex: 1,
             data: index.map((_t, i) => ({
@@ -311,7 +319,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
               const prices = raw.length >= 5 ? raw.slice(1, 5) : raw.slice(0, 4)
               const [open, close, low, high] = prices
               return [
-                `${marker}O: ${Number(open).toFixed(2)}`,
+                `O: ${Number(open).toFixed(2)}`,
                 `C: ${Number(close).toFixed(2)}`,
                 `L: ${Number(low).toFixed(2)}`,
                 `H: ${Number(high).toFixed(2)}`,
@@ -323,11 +331,11 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
               v = arr[arr.length - 1]
             }
             if (typeof v !== 'number' && typeof v !== 'string') {
-              return `${marker}${p.seriesName ?? ''}: —`
+              return `${p.seriesName ?? ''}: —`
             }
             const num = Number(v)
             const formatted = Number.isFinite(num) ? num.toFixed(2) : v
-            return `${marker}${p.seriesName ?? ''}: ${formatted}`
+            return `${p.seriesName ?? ''}: ${formatted}`
           })
           return [dateLabel, ...lines].join('<br/>')
         },
@@ -359,7 +367,7 @@ export function PriceChart({
   volume = true,
   style = 'candle',
   title,
-  height = 300,
+  height = 420,
   loading,
   error,
   empty,

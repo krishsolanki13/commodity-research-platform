@@ -180,6 +180,7 @@ function PortfolioRollingCorrelationChartInner({
             seriesName?: string
             axisValue?: string | number
             value?: number | [number, number | null]
+            marker?: string
           }>
           const axisRaw =
             items[0]?.axisValue ?? (Array.isArray(items[0]?.value) ? items[0]?.value[0] : undefined)
@@ -187,7 +188,7 @@ function PortfolioRollingCorrelationChartInner({
           const date = Number.isFinite(axisMs) ? fmtDate(axisMs) : String(axisRaw ?? '')
           const lines = items.map((p) => {
             const raw = Array.isArray(p.value) ? p.value[1] : p.value
-            return `${p.seriesName}: ${Number(raw ?? 0).toFixed(3)}`
+            return `${p.marker ?? ''}${p.seriesName}: ${Number(raw ?? 0).toFixed(3)}`
           })
           return [date, ...lines].join('<br/>')
         },

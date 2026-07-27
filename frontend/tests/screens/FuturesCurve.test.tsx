@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect } from 'vitest'
@@ -35,6 +35,10 @@ describe('FuturesCurve screen (S9)', () => {
   it('renders content sections when ?asset=gold is in URL', async () => {
     renderScreen('/intelligence?asset=gold&n_contracts=6&lookback=3Y')
 
+    // Click "View Curve" to launch the results view
+    const viewBtn = await waitFor(() => screen.getByText('View Curve'), { timeout: 3000 })
+    fireEvent.click(viewBtn)
+
     // CurveKPIRow renders a Regime cell; check it eventually appears
     await waitFor(
       () => {
@@ -46,6 +50,10 @@ describe('FuturesCurve screen (S9)', () => {
 
   it("shows 'CONTANGO' regime badge after snapshot loads for Gold", async () => {
     renderScreen('/intelligence?asset=gold&n_contracts=6&lookback=3Y')
+
+    // Click "View Curve" to launch the results view
+    const viewBtn = await waitFor(() => screen.getByText('View Curve'), { timeout: 3000 })
+    fireEvent.click(viewBtn)
 
     await waitFor(
       () => {
