@@ -7,10 +7,8 @@ import type { RangePreset } from '@/lib/date-range'
 
 const DISPLAY_NAMES = ['Gold', 'Silver', 'Copper', 'WTI', 'Brent', 'Nat Gas']
 
-/** Live F0 API returns epoch seconds; schema/fixtures use ms. Normalize either. */
 function toIsoDate(epoch: number): string {
-  const ms = epoch < 1e12 ? epoch * 1000 : epoch
-  return new Date(ms).toISOString().slice(0, 10)
+  return new Date(epoch).toISOString().slice(0, 10)
 }
 
 interface ReturnComparisonPanelProps {
@@ -135,10 +133,10 @@ function ReturnComparisonInner({ range, theme }: ReturnComparisonInnerProps) {
     })
 
     const handleResize = () => chart.resize()
-    window.addEventListener('resize', handleResize)
+    globalThis.addEventListener('resize', handleResize)
 
     return () => {
-      window.removeEventListener('resize', handleResize)
+      globalThis.removeEventListener('resize', handleResize)
       chart.dispose()
     }
   }, [series, dates, theme, ctx, isLoading, isEmpty])
