@@ -215,9 +215,15 @@ class _ConfiguredTracker(VolatilityScaledSizer):
         self.configure_calls += 1
         super().configure(ohlcv)
 
-    def compute_size(self, signal: float, asset: str, equity: float) -> float:
+    def compute_size(
+        self,
+        signal: float,
+        asset: str,
+        equity: float,
+        bar_date: object = None,
+    ) -> float:
         self.compute_size_calls += 1
-        return super().compute_size(signal, asset, equity)
+        return super().compute_size(signal, asset, equity, bar_date=bar_date)
 
 
 def test_backtester_calls_configure_before_simulation(

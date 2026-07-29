@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 import math
 
+import numpy as np
 import pandas as pd
 
 from src.core.registry import PositionSizer
@@ -34,7 +35,13 @@ class FixedNotionalSizer(PositionSizer):
         self._notional_usd = notional_usd
         self._logger = logging.getLogger(__name__)
 
-    def compute_size(self, signal: float, asset: str, equity: float) -> float:
+    def compute_size(
+        self,
+        signal: float,
+        asset: str,
+        equity: float,
+        bar_date: object = None,
+    ) -> float:
         """Return the fixed notional size, ignoring signal/asset/equity.
 
         Args:
@@ -110,6 +117,7 @@ class VolatilityScaledSizer(PositionSizer):
         self._min_notional = min_notional
         self._max_notional = max_notional
         self._realized_vol: float = float("nan")  # populated by configure()
+        self._vol_series: pd.Series | None = None
         self._logger = logging.getLogger(__name__)
 
     def configure(self, ohlcv: pd.DataFrame) -> None:
@@ -125,7 +133,25 @@ class VolatilityScaledSizer(PositionSizer):
             ohlcv: NormalizedOHLCV DataFrame from DataLoader.load().
                 Uses the 'close' column to compute daily close-to-close returns.
         """
-        self._realized_vol = self.compute_realized_vol(ohlcv)
+        returns = ohlcv["close"].pct_change()
+
+        # TD-C fix: rolling point-in-time vol Series — no look-ahead
+        self._vol_series = (
+            returns.rolling(window=self._lookback_days, min_periods=20)
+            .std()
+            .mul(np.sqrt(252))
+        )
+        # bfill: early bars (<20 obs) get first valid estimate — not future data
+        # ffill: propagate forward through any remaining NaN
+        self._vol_series = self._vol_series.bfill().ffill()
+
+        # Apply vol cap to series (self._vol_cap confirmed to exist from Task 0a)
+        if self._vol_cap is not None:
+            self._vol_series = self._vol_series.clip(upper=self._vol_cap)
+
+        # Keep scalar as fallback (backward compat — uses last available estimate)
+        self._realized_vol = float(self._vol_series.iloc[-1])
+
         self._logger.info(
             "VolatilityScaledSizer: configured — realized_vol=%.4f "
             "(lookback=%d days, cap=%.2f, target_vol=%.4f)",
@@ -186,7 +212,9 @@ class VolatilityScaledSizer(PositionSizer):
 
         return annual_vol
 
-    def size(self, signal: float, current_equity: float) -> float:
+    def size(
+        self, signal: float, current_equity: float, realized_vol: float | None = None
+    ) -> float:
         """Return position size in USD notional scaled to target volatility.
 
         Returns 0.0 if signal is flat, configure() has not been called,
@@ -209,12 +237,11 @@ class VolatilityScaledSizer(PositionSizer):
         if signal == 0.0:
             return 0.0
 
-        if math.isnan(self._realized_vol) or self._realized_vol <= 0.0:
+        vol = realized_vol if realized_vol is not None else self._realized_vol
+        if math.isnan(vol) or vol <= 0.0:
             return 0.0
 
-        target_notional = (
-            self._target_annual_vol * current_equity
-        ) / self._realized_vol
+        target_notional = (self._target_annual_vol * current_equity) / vol
         target_notional *= abs(signal)
 
         if self._min_notional > 0.0:
@@ -224,9 +251,28 @@ class VolatilityScaledSizer(PositionSizer):
 
         return float(target_notional)
 
-    def compute_size(self, signal: float, asset: str, equity: float) -> float:
+    def compute_size(
+        self,
+        signal: float,
+        asset: str,
+        equity: float,
+        bar_date: object = None,
+    ) -> float:
         """PositionSizer interface — delegates to size()."""
-        return self.size(signal, equity)
+        # TD-C: look up vol from rolling series at bar_date if available
+        if (
+            bar_date is not None
+            and hasattr(self, "_vol_series")
+            and self._vol_series is not None
+        ):
+            try:
+                pit_vol: float = float(self._vol_series.loc[bar_date])
+            except KeyError:
+                pit_vol = self._realized_vol  # fallback: date not in index
+        else:
+            pit_vol = self._realized_vol  # backward compat: no date provided
+
+        return self.size(signal, equity, realized_vol=pit_vol)
 
     @property
     def realized_vol(self) -> float:

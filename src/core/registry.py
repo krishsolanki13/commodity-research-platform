@@ -172,6 +172,7 @@ class PositionSizer(ABC):
         signal: float,
         asset: str,
         equity: float,
+        bar_date: object = None,
     ) -> float:
         """Compute position size in USD notional.
 
@@ -180,6 +181,8 @@ class PositionSizer(ABC):
                 in Phase 2 for signal-proportional sizing).
             asset: Asset identifier for asset-specific parameters.
             equity: Current capital account value in USD.
+            bar_date: Optional bar timestamp for point-in-time vol lookup
+                (VolatilityScaledSizer). Ignored by static sizers.
 
         Returns:
             Position size in USD notional. See ADR-005.

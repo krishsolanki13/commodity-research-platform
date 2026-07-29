@@ -95,6 +95,18 @@ class VectorizedBacktester(BacktestEngine):
         """
         run_id = generate_run_id(self._strategy_name, self._asset)
 
+        # TD-B: proxy equity series for rolling equity scaling (Option A)
+        # Breaks circular dependency (equity needs positions, positions need equity)
+        # without running the engine twice.
+        daily_returns = (
+            ohlcv["close"].pct_change().reindex(position_signal.index).fillna(0.0)
+        )
+        # signal.shift(1): at bar t, position was set by signal at t-1
+        signed_returns = position_signal.shift(1).fillna(0.0) * daily_returns
+        equity_proxy = self._initial_capital_usd * (1 + signed_returns.cumsum())
+        # Lag by 1: sizing at bar t uses equity known at bar t-1
+        equity_lagged = equity_proxy.shift(1).fillna(self._initial_capital_usd)
+
         trade_log = TradeLog(
             run_id=run_id,
             asset=self._asset,
@@ -103,6 +115,7 @@ class VectorizedBacktester(BacktestEngine):
             contract_multiplier=self._contract_multiplier,
             tick_value=self._tick_value,
             initial_capital_usd=self._initial_capital_usd,
+            rolling_equity=equity_lagged,
         )
         self._sizer.configure(
             ohlcv

@@ -45,6 +45,7 @@ class TradeLog:
         contract_multiplier: float,
         tick_value: float,
         initial_capital_usd: float,
+        rolling_equity: pd.Series | None = None,
     ) -> None:
         """Initialise TradeLog.
 
@@ -69,6 +70,7 @@ class TradeLog:
         self._contract_multiplier = contract_multiplier
         self._tick_value = tick_value
         self._initial_capital_usd = initial_capital_usd
+        self._rolling_equity = rolling_equity
         self._logger = logging.getLogger(__name__)
 
     def build(
@@ -118,10 +120,19 @@ class TradeLog:
 
             duration_bars = end_pos - start_pos + 1
 
+            # TD-B: rolling equity at entry bar — fall back to initial capital
+            if self._rolling_equity is not None:
+                equity_at_bar = float(
+                    self._rolling_equity.get(entry_date, self._initial_capital_usd)
+                )
+            else:
+                equity_at_bar = self._initial_capital_usd
+
             size_notional = self._position_sizer.compute_size(
                 signal=float(direction),
                 asset=self._asset,
-                equity=self._initial_capital_usd,
+                equity=equity_at_bar,
+                bar_date=entry_date,
             )
             size_contracts = size_notional / (entry_price * self._contract_multiplier)
 
