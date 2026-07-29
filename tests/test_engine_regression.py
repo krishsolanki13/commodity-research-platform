@@ -32,6 +32,15 @@ PARAMETERS = {"fast_period": 50, "slow_period": 200}
 @pytest.fixture(scope="module")
 def golden_result():
     """Run the canonical EMA 50/200 on Gold and return the BacktestResult."""
+    from pathlib import Path  # noqa: PLC0415
+
+    data_path = Path("data/processed/continuous/gold.parquet")
+    if not data_path.exists():
+        pytest.skip(
+            f"Gold Parquet not available at {data_path}. "
+            "Golden-master tests require local data files — skipped in CI."
+        )
+
     from src.backtesting.engine import VectorizedBacktester
     from src.backtesting.pipeline_builder import build_pipeline_components
     from src.core.config import Config
