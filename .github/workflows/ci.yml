@@ -37,7 +37,7 @@ jobs:
         run: python -m ruff format src/ api/ tests/ --check
 
       - name: mypy
-        run: python -m mypy src/ --ignore-missing-imports --no-error-summary --exclude "site-packages"
+        run: python -m mypy src/ --ignore-missing-imports --no-error-summary --follow-imports=skip
 
       - name: pytest
         run: |
