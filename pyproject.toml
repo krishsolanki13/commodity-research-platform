@@ -44,6 +44,12 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "--tb=short"
+filterwarnings = [
+    "ignore::ResourceWarning:pyarrow",
+    "ignore::ResourceWarning:.*parquet.*",
+    "ignore::UserWarning:starlette",
+    "ignore::DeprecationWarning:httpx",
+]
 
 [tool.ruff]
 line-length = 88

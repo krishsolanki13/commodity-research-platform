@@ -333,10 +333,10 @@ def save_portfolio_summary(
     """
 
     def _nan_safe(v: object) -> object:
-        """Convert math.nan to None for JSON null; str() for other non-serializable."""
+        """Convert math.nan to None for JSON null; leave other values as-is."""
         if isinstance(v, float) and math.isnan(v):
             return None
-        return str(v)
+        return v
 
     summary: dict = {
         "run_id": report.run_id,

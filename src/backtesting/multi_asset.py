@@ -23,15 +23,9 @@ from src.backtesting.engine import VectorizedBacktester
 from src.core.config import Config
 from src.core.types import BacktestResult, MultiAssetBacktestResult
 from src.data.loader import DataLoader
-from src.research.momentum import Momentum
-from src.research.moving_averages import EMA
-from src.research.oscillators import RSI
 from src.research.pipeline import FeaturePipeline
-from src.signal.breakout import DonchianBreakoutSignal
 from src.signal.evaluation import SignalEvaluator
 from src.signal.position import PositionSignalConstructor
-from src.signal.reversion import RSIReversionSignal
-from src.signal.trend import EMACrossoverSignal, MomentumSignal
 
 if TYPE_CHECKING:
     from src.core.registry import PositionSizer
@@ -57,11 +51,6 @@ class MultiAssetRunner:
         - Capital allocation or risk budgeting (Modules 16–17)
         - RunManager persistence (Module 15)
         - Portfolio-level metrics (Module 15)
-
-    Technical debt TD-M14-A:
-        _build_pipeline_components() duplicates the strategy->pipeline mapping
-        from dashboard/pages/3_strategy_builder.py. Phase 3+ refactor:
-        extract to src/backtesting/pipeline_builder.py for shared use.
 
     See Architecture Section 5 (Layer 3) and ADR-010.
 
@@ -273,57 +262,12 @@ class MultiAssetRunner:
         strategy_name: str,
         parameters: dict[str, Any],
     ) -> tuple[list, Any]:
-        """Return (indicators, signal_generator) for the given strategy and params.
-
-        Technical debt TD-M14-A: this mapping duplicates logic in
-        dashboard/pages/3_strategy_builder.py._build_pipeline_components().
-        Refactor to src/backtesting/pipeline_builder.py in a future module.
-
-        Args:
-            strategy_name: One of ema_crossover | momentum | rsi_reversion |
-                donchian_breakout.
-            parameters: Parameter dict matching the strategy's schema.
-
-        Returns:
-            (indicators: list[Indicator], signal_gen: SignalGenerator)
-
-        Raises:
-            ValueError: If strategy_name is not recognized.
-        """
-        if strategy_name == "ema_crossover":
-            fast = int(parameters["fast_period"])
-            slow = int(parameters["slow_period"])
-            return (
-                [EMA(period=fast), EMA(period=slow)],
-                EMACrossoverSignal(fast_period=fast, slow_period=slow),
-            )
-
-        if strategy_name == "momentum":
-            lookback = int(parameters["lookback_period"])
-            z_window = int(parameters.get("z_score_window", 63))
-            return (
-                [Momentum(lookback=lookback)],
-                MomentumSignal(lookback=lookback, z_score_window=z_window),
-            )
-
-        if strategy_name == "rsi_reversion":
-            period = int(parameters["period"])
-            return (
-                [RSI(period=period)],
-                RSIReversionSignal(period=period),
-            )
-
-        if strategy_name == "donchian_breakout":
-            channel = int(parameters["channel_period"])
-            return (
-                [],
-                DonchianBreakoutSignal(channel_period=channel),
-            )
-
-        raise ValueError(
-            f"MultiAssetRunner: unknown strategy '{strategy_name}'. "
-            "Valid: ema_crossover, momentum, rsi_reversion, donchian_breakout"
+        """Return (indicators, signal_generator) via shared pipeline_builder."""
+        from src.backtesting.pipeline_builder import (  # noqa: PLC0415
+            build_pipeline_components,
         )
+
+        return build_pipeline_components(strategy_name, parameters, self._config)
 
     def _aggregate_portfolio(
         self,

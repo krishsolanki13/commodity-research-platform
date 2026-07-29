@@ -17,20 +17,15 @@ import streamlit as st
 
 from dashboard.components._theme import inject_global_css, render_kpi_row
 from src.backtesting.engine import VectorizedBacktester
+from src.backtesting.pipeline_builder import build_pipeline_components
 from src.backtesting.run_manager import RunManager
 from src.core.config import Config
 from src.core.types import BacktestResult, PerformanceReport
 from src.data.loader import DataLoader
 from src.performance.report import PerformanceEngine
-from src.research.momentum import Momentum
-from src.research.moving_averages import EMA
-from src.research.oscillators import RSI
 from src.research.pipeline import FeaturePipeline
-from src.signal.breakout import DonchianBreakoutSignal
 from src.signal.evaluation import SignalEvaluator
 from src.signal.position import PositionSignalConstructor
-from src.signal.reversion import RSIReversionSignal
-from src.signal.trend import EMACrossoverSignal, MomentumSignal
 
 st.set_page_config(page_title="Strategy Builder", layout="wide")
 
@@ -58,38 +53,6 @@ def _get_config() -> Config:
     return Config.load("config/")
 
 
-def _build_pipeline_components(
-    strategy_name: str, params: dict[str, Any]
-) -> tuple[list, Any]:
-    """Return (indicators, signal_generator) for the given strategy and params."""
-    if strategy_name == "ema_crossover":
-        return (
-            [EMA(period=params["fast_period"]), EMA(period=params["slow_period"])],
-            EMACrossoverSignal(
-                fast_period=params["fast_period"], slow_period=params["slow_period"]
-            ),
-        )
-    if strategy_name == "momentum":
-        return (
-            [Momentum(lookback=params["lookback_period"])],
-            MomentumSignal(
-                lookback=params["lookback_period"],
-                z_score_window=params.get("z_score_window", 63),
-            ),
-        )
-    if strategy_name == "rsi_reversion":
-        return (
-            [RSI(period=params["period"])],
-            RSIReversionSignal(period=params["period"]),
-        )
-    if strategy_name == "donchian_breakout":
-        return (
-            [],
-            DonchianBreakoutSignal(channel_period=params["channel_period"]),
-        )
-    raise ValueError(f"Unknown strategy: {strategy_name}")
-
-
 def _run_full_pipeline(
     asset: str,
     strategy_name: str,
@@ -110,7 +73,11 @@ def _run_full_pipeline(
         Step 9: Persist artifacts                 (Layer 3)
     """
     ohlcv = DataLoader(config).load(asset)
-    indicators, signal_gen = _build_pipeline_components(strategy_name, params)
+    indicators, signal_gen = build_pipeline_components(
+        strategy_name=strategy_name,
+        parameters=params,
+        config=config,
+    )
     ff = FeaturePipeline(indicators).compute(ohlcv, asset=asset)
     raw_signal = signal_gen.generate(ff)
 
