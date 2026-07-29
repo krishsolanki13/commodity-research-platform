@@ -197,6 +197,20 @@ def _run_portfolio_task(
         risk_report = RiskEngine().compute(multi_result)
         corr_report = CorrelationEngine().compute(multi_result)
 
+        # EM3: persist equity, risk, and correlation to disk for post-restart access
+        try:
+            from src.performance.portfolio import (  # noqa: PLC0415
+                save_correlation_report,
+                save_portfolio_equity,
+                save_risk_report,
+            )
+
+            save_portfolio_equity(multi_result, run_dir)
+            save_risk_report(risk_report, run_dir)
+            save_correlation_report(corr_report, run_dir)
+        except Exception as _e:  # noqa: BLE001
+            logger.warning("EM3: failed to persist portfolio artifacts: %s", _e)
+
         state.set_artifact_id(polling_run_id, run_id)
 
         import api.state as _state_module  # noqa: PLC0415

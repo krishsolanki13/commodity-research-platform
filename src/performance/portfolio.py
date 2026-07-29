@@ -22,6 +22,7 @@ import json
 import logging
 import math
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
@@ -32,6 +33,9 @@ from src.core.types import (
     PortfolioPerformanceReport,
 )
 from src.performance.report import PerformanceEngine
+
+if TYPE_CHECKING:
+    from src.core.types import CorrelationReport, RiskReport
 
 
 class PortfolioPerformanceEngine:
@@ -366,4 +370,188 @@ def save_portfolio_summary(
     run_dir.mkdir(parents=True, exist_ok=True)
     out_path = run_dir / "portfolio_summary.json"
     out_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    return out_path
+
+
+def save_portfolio_equity(
+    multi_result: MultiAssetBacktestResult,
+    run_dir: Path,
+) -> Path:
+    """Save portfolio equity curve and daily PnL series to parquet.
+
+    Persists multi_result.portfolio_equity_curve → portfolio_equity.parquet
+    and multi_result.portfolio_pnl_series       → portfolio_pnl.parquet
+
+    Both are required by GET /api/portfolio/{run_id}/equity (PortfolioEquityResponse
+    contains portfolio_equity and portfolio_pnl as separate columnar fields).
+
+    Args:
+        multi_result: MultiAssetBacktestResult from MultiAssetRunner.run().
+        run_dir: Portfolio run artifacts directory (data/runs/{run_id}/).
+
+    Returns:
+        Path to portfolio_equity.parquet (primary artifact path).
+    """
+    run_dir.mkdir(parents=True, exist_ok=True)
+    equity_path = run_dir / "portfolio_equity.parquet"
+    multi_result.portfolio_equity_curve.to_frame(name="equity").to_parquet(
+        equity_path, engine="pyarrow"
+    )
+    pnl_path = run_dir / "portfolio_pnl.parquet"
+    multi_result.portfolio_pnl_series.to_frame(name="pnl").to_parquet(
+        pnl_path, engine="pyarrow"
+    )
+    return equity_path
+
+
+def save_risk_report(
+    risk_report: RiskReport,
+    run_dir: Path,
+) -> Path:
+    """Save RiskReport scalars and per-asset dicts to portfolio_risk.json.
+
+    Persists all RiskReport fields so that
+    GET /api/portfolio/{run_id}/risk can be served after server restart.
+
+    NaN values are converted to None (JSON null) using the same
+    _nan_safe() pattern as save_portfolio_summary().
+
+    Args:
+        risk_report: RiskReport from RiskEngine.compute().
+        run_dir: Portfolio run artifacts directory.
+
+    Returns:
+        Path to the written JSON file.
+    """
+    import json as _json  # noqa: PLC0415
+
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    def _nan_safe(v: object) -> object:
+        if isinstance(v, float) and math.isnan(v):
+            return None
+        return v
+
+    data: dict = {
+        "strategy_name": risk_report.strategy_name,
+        "run_id": risk_report.run_id,
+        "assets": risk_report.assets,
+        "computation_date": str(risk_report.computation_date),
+        "lookback_days": risk_report.lookback_days,
+        "initial_capital_total": risk_report.initial_capital_total,
+        "portfolio_var_95": _nan_safe(risk_report.portfolio_var_95),
+        "portfolio_var_99": _nan_safe(risk_report.portfolio_var_99),
+        "portfolio_var_95_pct": _nan_safe(risk_report.portfolio_var_95_pct),
+        "portfolio_var_99_pct": _nan_safe(risk_report.portfolio_var_99_pct),
+        "portfolio_es_95": _nan_safe(risk_report.portfolio_es_95),
+        "portfolio_es_99": _nan_safe(risk_report.portfolio_es_99),
+        "asset_var_95": {k: _nan_safe(v) for k, v in risk_report.asset_var_95.items()},
+        "asset_var_99": {k: _nan_safe(v) for k, v in risk_report.asset_var_99.items()},
+        "avg_gross_notional_by_asset": {
+            k: _nan_safe(v) for k, v in risk_report.avg_gross_notional_by_asset.items()
+        },
+        "avg_net_notional_by_asset": {
+            k: _nan_safe(v) for k, v in risk_report.avg_net_notional_by_asset.items()
+        },
+        "total_avg_gross_notional": _nan_safe(risk_report.total_avg_gross_notional),
+        "total_avg_net_notional": _nan_safe(risk_report.total_avg_net_notional),
+    }
+
+    out_path = run_dir / "portfolio_risk.json"
+    out_path.write_text(_json.dumps(data, indent=2), encoding="utf-8")
+    return out_path
+
+
+def save_correlation_report(
+    corr_report: CorrelationReport,
+    run_dir: Path,
+) -> Path:
+    """Save CorrelationReport to disk — scalars to JSON, rolling series to Parquet.
+
+    Three files:
+      portfolio_correlation.json    — matrix, vol, pairwise scalars
+      portfolio_rolling_63.parquet  — 63-day rolling correlations (wide format)
+      portfolio_rolling_126.parquet — 126-day rolling correlations (wide format)
+
+    Rolling parquets are in wide format: date index, columns are
+    "{asset_a}__{asset_b}" (double-underscore separator, upper-triangle pairs only,
+    a < b alphabetically — matching CorrelationReport.rolling_correlations_63 structure).
+
+    Note: _symmetrize_rolling() is applied at read time in the API handler,
+    not at save time. Upper-triangle storage is canonical.
+
+    Args:
+        corr_report: CorrelationReport from CorrelationEngine.compute().
+        run_dir: Portfolio run artifacts directory.
+
+    Returns:
+        Path to the written JSON file (primary artifact).
+    """
+    import json as _json  # noqa: PLC0415
+
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    def _nan_safe(v: object) -> object:
+        if isinstance(v, float) and math.isnan(v):
+            return None
+        return v
+
+    data: dict = {
+        "strategy_name": corr_report.strategy_name,
+        "run_id": corr_report.run_id,
+        "assets": corr_report.assets,
+        "computation_date": str(corr_report.computation_date),
+        "correlation_matrix": {
+            a: {b: _nan_safe(v) for b, v in row.items()}
+            for a, row in corr_report.correlation_matrix.items()
+        },
+        "realized_vol_by_asset": {
+            k: _nan_safe(v) for k, v in corr_report.realized_vol_by_asset.items()
+        },
+        "portfolio_realized_vol": _nan_safe(corr_report.portfolio_realized_vol),
+        "avg_pairwise_correlation": _nan_safe(corr_report.avg_pairwise_correlation),
+        "most_correlated_pair": [
+            corr_report.most_correlated_pair[0],
+            corr_report.most_correlated_pair[1],
+            _nan_safe(corr_report.most_correlated_pair[2]),
+        ],
+        "least_correlated_pair": [
+            corr_report.least_correlated_pair[0],
+            corr_report.least_correlated_pair[1],
+            _nan_safe(corr_report.least_correlated_pair[2]),
+        ],
+    }
+
+    out_path = run_dir / "portfolio_correlation.json"
+    out_path.write_text(_json.dumps(data, indent=2), encoding="utf-8")
+
+    def _rolling_to_df(
+        rolling_dict: dict[str, dict[str, pd.Series]],
+    ) -> pd.DataFrame:
+        """Convert nested rolling dict to wide DataFrame.
+        Columns: '{asset_a}__{asset_b}' (upper-triangle pairs only).
+        """
+        frames: dict[str, pd.Series] = {}
+        for a, inner in rolling_dict.items():
+            for b, series in inner.items():
+                frames[f"{a}__{b}"] = series
+        if not frames:
+            import pandas as _pd  # noqa: PLC0415
+
+            return _pd.DataFrame()
+        import pandas as _pd  # noqa: PLC0415
+
+        return _pd.DataFrame(frames)
+
+    for window, rolling_dict in [
+        (63, corr_report.rolling_correlations_63),
+        (126, corr_report.rolling_correlations_126),
+    ]:
+        df = _rolling_to_df(rolling_dict)
+        if not df.empty:
+            df.to_parquet(
+                run_dir / f"portfolio_rolling_{window}.parquet",
+                engine="pyarrow",
+            )
+
     return out_path
