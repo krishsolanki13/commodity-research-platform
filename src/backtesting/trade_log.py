@@ -128,20 +128,20 @@ class TradeLog:
             else:
                 equity_at_bar = self._initial_capital_usd
 
-            size_notional = self._position_sizer.compute_size(
+            signed_notional = self._position_sizer.compute_size(
                 signal=float(direction),
                 asset=self._asset,
                 equity=equity_at_bar,
                 bar_date=entry_date,
             )
-            size_contracts = size_notional / (entry_price * self._contract_multiplier)
+            size_contracts = signed_notional / (entry_price * self._contract_multiplier)
 
-            gross_pnl = (
-                direction * (exit_price - entry_price) * size_notional / entry_price
-            )
+            gross_pnl = (exit_price - entry_price) * signed_notional / entry_price
             transaction_cost = self._cost_model.compute(self._tick_value)
             net_pnl = gross_pnl - transaction_cost
-            return_pct = net_pnl / size_notional
+            return_pct = (
+                net_pnl / abs(signed_notional) if signed_notional != 0.0 else 0.0
+            )
 
             trades.append(
                 TradeRecord(
@@ -152,8 +152,8 @@ class TradeLog:
                     exit_date=exit_date.date(),
                     entry_price=entry_price,
                     exit_price=exit_price,
-                    size_notional=size_notional,
-                    size_contracts=size_contracts,
+                    size_notional=abs(signed_notional),
+                    size_contracts=abs(size_contracts),
                     gross_pnl=gross_pnl,
                     transaction_cost=transaction_cost,
                     net_pnl=net_pnl,

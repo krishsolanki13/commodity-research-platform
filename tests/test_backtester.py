@@ -81,7 +81,7 @@ def test_fixed_notional_sizer_returns_constant() -> None:
     """FixedNotionalSizer.compute_size() returns the constructor value regardless of args."""
     sizer = FixedNotionalSizer(notional_usd=100_000.0)
     assert sizer.compute_size(signal=1.0, asset="gold", equity=1_000_000.0) == 100_000.0
-    assert sizer.compute_size(signal=-1.0, asset="wti", equity=500_000.0) == 100_000.0
+    assert sizer.compute_size(signal=-1.0, asset="wti", equity=500_000.0) == -100_000.0
 
 
 def test_trade_log_entry_price_is_open_t_plus_1() -> None:

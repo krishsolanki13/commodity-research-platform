@@ -51,9 +51,9 @@ class FixedNotionalSizer(PositionSizer):
             equity: Unused in Phase 1. Accepted for interface compliance.
 
         Returns:
-            Fixed USD notional size. See ADR-005.
+            Signed USD notional size (notional_usd * signal). See ADR-005.
         """
-        return self._notional_usd
+        return self._notional_usd * signal
 
 
 class VolatilityScaledSizer(PositionSizer):
@@ -220,18 +220,16 @@ class VolatilityScaledSizer(PositionSizer):
         Returns 0.0 if signal is flat, configure() has not been called,
         or realized_vol is NaN or non-positive.
 
-        The returned size is unsigned. The direction (long/short) is applied by
-        VectorizedBacktester based on the signal sign. This matches the
-        FixedNotionalSizer contract.
+        Signed notional per ADR-003: positive = long, negative = short.
 
         Args:
             signal: Position signal. -1 = full short, 0 = flat, +1 = full long.
-                |signal| scales the notional proportionally (Phase 3 compatibility).
-                For Phase 1 where signal is always {-1, 0, +1}, |signal| is 0 or 1.
+                Signal sign scales the notional proportionally (Phase 3 compatibility).
+                For Phase 1 where signal is always {-1, 0, +1}, signal is -1, 0, or +1.
             current_equity: Current portfolio equity in USD.
 
         Returns:
-            Unsigned position size in USD notional. Always >= 0.
+            Signed position size in USD notional.
             0.0 if signal == 0, configure() not called, or realized_vol invalid.
         """
         if signal == 0.0:
@@ -242,12 +240,15 @@ class VolatilityScaledSizer(PositionSizer):
             return 0.0
 
         target_notional = (self._target_annual_vol * current_equity) / vol
-        target_notional *= abs(signal)
+        target_notional *= float(signal)
 
+        magnitude = abs(target_notional)
         if self._min_notional > 0.0:
-            target_notional = max(target_notional, self._min_notional)
+            magnitude = max(magnitude, self._min_notional)
         if self._max_notional is not None:
-            target_notional = min(target_notional, self._max_notional)
+            magnitude = min(magnitude, self._max_notional)
+        sign = 1.0 if signal >= 0.0 else -1.0
+        target_notional = sign * magnitude
 
         return float(target_notional)
 

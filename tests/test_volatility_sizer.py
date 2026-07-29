@@ -77,7 +77,7 @@ def test_fixed_notional_sizer_still_works_with_configure_protocol() -> None:
     sizer.configure(ohlcv)
 
     assert sizer.compute_size(1.0, "gold", 1_000_000.0) == pytest.approx(50_000.0)
-    assert sizer.compute_size(-1.0, "gold", 1_000_000.0) == pytest.approx(50_000.0)
+    assert sizer.compute_size(-1.0, "gold", 1_000_000.0) == pytest.approx(-50_000.0)
 
 
 # ---------------------------------------------------------------------------
