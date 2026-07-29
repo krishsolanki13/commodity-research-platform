@@ -1,0 +1,84 @@
+# .github/workflows/ci.yml
+# Commodity Systematic Research Platform — Continuous Integration
+#
+# Runs on every push and pull request to main.
+# Two jobs: backend (Python) and frontend (Node).
+# Both must pass for the workflow to be green.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend — pytest / mypy / ruff / coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: ruff lint
+        run: ruff check src/ api/ tests/ --output-format=github
+
+      - name: ruff format check
+        run: ruff format src/ api/ tests/ --check
+
+      - name: mypy
+        run: mypy src/ --ignore-missing-imports --no-error-summary
+
+      - name: pytest (backend + API tests)
+        run: |
+          pytest tests/ api/tests/ \
+            --tb=short \
+            --cov=src \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --cov-fail-under=65
+        env:
+          MLFLOW_ALLOW_FILE_STORE: "true"
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+
+  frontend:
+    name: Frontend — TypeScript / ESLint / vitest
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: cd frontend && npm ci
+
+      - name: TypeScript check
+        run: cd frontend && npx tsc --noEmit
+
+      - name: ESLint
+        run: cd frontend && npx eslint src --max-warnings 0
+
+      - name: vitest
+        run: cd frontend && npm test -- --run

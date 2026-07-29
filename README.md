@@ -1,5 +1,7 @@
 # Commodity Systematic Research Platform
 
+![CI](https://github.com/krishsolanki13/commodity-research-platform/actions/workflows/ci.yml/badge.svg)
+
 An institutional-style quantitative research infrastructure for commodity futures markets. Built to demonstrate and practice the systematic research workflow used by professional commodity trading teams: data normalization → feature engineering → signal evaluation → backtesting → performance attribution.
 
 ---
