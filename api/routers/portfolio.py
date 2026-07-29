@@ -487,12 +487,145 @@ def get_portfolio_summary(run_id: str) -> PortfolioSummaryResponse:
     )
 
 
+def _derive_diversification_benefit(
+    asset_var_99: dict,
+    portfolio_var_99: float | None,
+) -> float | None:
+    """Replicate RiskReport.portfolio_diversification_benefit from stored values.
+
+    Defined as sum(asset_var_99.values()) / portfolio_var_99.
+    Returns None when portfolio_var_99 is None, zero, or NaN.
+    """
+    if not portfolio_var_99:
+        return None
+    total = sum(asset_var_99.values())
+    return total / portfolio_var_99
+
+
+def _risk_from_disk(run_id: str) -> RiskReportResponse | None:
+    """Build RiskReportResponse from portfolio_risk.json if present."""
+    # EM3 disk fallback — serves after server restart
+    artifact_run_id = resolve_artifact_id(run_id)
+    risk_path = RUNS_DIR / artifact_run_id / "portfolio_risk.json"
+    if not risk_path.exists():
+        return None
+    import json as _json  # noqa: PLC0415
+
+    d = _json.loads(risk_path.read_text(encoding="utf-8"))
+    return RiskReportResponse(
+        run_id=run_id,
+        portfolio_var_95=d.get("portfolio_var_95"),
+        portfolio_var_99=d.get("portfolio_var_99"),
+        portfolio_var_95_pct=d.get("portfolio_var_95_pct"),
+        portfolio_var_99_pct=d.get("portfolio_var_99_pct"),
+        portfolio_es_95=d.get("portfolio_es_95"),
+        portfolio_es_99=d.get("portfolio_es_99"),
+        asset_var_95=d.get("asset_var_95", {}),
+        asset_var_99=d.get("asset_var_99", {}),
+        avg_gross_notional_by_asset=d.get("avg_gross_notional_by_asset", {}),
+        avg_net_notional_by_asset=d.get("avg_net_notional_by_asset", {}),
+        total_avg_gross_notional=d.get("total_avg_gross_notional"),
+        total_avg_net_notional=d.get("total_avg_net_notional"),
+        portfolio_diversification_benefit=_derive_diversification_benefit(
+            d.get("asset_var_99", {}), d.get("portfolio_var_99")
+        ),
+        lookback_days=d.get("lookback_days", 252),
+    )
+
+
+def _correlation_from_disk(run_id: str) -> CorrelationReportResponse | None:
+    """Build CorrelationReportResponse from disk artifacts if present."""
+    # EM3 disk fallback — serves after server restart
+    artifact_run_id = resolve_artifact_id(run_id)
+    corr_path = RUNS_DIR / artifact_run_id / "portfolio_correlation.json"
+    if not corr_path.exists():
+        return None
+    import json as _json  # noqa: PLC0415
+
+    import pandas as _pd  # noqa: PLC0415
+
+    d = _json.loads(corr_path.read_text(encoding="utf-8"))
+
+    # Reconstruct upper-triangle rolling dicts from wide-format parquet
+    raw_63: dict = {}
+    raw_126: dict = {}
+    for window, target in [(63, raw_63), (126, raw_126)]:
+        rp = RUNS_DIR / artifact_run_id / f"portfolio_rolling_{window}.parquet"
+        if rp.exists():
+            df = _pd.read_parquet(rp, engine="pyarrow")
+            for col in df.columns:
+                parts = col.split("__", 1)
+                if len(parts) == 2:
+                    a, b = parts
+                    target.setdefault(a, {})[b] = df[col]
+
+    # Symmetrize matches in-memory handler exactly
+    rolling_63 = _symmetrize_rolling(raw_63)
+    rolling_126 = _symmetrize_rolling(raw_126)
+
+    def _req_float(v: Any, default: float = 0.0) -> float:
+        # Disk JSON may store NaN as null via _nan_safe(); response model requires float
+        return float(v) if v is not None else default
+
+    most = d.get("most_correlated_pair", ["", "", 0.0])
+    least = d.get("least_correlated_pair", ["", "", 0.0])
+
+    return CorrelationReportResponse(
+        run_id=run_id,
+        correlation_matrix=d.get("correlation_matrix", {}),
+        rolling_correlations_63=rolling_63,
+        rolling_correlations_126=rolling_126,
+        realized_vol_by_asset=d.get("realized_vol_by_asset", {}),
+        portfolio_realized_vol=_req_float(d.get("portfolio_realized_vol")),
+        avg_pairwise_correlation=_req_float(d.get("avg_pairwise_correlation")),
+        most_correlated_pair=(
+            str(most[0]),
+            str(most[1]),
+            _req_float(most[2] if len(most) > 2 else None),
+        ),
+        least_correlated_pair=(
+            str(least[0]),
+            str(least[1]),
+            _req_float(least[2] if len(least) > 2 else None),
+        ),
+    )
+
+
+def _equity_from_disk(run_id: str) -> PortfolioEquityResponse | None:
+    """Build PortfolioEquityResponse from equity/pnl parquets if present."""
+    # EM3 disk fallback — serves after server restart
+    artifact_run_id = resolve_artifact_id(run_id)
+    equity_path = RUNS_DIR / artifact_run_id / "portfolio_equity.parquet"
+    pnl_path = RUNS_DIR / artifact_run_id / "portfolio_pnl.parquet"
+    if not (equity_path.exists() and pnl_path.exists()):
+        return None
+    import pandas as _pd  # noqa: PLC0415
+
+    equity_series = _pd.read_parquet(equity_path, engine="pyarrow")["equity"]
+    pnl_series = _pd.read_parquet(pnl_path, engine="pyarrow")["pnl"]
+    return PortfolioEquityResponse(
+        run_id=run_id,
+        portfolio_equity=series_to_columnar(equity_series, col_name="value"),
+        portfolio_pnl=series_to_columnar(pnl_series, col_name="value"),
+    )
+
+
 @router.get("/{run_id}/risk", response_model=RiskReportResponse)
 def get_portfolio_risk(run_id: str) -> RiskReportResponse:
     """Portfolio risk analytics: VaR, ES, notional exposure."""
-    task = _get_task_or_404(run_id)
+    try:
+        task = _get_task_or_404(run_id)
+    except ApiError:
+        disk = _risk_from_disk(run_id)
+        if disk is not None:
+            return disk
+        raise
+
     risk = task.get("risk_report")
     if risk is None:
+        disk = _risk_from_disk(run_id)
+        if disk is not None:
+            return disk
         raise ApiError(
             code="REPORT_NOT_FOUND",
             message="Risk report not available.",
@@ -532,9 +665,19 @@ def get_portfolio_risk(run_id: str) -> RiskReportResponse:
 @router.get("/{run_id}/correlation", response_model=CorrelationReportResponse)
 def get_portfolio_correlation(run_id: str) -> CorrelationReportResponse:
     """Cross-asset correlation report with symmetrized rolling correlations."""
-    task = _get_task_or_404(run_id)
+    try:
+        task = _get_task_or_404(run_id)
+    except ApiError:
+        disk = _correlation_from_disk(run_id)
+        if disk is not None:
+            return disk
+        raise
+
     corr = task.get("corr_report")
     if corr is None:
+        disk = _correlation_from_disk(run_id)
+        if disk is not None:
+            return disk
         raise ApiError(
             code="REPORT_NOT_FOUND",
             message="Correlation report not available.",
@@ -563,9 +706,19 @@ def get_portfolio_correlation(run_id: str) -> CorrelationReportResponse:
 @router.get("/{run_id}/equity", response_model=PortfolioEquityResponse)
 def get_portfolio_equity(run_id: str) -> PortfolioEquityResponse:
     """Portfolio equity curve and daily PnL series."""
-    task = _get_task_or_404(run_id)
+    try:
+        task = _get_task_or_404(run_id)
+    except ApiError:
+        disk = _equity_from_disk(run_id)
+        if disk is not None:
+            return disk
+        raise
+
     multi = task.get("multi_result")
     if multi is None:
+        disk = _equity_from_disk(run_id)
+        if disk is not None:
+            return disk
         raise ApiError(
             code="REPORT_NOT_FOUND",
             message="Portfolio equity not available.",

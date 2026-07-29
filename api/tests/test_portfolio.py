@@ -561,3 +561,119 @@ def test_portfolio_runs_returns_empty_list_when_no_runs(
     data = response.json()
     assert data["runs"] == []
     assert data["total"] == 0
+
+
+def test_equity_disk_fallback_returns_200(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GET /equity → 200 from disk when task state is absent (post-restart)."""
+    run_id = "disk_fallback_equity_test"
+    run_dir = tmp_path / run_id
+    run_dir.mkdir(parents=True)
+
+    idx = pd.bdate_range("2026-01-02", periods=3, freq="B", tz="UTC")
+    pd.Series([1e6, 1.01e6, 1.02e6], index=idx, name="equity").to_frame(
+        "equity"
+    ).to_parquet(run_dir / "portfolio_equity.parquet")
+    pd.Series([0.0, 1e4, 1e4], index=idx, name="pnl").to_frame("pnl").to_parquet(
+        run_dir / "portfolio_pnl.parquet"
+    )
+
+    import api.routers.portfolio as pr
+
+    monkeypatch.setattr(pr, "RUNS_DIR", tmp_path)
+
+    response = client.get(f"/api/portfolio/{run_id}/equity")
+    assert response.status_code == 200, response.text
+
+
+def test_risk_disk_fallback_returns_200(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GET /risk → 200 from disk when task state is absent (post-restart)."""
+    run_id = "disk_fallback_risk_test"
+    run_dir = tmp_path / run_id
+    run_dir.mkdir(parents=True)
+
+    (run_dir / "portfolio_risk.json").write_text(
+        json.dumps(
+            {
+                "strategy_name": "ema_crossover",
+                "run_id": run_id,
+                "assets": ["gold"],
+                "computation_date": "2026-07-01",
+                "lookback_days": 252,
+                "initial_capital_total": 1e6,
+                "portfolio_var_95": 5000.0,
+                "portfolio_var_99": 8000.0,
+                "portfolio_var_95_pct": 0.005,
+                "portfolio_var_99_pct": 0.008,
+                "portfolio_es_95": 7000.0,
+                "portfolio_es_99": 12000.0,
+                "asset_var_95": {"gold": 5000.0},
+                "asset_var_99": {"gold": 8000.0},
+                "avg_gross_notional_by_asset": {"gold": 100000.0},
+                "avg_net_notional_by_asset": {"gold": 100000.0},
+                "total_avg_gross_notional": 100000.0,
+                "total_avg_net_notional": 100000.0,
+                "portfolio_diversification_benefit": 1.6,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    import api.routers.portfolio as pr
+
+    monkeypatch.setattr(pr, "RUNS_DIR", tmp_path)
+
+    response = client.get(f"/api/portfolio/{run_id}/risk")
+    assert response.status_code == 200, response.text
+
+
+def test_correlation_disk_fallback_returns_200(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GET /correlation → 200 from disk when task state is absent (post-restart)."""
+    run_id = "disk_fallback_correlation_test"
+    run_dir = tmp_path / run_id
+    run_dir.mkdir(parents=True)
+
+    (run_dir / "portfolio_correlation.json").write_text(
+        json.dumps(
+            {
+                "strategy_name": "ema_crossover",
+                "run_id": run_id,
+                "assets": ["gold", "silver"],
+                "computation_date": "2026-07-01",
+                "correlation_matrix": {
+                    "gold": {"gold": 1.0, "silver": 0.65},
+                    "silver": {"gold": 0.65, "silver": 1.0},
+                },
+                "realized_vol_by_asset": {"gold": 0.0234, "silver": 0.031},
+                "portfolio_realized_vol": 0.025,
+                "avg_pairwise_correlation": None,
+                "most_correlated_pair": ["", "", None],
+                "least_correlated_pair": ["", "", None],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    idx = pd.bdate_range("2026-01-02", periods=3, freq="B", tz="UTC")
+    pd.DataFrame(
+        {"gold__silver": [0.6, 0.65, 0.7]},
+        index=idx,
+    ).to_parquet(run_dir / "portfolio_rolling_63.parquet")
+
+    import api.routers.portfolio as pr
+
+    monkeypatch.setattr(pr, "RUNS_DIR", tmp_path)
+
+    response = client.get(f"/api/portfolio/{run_id}/correlation")
+    assert response.status_code == 200, response.text
