@@ -1,0 +1,18 @@
+{
+  "n_trades": 19,
+  "final_equity": 1108823.88,
+  "first_5_trade_pnls": [
+    12759.3612,
+    -10070.7933,
+    -5108.1398,
+    24991.2097,
+    -1191.0869
+  ],
+  "equity_checksum": "dc7220fc7f437b3d",
+  "asset": "gold",
+  "strategy": "ema_crossover",
+  "parameters": {
+    "fast_period": 50,
+    "slow_period": 200
+  }
+}
