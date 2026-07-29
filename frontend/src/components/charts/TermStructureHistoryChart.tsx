@@ -22,6 +22,15 @@ import type { components } from '@/api/schema'
 
 type TermStructureSnapshotSummary = components['schemas']['TermStructureSnapshotSummary']
 
+interface EChartsTooltipParams {
+  seriesName?: string
+  seriesIndex?: number
+  value?: number | string | null | unknown[]
+  axisValue?: string | number
+  marker?: string
+  color?: string
+}
+
 export interface TermStructureHistoryChartProps {
   snapshots: TermStructureSnapshotSummary[]
   title?: string
@@ -201,13 +210,8 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
           fontFamily: theme.monoFont,
           fontSize: 11,
         },
-        formatter: (params: unknown) => {
-          const items = (Array.isArray(params) ? params : [params]) as Array<{
-            seriesName?: string
-            value?: unknown
-            axisValue?: string | number
-            marker?: string
-          }>
+        formatter: (params: EChartsTooltipParams | EChartsTooltipParams[]) => {
+          const items = Array.isArray(params) ? params : [params]
           if (!items.length) return ''
           const axisRaw = items[0]?.axisValue
           const axisMs = typeof axisRaw === 'number' ? axisRaw : Number(axisRaw)
@@ -230,7 +234,7 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
             if (p.seriesName !== 'Slope %/yr' && p.seriesName !== 'Roll Yield %/yr') continue
             let v: unknown = p.value
             if (Array.isArray(p.value)) {
-              const arr = p.value as unknown[]
+              const arr = p.value
               v = arr[arr.length - 1]
             }
             const num = v == null ? null : Number(v)
@@ -242,16 +246,17 @@ function TermStructureHistoryChartInner({ snapshots, theme, showRegimeBands }: I
 
           const slopeItem =
             items.find(
-              (p: any) => p.seriesIndex === 0 || p.seriesName?.toLowerCase().includes('slope')
+              (p: EChartsTooltipParams) =>
+                p.seriesIndex === 0 || p.seriesName?.toLowerCase().includes('slope')
             ) ?? items[0]
           const rollItem =
             items.find(
-              (p: any) => p.seriesIndex === 1 || p.seriesName?.toLowerCase().includes('roll')
+              (p: EChartsTooltipParams) =>
+                p.seriesIndex === 1 || p.seriesName?.toLowerCase().includes('roll')
             ) ?? items[1]
-          const AMBER_HEX = '#e8a33d' // --amber-500 concrete value; CSS vars don't work in ECharts HTML tooltip strings
           const slopeMarker = slopeItem?.marker ?? '● '
           const rollMarker = rollItem?.marker ??
-            `<span style="display:inline-block;margin-right:4px;border-radius:50%;width:10px;height:10px;background-color:${AMBER_HEX};"></span>`
+            `<span style="display:inline-block;margin-right:4px;border-radius:50%;width:10px;height:10px;background-color:${theme.amber};"></span>`
           return [
             dateLabel,
             `${slopeMarker}Slope %/yr: ${formatPctYr(slope)}`,
