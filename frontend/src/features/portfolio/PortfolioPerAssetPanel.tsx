@@ -15,10 +15,7 @@ export function PortfolioPerAssetPanel({ runId, assets }: PortfolioPerAssetPanel
   if (error) {
     return (
       <div className="rounded border border-border-default">
-        <p className="p-4 text-xs text-text-secondary">
-          Per-asset data not available for this run. Re-run the portfolio backtest to generate
-          per-asset metrics.
-        </p>
+        <p className="p-4 text-xs text-text-secondary">Failed to load per-asset data.</p>
       </div>
     )
   }

@@ -196,6 +196,7 @@ export function PortfolioAnalytics() {
       <PortfolioCorrelationPanel
         correlation={correlation.data ?? null}
         loading={correlation.isLoading}
+        error={correlation.error}
       />
 
       {correlation.data && (

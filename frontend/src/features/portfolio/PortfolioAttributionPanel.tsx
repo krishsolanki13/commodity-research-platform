@@ -62,7 +62,6 @@ export function PortfolioAttributionPanel({
           title="Per-Asset Sharpe Ratio"
           height={220}
           loading={assetsLoading}
-          empty={{ message: 'Per-asset metrics not available. Re-run portfolio to generate.' }}
         />
       )}
       <div>
