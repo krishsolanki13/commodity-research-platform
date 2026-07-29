@@ -32,15 +32,12 @@ jobs:
 
       - name: ruff lint
         run: python -m ruff check src/ api/ tests/ --output-format=github
-        continue-on-error: true
 
       - name: ruff format check
         run: python -m ruff format src/ api/ tests/ --check
-        continue-on-error: true
 
       - name: mypy
         run: python -m mypy src/ --ignore-missing-imports --no-error-summary
-        continue-on-error: true
 
       - name: pytest
         run: |
@@ -49,7 +46,6 @@ jobs:
             --cov=src \
             --cov-report=xml \
             --cov-report=term-missing
-        continue-on-error: true
         env:
           MLFLOW_ALLOW_FILE_STORE: "true"
 
