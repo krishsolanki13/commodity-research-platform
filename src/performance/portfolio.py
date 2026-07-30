@@ -455,6 +455,21 @@ def save_risk_report(
         },
         "total_avg_gross_notional": _nan_safe(risk_report.total_avg_gross_notional),
         "total_avg_net_notional": _nan_safe(risk_report.total_avg_net_notional),
+        # EM4 — Kupiec backtesting + contribution to strategy vol
+        "n_backtesting_days": risk_report.n_backtesting_days,
+        "exceptions_95": risk_report.exceptions_95,
+        "exceptions_99": risk_report.exceptions_99,
+        "exception_rate_95": _nan_safe(risk_report.exception_rate_95),
+        "exception_rate_99": _nan_safe(risk_report.exception_rate_99),
+        "kupiec_lr_99": _nan_safe(risk_report.kupiec_lr_99),
+        "kupiec_pvalue_99": _nan_safe(risk_report.kupiec_pvalue_99),
+        "asset_contribution_to_vol": {
+            k: _nan_safe(v) for k, v in risk_report.asset_contribution_to_vol.items()
+        },
+        "asset_contribution_to_vol_pct": {
+            k: _nan_safe(v)
+            for k, v in risk_report.asset_contribution_to_vol_pct.items()
+        },
     }
 
     out_path = run_dir / "portfolio_risk.json"

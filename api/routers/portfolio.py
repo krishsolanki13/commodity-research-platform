@@ -194,8 +194,12 @@ def _run_portfolio_task(
         run_dir.mkdir(parents=True, exist_ok=True)
         save_portfolio_summary(port_report, run_dir)
 
-        risk_report = RiskEngine().compute(multi_result)
         corr_report = CorrelationEngine().compute(multi_result)
+        risk_report = RiskEngine().compute(
+            multi_result,
+            lookback_days=252,
+            corr_report=corr_report,
+        )
 
         # EM3: persist equity, risk, and correlation to disk for post-restart access
         try:
@@ -530,6 +534,16 @@ def _risk_from_disk(run_id: str) -> RiskReportResponse | None:
             d.get("asset_var_99", {}), d.get("portfolio_var_99")
         ),
         lookback_days=d.get("lookback_days", 252),
+        # EM4 — backward-compatible; pre-EM4 runs return 0/null/empty
+        n_backtesting_days=d.get("n_backtesting_days", 0),
+        exceptions_95=d.get("exceptions_95", 0),
+        exceptions_99=d.get("exceptions_99", 0),
+        exception_rate_95=d.get("exception_rate_95"),
+        exception_rate_99=d.get("exception_rate_99"),
+        kupiec_lr_99=d.get("kupiec_lr_99"),
+        kupiec_pvalue_99=d.get("kupiec_pvalue_99"),
+        asset_contribution_to_vol=d.get("asset_contribution_to_vol", {}),
+        asset_contribution_to_vol_pct=d.get("asset_contribution_to_vol_pct", {}),
     )
 
 

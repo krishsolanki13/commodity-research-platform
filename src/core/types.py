@@ -692,6 +692,55 @@ class RiskReport:
     total_avg_net_notional: float
     """Sum of avg_net_notional_by_asset across all assets (signed)."""
 
+    # ── Kupiec VaR Backtesting (EM4) ─────────────────────────────────────────
+
+    n_backtesting_days: int = 0
+    """Number of trading days used in Kupiec backtesting.
+    Equal to len(portfolio_pnl_series.dropna().iloc[-lookback_days:]).
+    0 if backtesting could not be computed."""
+
+    exceptions_95: int = 0
+    """Days where portfolio loss exceeded VaR95 (count).
+    Expected at 5% confidence: ~5% of n_backtesting_days."""
+
+    exceptions_99: int = 0
+    """Days where portfolio loss exceeded VaR99 (count).
+    Expected at 1% confidence: ~1% of n_backtesting_days."""
+
+    exception_rate_95: float = 0.0
+    """Observed exception rate at 95% confidence: exceptions_95 / n_backtesting_days.
+    Should be approximately 0.05 for a well-calibrated VaR95."""
+
+    exception_rate_99: float = 0.0
+    """Observed exception rate at 99% confidence: exceptions_99 / n_backtesting_days.
+    Should be approximately 0.01 for a well-calibrated VaR99."""
+
+    kupiec_lr_99: float = 0.0
+    """Kupiec (1995) likelihood ratio statistic at 99% confidence.
+    Approximately chi-squared(1) under H0 that VaR is correctly calibrated.
+    NaN if exception rate is 0 or 1 (boundary — LR undefined)."""
+
+    kupiec_pvalue_99: float = 1.0
+    """P-value for Kupiec test at 99% confidence.
+    Low p-value (<0.05) rejects null that VaR99 is correctly calibrated.
+    p-value = 1 - chi2_cdf(kupiec_lr_99, df=1).
+    NaN if LR is undefined."""
+
+    # ── Contribution to Risk (EM4) ───────────────────────────────────────────
+
+    asset_contribution_to_vol: dict[str, float] = field(default_factory=dict)
+    """Per-asset contribution to portfolio annualized strategy volatility.
+    CTR_i = w_i x (Sw)_i / sqrt(w^T S w)
+    where w = notional weights from avg_gross_notional_by_asset,
+    S = covariance matrix from CorrelationReport.
+    Values are in vol units (annualized). Sum ~ portfolio_vol.
+    Empty dict if CorrelationReport not provided to RiskEngine.compute()."""
+
+    asset_contribution_to_vol_pct: dict[str, float] = field(default_factory=dict)
+    """Per-asset contribution as fraction of total portfolio strategy vol.
+    CTR_pct_i = CTR_i / portfolio_vol. Values sum to approximately 1.0.
+    Empty dict if CorrelationReport not provided to RiskEngine.compute()."""
+
     @property
     def portfolio_diversification_benefit(self) -> float:
         """Ratio of sum of per-asset VaR99 to portfolio VaR99.

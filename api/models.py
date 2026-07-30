@@ -430,6 +430,19 @@ class RiskReportResponse(BaseModel):
     methodology: str = "historical_simulation"
     # Note: VaR is backward-looking (realized P&L history, not current positions × scenarios)
 
+    # EM4 — Kupiec VaR backtesting
+    n_backtesting_days: int = 0
+    exceptions_95: int = 0
+    exceptions_99: int = 0
+    exception_rate_95: float | None = None
+    exception_rate_99: float | None = None
+    kupiec_lr_99: float | None = None
+    kupiec_pvalue_99: float | None = None
+
+    # EM4 — Contribution to strategy volatility
+    asset_contribution_to_vol: dict[str, float] = Field(default_factory=dict)
+    asset_contribution_to_vol_pct: dict[str, float] = Field(default_factory=dict)
+
 
 class RollingCorrSeries(BaseModel):
     """Rolling correlation between one asset pair."""
