@@ -57,6 +57,7 @@ def create_app() -> FastAPI:
     from api.routers import runs as runs_router
     from api.routers import signals as signals_router
     from api.routers import system as system_router
+    from api.routers import validation as validation_router
 
     app.include_router(assets_router.router)
     app.include_router(backtests_router.router)
@@ -66,6 +67,7 @@ def create_app() -> FastAPI:
     app.include_router(signals_router.router)
     app.include_router(system_router.router)
     app.include_router(curves_router.router)
+    app.include_router(validation_router.router)
 
     return app
 

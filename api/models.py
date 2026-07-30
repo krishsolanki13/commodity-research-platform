@@ -629,6 +629,77 @@ class CurveHistoryResponse(BaseModel):
     snapshots: list[TermStructureSnapshotSummary]
 
 
+class ValidationLaunchRequest(BaseModel):
+    """Request body for POST /api/validation/run."""
+
+    asset: str
+    strategy_name: str
+    parameters: dict[str, object]
+    n_splits: int = 5
+    embargo_bars: int = 10
+
+
+class ValidationStatusResponse(BaseModel):
+    """Response for GET /api/validation/{id}/status."""
+
+    validation_run_id: str
+    status: str  # queued | running | complete | failed
+    error: str | None = None
+
+
+class TrainTestSplitResponse(BaseModel):
+    """Date boundaries for one walk-forward fold — returned in ValidationReportResponse."""
+
+    fold_idx: int
+    train_start: str
+    train_end: str
+    test_start: str
+    test_end: str
+    n_train_bars: int
+    n_test_bars: int
+    embargo_bars: int
+
+
+class WalkForwardFoldResponse(BaseModel):
+    """Per-fold train/test Sharpe and return metrics."""
+
+    split: TrainTestSplitResponse
+    train_sharpe: float | None
+    test_sharpe: float | None
+    train_return: float | None
+    test_return: float | None
+    train_max_dd: float | None
+    test_max_dd: float | None
+    train_n_trades: int
+    test_n_trades: int
+    overfitting_ratio: float | None
+
+
+class ValidationReportResponse(BaseModel):
+    """Response for GET /api/validation/{id}/report."""
+
+    validation_run_id: str
+    asset: str
+    strategy_name: str
+    parameters: dict[str, object]
+    n_splits: int
+    embargo_bars: int
+    computation_date: str
+    folds: list[WalkForwardFoldResponse]
+    insample_sharpe: float | None
+    outsample_sharpe: float | None
+    insample_return: float | None
+    outsample_return: float | None
+    overfitting_ratio: float | None
+    sharpe_se: float | None
+    psr: float | None
+    n_trials: int
+    sr_benchmark: float | None
+    dsr: float | None
+    is_significant: bool
+    dsr_threshold: float
+
+
 # ── Serialization utilities ────────────────────────────────────────────────────
 
 
