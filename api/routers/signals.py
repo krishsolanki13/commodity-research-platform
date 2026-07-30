@@ -3,12 +3,13 @@ from __future__ import annotations
 import datetime
 from typing import Any, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Query
 
 from api.exceptions import ApiError
 from api.models import (
     DecayEntry,
     ParamSpec,
+    RollingICResponse,
     SignalEvaluateRequest,
     SignalEvaluateResponse,
     SignalEvaluationData,
@@ -354,4 +355,60 @@ def evaluate_signal(request: SignalEvaluateRequest) -> SignalEvaluateResponse:
         strategy=request.strategy,
         params=request.params,
         evaluation=eval_data,
+    )
+
+
+@router.get("/signals/rolling-ic")
+async def get_rolling_ic(
+    asset: str,
+    strategy: str,
+    params: str = "{}",
+    window: int = Query(default=63, ge=10, le=252),
+) -> RollingICResponse:
+    """Rolling IC: Pearson(RawSignal, forward_return) over a rolling window.
+
+    Query parameters:
+      asset:    Asset identifier (e.g. 'gold')
+      strategy: Strategy name (e.g. 'ema_crossover')
+      params:   JSON-encoded parameter dict
+      window:   Rolling window in bars (default 63, min 10, max 252)
+
+    Returns RollingICResponse with ColumnarSeries (epoch-ms index,
+    rolling_ic column). Null for first window-1 bars.
+    Invalid params JSON → 422.
+    """
+    import json as _json  # noqa: PLC0415
+
+    from src.signal.evaluation import SignalEvaluator  # noqa: PLC0415
+
+    try:
+        parameters = _json.loads(params)
+    except _json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid params JSON: {exc}",
+        ) from exc
+
+    try:
+        evaluator = SignalEvaluator(asset=asset, ic_rolling_window=window)
+        rolling_ic_series = evaluator.compute_rolling_ic(
+            strategy_name=strategy,
+            parameters=parameters,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=500,
+            detail=f"Rolling IC computation failed: {exc}",
+        ) from exc
+
+    columnar = series_to_columnar(rolling_ic_series, col_name="rolling_ic")
+
+    return RollingICResponse(
+        asset=asset,
+        strategy_name=strategy,
+        parameters=parameters,
+        window=window,
+        data=columnar,
     )

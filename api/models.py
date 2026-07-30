@@ -700,6 +700,24 @@ class ValidationReportResponse(BaseModel):
     dsr_threshold: float
 
 
+class RollingICResponse(BaseModel):
+    """Response for GET /api/signals/rolling-ic.
+
+    Contains the rolling IC time series as a ColumnarSeries:
+      - index: epoch-ms timestamps
+      - columns.rolling_ic: IC values in [-1, 1] or null for first window-1 bars
+
+    Consistent with static IC (RawSignal-based). ICRollingChart frontend
+    component (F5) consumes this response; wiring deferred to FEP.
+    """
+
+    asset: str
+    strategy_name: str
+    parameters: dict[str, object]
+    window: int
+    data: ColumnarSeries
+
+
 # ── Serialization utilities ────────────────────────────────────────────────────
 
 

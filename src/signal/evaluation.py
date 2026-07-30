@@ -123,6 +123,82 @@ class SignalEvaluator:
             evaluation_end=ohlcv.index.max().date(),
         )
 
+    def compute_rolling_ic(
+        self,
+        strategy_name: str,
+        parameters: dict,
+    ) -> pd.Series:
+        """Compute rolling information coefficient for this evaluator's asset.
+
+        Rolling IC at bar t = Pearson correlation between the raw signal
+        and the 1-bar-ahead forward return over the preceding
+        self._ic_rolling_window bars.
+
+        Uses RawSignal (not PositionSignal) for consistency with the static IC
+        definition: Pearson(RawSignal[t], forward_return[t+1]). Rolling IC values
+        are therefore directly comparable to the static IC scalar.
+
+        NaN for the first ic_rolling_window-1 bars (insufficient history).
+        NaN where signal variance is zero over the window.
+
+        Args:
+            strategy_name: Strategy name (e.g. 'ema_crossover').
+            parameters: Strategy parameter dict (e.g. {'fast_period': 50}).
+
+        Returns:
+            pd.Series of rolling IC values indexed by DatetimeIndex (UTC).
+            Values in [-1.0, 1.0] or NaN. Series named 'rolling_ic'.
+
+        Raises:
+            ValueError: If window exceeds available aligned bars.
+        """
+        from src.backtesting.pipeline_builder import (  # noqa: PLC0415
+            build_pipeline_components,
+        )
+        from src.core.config import Config  # noqa: PLC0415
+        from src.data.loader import DataLoader  # noqa: PLC0415
+        from src.research.pipeline import FeaturePipeline  # noqa: PLC0415
+
+        config = Config.load("config/")
+        ohlcv = DataLoader(config).load(self._asset)
+
+        # DEV-EM5-1: build_pipeline_components returns 2-tuple
+        indicators, signal_generator = build_pipeline_components(
+            strategy_name=strategy_name,
+            parameters=parameters,
+            config=config,
+        )
+        feature_pipeline = FeaturePipeline(indicators)
+        feature_frame = feature_pipeline.compute(ohlcv, asset=self._asset)
+
+        raw_signal = signal_generator.generate(feature_frame)
+
+        # Forward return: close[t+1]/close[t] - 1, aligned to bar t
+        forward_returns = ohlcv["close"].pct_change().shift(-1)
+
+        aligned = pd.DataFrame(
+            {"signal": raw_signal, "fwd_return": forward_returns},
+            index=ohlcv.index,
+        ).dropna()
+
+        if len(aligned) < self._ic_rolling_window:
+            raise ValueError(
+                f"Insufficient data: {len(aligned)} bars < "
+                f"window={self._ic_rolling_window}. "
+                f"Reduce window or ingest more data for '{self._asset}'."
+            )
+
+        rolling_ic = (
+            aligned["signal"]
+            .rolling(
+                window=self._ic_rolling_window,
+                min_periods=self._ic_rolling_window,
+            )
+            .corr(aligned["fwd_return"])
+        )
+
+        return rolling_ic.rename("rolling_ic")
+
     def _forward_return(self, ohlcv: pd.DataFrame, horizon: int = 1) -> pd.Series:
         """Compute h-period forward log return at each bar t.
 
