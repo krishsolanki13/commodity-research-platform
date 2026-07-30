@@ -872,3 +872,85 @@ class CorrelationReport:
             return self.correlation_matrix[asset_a][asset_b]
         except KeyError:
             return float("nan")
+
+
+@dataclass
+class TrainTestSplit:
+    """Date boundaries and bar counts for one walk-forward fold.
+
+    Used by WalkForwardValidator to define train/test windows.
+    embargo_bars bars between train_end and test_start prevent leakage
+    from autocorrelated consecutive returns.
+    """
+
+    fold_idx: int
+    train_start: datetime.date
+    train_end: datetime.date
+    test_start: datetime.date
+    test_end: datetime.date
+    n_train_bars: int
+    n_test_bars: int
+    embargo_bars: int
+
+
+@dataclass
+class WalkForwardFold:
+    """Out-of-sample results for one walk-forward fold.
+
+    Contains performance metrics for both the train window (in-sample)
+    and the test window (out-of-sample). overfitting_ratio is the ratio
+    of test Sharpe to train Sharpe — values near 1.0 suggest no overfit.
+    """
+
+    split: TrainTestSplit
+    train_sharpe: float
+    test_sharpe: float
+    train_return: float
+    test_return: float
+    train_max_dd: float
+    test_max_dd: float
+    train_n_trades: int
+    test_n_trades: int
+    overfitting_ratio: float  # test_sharpe / train_sharpe; NaN if train_sharpe == 0
+
+
+@dataclass
+class ValidationReport:
+    """Complete statistical validation report for a strategy/asset combination.
+
+    Aggregates walk-forward fold results and statistical inference metrics.
+    The Deflated Sharpe Ratio (DSR) is the headline result: it is the
+    Probabilistic Sharpe Ratio adjusted for the number of trials that were
+    run to find this strategy configuration (read from MLflow).
+
+    References:
+        Bailey, D.H. & López de Prado, M. (2012). The Sharpe Ratio
+        Efficient Frontier. Journal of Risk, 15(2), 3-44.
+    """
+
+    validation_run_id: str
+    asset: str
+    strategy_name: str
+    parameters: dict[str, object]
+    n_splits: int
+    embargo_bars: int
+    computation_date: datetime.date
+
+    # Walk-forward fold results
+    folds: list[WalkForwardFold]
+    insample_sharpe: float  # Sharpe on full training data (pre-split)
+    outsample_sharpe: float  # Mean Sharpe across test folds
+    insample_return: float  # Cumulative return on full training data
+    outsample_return: float  # Mean return across test folds
+    overfitting_ratio: float  # Mean of fold.overfitting_ratio values
+
+    # Statistical inference (Bailey & López de Prado 2012)
+    sharpe_se: float  # Standard error of observed in-sample Sharpe
+    psr: float  # PSR vs SR₀ = 0: P[true SR > 0]
+    n_trials: int  # Number of trials from MLflow (for DSR)
+    sr_benchmark: float  # E[max SR | n_trials] — DSR benchmark
+    dsr: float  # DSR = PSR[sr_benchmark]: P[true SR > E[max SR]]
+
+    # Summary
+    is_significant: bool  # DSR > 0.95 (adjustable threshold)
+    dsr_threshold: float  # Threshold used (default 0.95)
