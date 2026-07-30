@@ -673,6 +673,17 @@ def get_portfolio_risk(run_id: str) -> RiskReportResponse:
         total_avg_net_notional=float(risk.total_avg_net_notional),
         portfolio_diversification_benefit=_safe(risk.portfolio_diversification_benefit),
         lookback_days=252,
+        # EM4 — Kupiec VaR backtesting
+        n_backtesting_days=risk.n_backtesting_days,
+        exceptions_95=risk.exceptions_95,
+        exceptions_99=risk.exceptions_99,
+        exception_rate_95=_safe(risk.exception_rate_95),
+        exception_rate_99=_safe(risk.exception_rate_99),
+        kupiec_lr_99=_safe(risk.kupiec_lr_99),
+        kupiec_pvalue_99=_safe(risk.kupiec_pvalue_99),
+        # EM4 — Contribution to strategy volatility
+        asset_contribution_to_vol=risk.asset_contribution_to_vol,
+        asset_contribution_to_vol_pct=risk.asset_contribution_to_vol_pct,
     )
 
 

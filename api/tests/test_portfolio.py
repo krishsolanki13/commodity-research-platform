@@ -79,6 +79,16 @@ def _make_mock_risk_report():
     report.total_avg_gross_notional = 600_000.0
     report.total_avg_net_notional = 300_000.0
     report.portfolio_diversification_benefit = 2.23
+    # EM4 — Kupiec / contribution defaults
+    report.n_backtesting_days = 0
+    report.exceptions_95 = 0
+    report.exceptions_99 = 0
+    report.exception_rate_95 = float("nan")
+    report.exception_rate_99 = float("nan")
+    report.kupiec_lr_99 = float("nan")
+    report.kupiec_pvalue_99 = float("nan")
+    report.asset_contribution_to_vol = {}
+    report.asset_contribution_to_vol_pct = {}
     return report
 
 
@@ -621,6 +631,15 @@ def test_risk_disk_fallback_returns_200(
                 "total_avg_gross_notional": 100000.0,
                 "total_avg_net_notional": 100000.0,
                 "portfolio_diversification_benefit": 1.6,
+                "n_backtesting_days": 0,
+                "exceptions_95": 0,
+                "exceptions_99": 0,
+                "exception_rate_95": None,
+                "exception_rate_99": None,
+                "kupiec_lr_99": None,
+                "kupiec_pvalue_99": None,
+                "asset_contribution_to_vol": {},
+                "asset_contribution_to_vol_pct": {},
             }
         ),
         encoding="utf-8",

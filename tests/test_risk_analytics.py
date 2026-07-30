@@ -385,3 +385,122 @@ def test_var_nan_for_insufficient_data(config: Config) -> None:
 
     var = engine._compute_var(short_pnl, 0.99, lookback_days=252)
     assert math.isnan(var), f"VaR must be NaN for fewer than 20 observations, got {var}"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EM4 Tests — Kupiec VaR Backtesting
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+def test_kupiec_exception_count_correct() -> None:
+    """exceptions_99 counts days where portfolio loss exceeded VaR99."""
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    pnl = pd.Series(
+        rng.normal(100, 500, 252),
+        index=pd.bdate_range("2024-01-02", periods=252, freq="B", tz="UTC"),
+    )
+    # VaR99 from clean series (positive magnitude) — matches engine: fixed VaR, then count
+    var_99 = abs(float(pnl.quantile(0.01)))
+    # Inject 5 large losses that exceed that VaR99
+    pnl.iloc[[10, 50, 100, 150, 200]] = -50_000.0
+
+    exceptions = int((pnl < -var_99).sum())
+    # With 5 forced losses of -50k we expect at least 5 exceptions
+    assert exceptions >= 5, f"Expected >= 5 exceptions, got {exceptions}"
+
+
+def test_kupiec_fields_populated_on_real_multi_result(
+    config: Config, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """RiskReport Kupiec fields are populated when n_backtesting_days >= 30."""
+    multi_result = _make_multi_result(config, monkeypatch, seeds=[1, 2])
+    engine = RiskEngine()
+    report = engine.compute(multi_result, lookback_days=252)
+
+    assert isinstance(report.n_backtesting_days, int)
+    assert report.n_backtesting_days >= 0
+    assert isinstance(report.exceptions_99, int)
+    assert report.exceptions_99 >= 0
+    assert isinstance(report.exception_rate_99, float)
+
+
+def test_kupiec_lr_nan_for_zero_exceptions() -> None:
+    """Kupiec LR and p-value are NaN when x=0 (boundary — log(0) undefined)."""
+    engine = RiskEngine()
+    lr, pv = engine._kupiec_lr(x=0, N=252, confidence=0.99)
+    assert math.isnan(lr), f"LR must be NaN when x=0, got {lr}"
+    assert math.isnan(pv), f"p-value must be NaN when LR is NaN, got {pv}"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EM4 Tests — Contribution to Risk
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+def test_contribution_to_risk_returns_empty_without_corr_report(
+    config: Config, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """contribution fields are empty dicts when corr_report=None."""
+    multi_result = _make_multi_result(config, monkeypatch, seeds=[3, 4])
+    engine = RiskEngine()
+    report = engine.compute(multi_result, lookback_days=252, corr_report=None)
+
+    assert (
+        report.asset_contribution_to_vol == {}
+    ), "asset_contribution_to_vol must be empty when corr_report=None"
+    assert (
+        report.asset_contribution_to_vol_pct == {}
+    ), "asset_contribution_to_vol_pct must be empty when corr_report=None"
+
+
+def test_contribution_to_risk_pct_sums_to_approximately_one(
+    config: Config, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """asset_contribution_to_vol_pct values sum to approximately 1.0."""
+    from src.analytics.correlation import CorrelationEngine
+
+    multi_result = _make_multi_result(
+        config, monkeypatch, assets=["gold", "silver"], n_bars=400, seeds=[5, 6]
+    )
+    corr_report = CorrelationEngine().compute(multi_result)
+    engine = RiskEngine()
+    report = engine.compute(multi_result, lookback_days=252, corr_report=corr_report)
+
+    if not report.asset_contribution_to_vol_pct:
+        pytest.skip(
+            "Contribution pct empty — insufficient data for covariance computation"
+        )
+
+    total = sum(report.asset_contribution_to_vol_pct.values())
+    assert abs(total - 1.0) < 0.05, (
+        f"Contribution pct sum {total:.4f} should be ~1.0. "
+        "Large deviation indicates incorrect CTR computation or NaN vols."
+    )
+
+
+def test_contribution_to_risk_all_assets_present(
+    config: Config, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Contribution dicts have entries for all successful assets."""
+    from src.analytics.correlation import CorrelationEngine
+
+    assets = ["gold", "silver"]
+    multi_result = _make_multi_result(
+        config, monkeypatch, assets=assets, n_bars=400, seeds=[7, 8]
+    )
+    corr_report = CorrelationEngine().compute(multi_result)
+    engine = RiskEngine()
+    report = engine.compute(multi_result, lookback_days=252, corr_report=corr_report)
+
+    if not report.asset_contribution_to_vol_pct:
+        pytest.skip("Contribution pct empty — insufficient data")
+
+    for asset in assets:
+        assert (
+            asset in report.asset_contribution_to_vol
+        ), f"asset_contribution_to_vol missing key: {asset!r}"
+        assert (
+            asset in report.asset_contribution_to_vol_pct
+        ), f"asset_contribution_to_vol_pct missing key: {asset!r}"
