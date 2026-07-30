@@ -15,3 +15,7 @@ rsi_reversion:
   period: 14
   oversold_threshold: 30
   overbought_threshold: 70
+
+carry:
+  threshold: 0.0
+  n_contracts: 4

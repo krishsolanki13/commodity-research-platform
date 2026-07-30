@@ -177,6 +177,33 @@ def _load_strategy_catalog() -> list[StrategyMeta]:
             ],
             default_params=raw.get("donchian_breakout", {}),
         ),
+        StrategyMeta(
+            name="carry",
+            display_name="Carry",
+            description=(
+                "Long in backwardation (positive roll yield), short in contango. "
+                "Commodity risk premium from the futures curve."
+            ),
+            params_schema=[
+                ParamSpec(
+                    name="threshold",
+                    kind="float",
+                    default=0.0,
+                    min=0.0,
+                    max=0.5,
+                    description="Minimum annualized roll yield magnitude to generate signal",
+                ),
+                ParamSpec(
+                    name="n_contracts",
+                    kind="int",
+                    default=4,
+                    min=2,
+                    max=12,
+                    description="Number of contracts used in forward curve construction",
+                ),
+            ],
+            default_params=raw.get("carry", {}),
+        ),
     ]
     return strategies
 
@@ -226,6 +253,17 @@ def _build_signal_pipeline(
         ch_period = params.get("channel_period", 20)
         indicators = []
         gen = DonchianBreakoutSignal(channel_period=ch_period)
+
+    elif strategy == "carry":
+        from src.core.config import Config  # noqa: PLC0415
+        from src.signal.carry import CarrySignal  # noqa: PLC0415
+
+        indicators = []
+        gen = CarrySignal(
+            config=Config.load(),
+            threshold=params.get("threshold", 0.0),
+            n_contracts=int(params.get("n_contracts", 4)),
+        )
 
     else:
         raise ApiError(

@@ -62,6 +62,17 @@ def _build_full_pipeline(
         indicators = []
         gen = DonchianBreakoutSignal(channel_period=ch_period)
 
+    elif strategy == "carry":
+        from src.core.config import Config  # noqa: PLC0415
+        from src.signal.carry import CarrySignal  # noqa: PLC0415
+
+        indicators = []
+        gen = CarrySignal(
+            config=Config.load(),
+            threshold=params.get("threshold", 0.0),
+            n_contracts=int(params.get("n_contracts", 4)),
+        )
+
     else:
         raise ApiError(
             code="UNKNOWN_STRATEGY",

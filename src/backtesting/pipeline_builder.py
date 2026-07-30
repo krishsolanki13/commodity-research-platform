@@ -27,9 +27,9 @@ def build_pipeline_components(
 
     Args:
         strategy_name: One of ema_crossover | momentum | rsi_reversion |
-            donchian_breakout.
+            donchian_breakout | carry.
         parameters: Parameter dict matching the strategy's schema.
-        config: Platform Config (accepted for caller uniformity; unused here).
+        config: Platform Config (used by carry; reserved for others).
 
     Returns:
         (indicators: list[Indicator], signal_gen: SignalGenerator)
@@ -69,7 +69,18 @@ def build_pipeline_components(
             DonchianBreakoutSignal(channel_period=channel),
         )
 
+    if strategy_name == "carry":
+        from src.signal.carry import CarrySignal  # noqa: PLC0415
+
+        indicators: list = []
+        signal_gen = CarrySignal(
+            config=config,
+            threshold=parameters.get("threshold", 0.0),
+            n_contracts=int(parameters.get("n_contracts", 4)),
+        )
+        return indicators, signal_gen
+
     raise ValueError(
         f"MultiAssetRunner: unknown strategy '{strategy_name}'. "
-        "Valid: ema_crossover, momentum, rsi_reversion, donchian_breakout"
+        "Valid: ema_crossover, momentum, rsi_reversion, donchian_breakout, carry"
     )

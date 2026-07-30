@@ -47,6 +47,7 @@ def test_get_strategies_returns_four(client: TestClient) -> None:
         "momentum",
         "rsi_reversion",
         "donchian_breakout",
+        "carry",
     }
 
 
