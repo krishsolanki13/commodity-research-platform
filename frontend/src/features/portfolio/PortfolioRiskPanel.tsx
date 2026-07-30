@@ -1,5 +1,7 @@
 import { MetricGrid } from '@/components/data/MetricGrid'
 import { AssetRiskBarChart } from '@/components/charts/AssetRiskBarChart'
+import { ContributionToRiskChart } from './ContributionToRiskChart'
+import { cn } from '@/lib/cn'
 import type { components } from '@/api/schema'
 
 type RiskReportResponse = components['schemas']['RiskReportResponse']
@@ -49,6 +51,30 @@ export function PortfolioRiskPanel({ risk, loading }: PortfolioRiskPanelProps) {
           Historical simulation VaR — realized strategy P&L over 252 days. Positive values = loss
           magnitudes.
         </p>
+        {/* EM4 — Kupiec VaR Calibration (Unconditional Coverage Test) */}
+        {risk != null && (risk.n_backtesting_days ?? 0) > 0 && (
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <span className="text-text-secondary">VaR99 Calibration</span>
+            <span className="font-mono text-text-primary">
+              {risk.exceptions_99} exceptions / {risk.n_backtesting_days} days{' '}
+              ({((risk.exception_rate_99 ?? 0) * 100).toFixed(1)}% observed vs 1.0% expected)
+            </span>
+            {risk.kupiec_pvalue_99 != null && !Number.isNaN(risk.kupiec_pvalue_99) && (
+              <span
+                className={cn(
+                  'rounded px-1.5 py-0.5 font-mono text-xs',
+                  risk.kupiec_pvalue_99 > 0.05
+                    ? 'bg-gain-fill text-gain'
+                    : 'bg-loss-fill text-loss'
+                )}
+                title="Unconditional Coverage Test (Kupiec 1995). p > 0.05: cannot reject that VaR is correctly calibrated."
+              >
+                p={risk.kupiec_pvalue_99.toFixed(3)}
+                {risk.kupiec_pvalue_99 > 0.05 ? ' calibrated' : ' miscalibrated'}
+              </span>
+            )}
+          </div>
+        )}
       </div>
       {risk?.asset_var_99 && Object.keys(risk.asset_var_99).length > 0 && (
         <AssetRiskBarChart
@@ -59,6 +85,23 @@ export function PortfolioRiskPanel({ risk, loading }: PortfolioRiskPanelProps) {
           loading={loading}
         />
       )}
+      {/* EM4 — Contribution to Strategy Volatility */}
+      {risk != null &&
+        Object.keys(risk.asset_contribution_to_vol_pct ?? {}).length > 0 && (
+          <section className="mt-4">
+            <h3 className="mb-1 text-sm font-medium text-text-secondary">
+              Contribution to Strategy Volatility
+            </h3>
+            <p className="mb-3 text-xs text-text-secondary opacity-70">
+              Per-asset share of portfolio annualized strategy P&amp;L volatility. Weights from
+              average gross notional. Values sum to 100%.{' '}
+              <span className="italic">
+                Strategy vol (2–8%/yr), not commodity price vol (15–60%/yr).
+              </span>
+            </p>
+            <ContributionToRiskChart data={risk.asset_contribution_to_vol_pct ?? {}} />
+          </section>
+        )}
       <div>
         <p className="mb-2 font-mono text-xs uppercase text-text-secondary">Notional Exposure</p>
         <MetricGrid
