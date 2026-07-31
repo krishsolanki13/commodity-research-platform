@@ -16,6 +16,8 @@ from api.models import (
     CompareRunSummary,
     DeleteResponse,
     ProvenanceInfo,
+    RegimeAttributionResponse,
+    RegimeMetricsResponse,
     RunDetailResponse,
     RunListItem,
     RunListResponse,
@@ -418,6 +420,116 @@ def compare_runs(request: CompareRequest) -> CompareResponse:
         intersection_to=intersection_to,
         intersection_bars=intersection_bars,
         mixed_assets=mixed_assets,
+    )
+
+
+@router.get("/{run_id}/regime-attribution")
+async def get_regime_attribution(
+    run_id: str,
+    n_contracts: int = Query(default=4, ge=1, le=12),
+) -> RegimeAttributionResponse:
+    """Compute regime-conditional performance attribution for a completed run.
+
+    Loads run artifacts via RunManager.load_run(), reconstructs the data
+    needed by RegimeAttributionEngine, and returns per-regime metrics.
+    On-demand — not cached in run artifacts. NaN → null for regimes with
+    < 20 trading days.
+    """
+    import math as _math  # noqa: PLC0415
+    import types as _types  # noqa: PLC0415
+
+    from src.analytics.regime_attribution import (  # noqa: PLC0415
+        RegimeAttributionEngine,
+    )
+    from src.backtesting.run_manager import RunManager  # noqa: PLC0415
+    from src.core.config import Config  # noqa: PLC0415
+
+    config = Config.load("config/")
+    manager = RunManager(config)
+
+    try:
+        artifact = manager.load_run(run_id)
+    except Exception as exc:
+        raise ApiError(
+            code="RUN_NOT_FOUND",
+            message=f"Run '{run_id}' not found: {exc}",
+            status=404,
+        ) from exc
+
+    # Reconstruct a proxy object from the artifact dict so the engine
+    # can use getattr() as designed. Trades DataFrame → list of SimpleNamespace.
+    params = artifact.get("params", {})
+    trades_df = artifact.get("trades")
+
+    trade_list = []
+    if trades_df is not None and len(trades_df) > 0:
+        for _, row in trades_df.iterrows():
+            trade_list.append(
+                _types.SimpleNamespace(
+                    entry_date=row.get("entry_date"),
+                    net_pnl=row.get("net_pnl", 0.0),
+                )
+            )
+
+    class _RunProxy:
+        pass
+
+    proxy = _RunProxy()
+    proxy.run_id = params.get("run_id", run_id)
+    # Prefer strategy_name (BacktestMetadata), fall back to strategy
+    proxy.strategy_name = params.get("strategy_name") or params.get(
+        "strategy", "unknown"
+    )
+    proxy.asset = params.get("asset", run_id.split("_")[-1])
+    proxy.pnl_series = artifact.get("pnl_series")
+    proxy.equity_curve = artifact.get("equity_curve")
+    proxy.trades = trade_list
+
+    asset = proxy.asset
+    engine = RegimeAttributionEngine(config)
+    try:
+        report = engine.compute(
+            backtest_result=proxy,
+            asset=asset,
+            n_contracts=n_contracts,
+        )
+    except Exception as exc:
+        raise ApiError(
+            code="COMPUTATION_ERROR",
+            message=f"Regime attribution failed: {exc}",
+            status=500,
+        ) from exc
+
+    def _safe(v: object) -> object:
+        if isinstance(v, float) and _math.isnan(v):
+            return None
+        return v
+
+    regime_metrics_resp = {
+        regime_str: RegimeMetricsResponse(
+            regime=m.regime,
+            n_days=m.n_days,
+            coverage=m.coverage,
+            sharpe=_safe(m.sharpe),
+            total_return=_safe(m.total_return),
+            max_drawdown=_safe(m.max_drawdown),
+            n_trades=m.n_trades,
+            win_rate=_safe(m.win_rate),
+        )
+        for regime_str, m in report.regime_metrics.items()
+    }
+
+    return RegimeAttributionResponse(
+        run_id=report.run_id,
+        asset=report.asset,
+        strategy_name=report.strategy_name,
+        n_contracts=report.n_contracts,
+        computation_date=str(report.computation_date),
+        regime_metrics=regime_metrics_resp,
+        regime_coverage=report.regime_coverage,
+        dominant_regime=report.dominant_regime,
+        total_days_with_regime=report.total_days_with_regime,
+        total_days_in_run=report.total_days_in_run,
     )
 
 

@@ -744,3 +744,31 @@ def df_to_columnar(df: pd.DataFrame) -> ColumnarSeries:
         for col in df.columns
     }
     return ColumnarSeries(index=index_ms, columns=columns)
+
+
+class RegimeMetricsResponse(BaseModel):
+    """Performance metrics for one regime in a regime attribution report."""
+
+    regime: str
+    n_days: int = 0
+    coverage: float = 0.0
+    sharpe: float | None = None
+    total_return: float | None = None
+    max_drawdown: float | None = None
+    n_trades: int = 0
+    win_rate: float | None = None
+
+
+class RegimeAttributionResponse(BaseModel):
+    """Response for GET /api/runs/{run_id}/regime-attribution."""
+
+    run_id: str
+    asset: str
+    strategy_name: str
+    n_contracts: int
+    computation_date: str
+    regime_metrics: dict[str, RegimeMetricsResponse] = {}
+    regime_coverage: dict[str, float] = {}
+    dominant_regime: str = ""
+    total_days_with_regime: int = 0
+    total_days_in_run: int = 0

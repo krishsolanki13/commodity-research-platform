@@ -954,3 +954,44 @@ class ValidationReport:
     # Summary
     is_significant: bool  # DSR > 0.95 (adjustable threshold)
     dsr_threshold: float  # Threshold used (default 0.95)
+
+
+@dataclass
+class RegimeMetrics:
+    """Performance metrics for a strategy conditioned on a single regime.
+
+    All float fields are NaN when the regime has insufficient data
+    (< 20 trading days). regime string matches TermStructureRegime str()
+    value: 'contango' | 'backwardation' | 'flat'.
+    """
+
+    regime: str
+    n_days: int = 0
+    coverage: float = 0.0
+    sharpe: float = 0.0
+    total_return: float = 0.0
+    max_drawdown: float = 0.0
+    n_trades: int = 0
+    win_rate: float = 0.0
+
+
+@dataclass
+class RegimeAttributionReport:
+    """Regime-conditional performance attribution for a single backtest run.
+
+    regime_metrics: dict keyed by TermStructureRegime str() value
+                    ('contango', 'backwardation', 'flat').
+    regime_coverage: fraction of days per regime (values sum to ~1.0).
+    dominant_regime: regime key with highest coverage.
+    """
+
+    run_id: str
+    asset: str
+    strategy_name: str
+    n_contracts: int
+    computation_date: datetime.date
+    regime_metrics: dict[str, RegimeMetrics] = field(default_factory=dict)
+    regime_coverage: dict[str, float] = field(default_factory=dict)
+    dominant_regime: str = ""
+    total_days_with_regime: int = 0
+    total_days_in_run: int = 0
