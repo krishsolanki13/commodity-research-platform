@@ -995,3 +995,49 @@ class RegimeAttributionReport:
     dominant_regime: str = ""
     total_days_with_regime: int = 0
     total_days_in_run: int = 0
+
+
+@dataclass
+class SweepRunSummary:
+    """Result of a single backtest within a parameter sweep.
+
+    Each entry represents one (asset, strategy, parameters) combination
+    that was run as part of a sweep. status='failed' entries have NaN
+    metrics and a non-None error string.
+
+    run_id follows the standard format: YYYYMMDD_HHMMSS_{strategy}_{asset}.
+    sweep_id tags this run to its parent sweep for MLflow grouping.
+    """
+
+    sweep_id: str
+    run_id: str
+    parameters: dict[str, object]
+    sharpe: float = 0.0
+    total_return: float = 0.0
+    max_drawdown: float = 0.0
+    n_trades: int = 0
+    status: str = "complete"
+    error: str | None = None
+
+
+@dataclass
+class SweepResult:
+    """Complete result of a parameter sweep.
+
+    Contains all SweepRunSummary entries from the sweep, ordered by
+    the sequence in which they were executed (not sorted). Sorting is
+    applied at the API layer.
+
+    param_grid stores the original grid (not expanded combinations).
+    n_combinations = product of len(v) for v in param_grid.values().
+    """
+
+    sweep_id: str
+    asset: str
+    strategy_name: str
+    param_grid: dict[str, list]
+    n_combinations: int
+    n_complete: int
+    n_failed: int
+    computation_date: datetime.date
+    runs: list[SweepRunSummary] = field(default_factory=list)
