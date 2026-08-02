@@ -772,3 +772,57 @@ class RegimeAttributionResponse(BaseModel):
     dominant_regime: str = ""
     total_days_with_regime: int = 0
     total_days_in_run: int = 0
+
+
+class SweepLaunchRequest(BaseModel):
+    asset: str
+    strategy_name: str
+    param_grid: dict[str, list]
+
+
+class SweepStatusResponse(BaseModel):
+    sweep_id: str
+    status: str
+    n_combinations: int = 0
+    n_complete: int = 0
+    n_failed: int = 0
+    error: str | None = None
+
+
+class SweepRunSummaryResponse(BaseModel):
+    sweep_id: str
+    run_id: str
+    parameters: dict[str, object]
+    sharpe: float | None = None
+    total_return: float | None = None
+    max_drawdown: float | None = None
+    n_trades: int = 0
+    status: str = "complete"
+    error: str | None = None
+
+
+class SweepResultResponse(BaseModel):
+    sweep_id: str
+    asset: str
+    strategy_name: str
+    param_grid: dict[str, list]
+    n_combinations: int
+    n_complete: int
+    n_failed: int
+    computation_date: str
+    runs: list[SweepRunSummaryResponse]
+
+
+class SweepListItem(BaseModel):
+    sweep_id: str
+    asset: str
+    strategy_name: str
+    n_combinations: int
+    n_complete: int
+    n_failed: int
+    computation_date: str
+
+
+class SweepListResponse(BaseModel):
+    sweeps: list[SweepListItem]
+    total: int
