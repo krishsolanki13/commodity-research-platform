@@ -826,3 +826,22 @@ class SweepListItem(BaseModel):
 class SweepListResponse(BaseModel):
     sweeps: list[SweepListItem]
     total: int
+
+
+class QCReportResponse(BaseModel):
+    """Response for GET /api/system/data/qc.
+
+    On-demand data quality assessment for one asset's OHLCV history.
+    Computed from the processed Parquet file at request time.
+    """
+
+    asset: str
+    generated_at: str
+    bar_count: int
+    from_date: str
+    to_date: str
+    zero_volume_days: int
+    ohlc_violations: int
+    large_gap_flags: int
+    data_health: str  # "ok" | "warn" | "crit"
+    anomalies: list[str] = []

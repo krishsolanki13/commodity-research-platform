@@ -32,6 +32,7 @@ dev = [
     "uvicorn[standard]>=0.30",
     "httpx2>=0.28",
     "pytest-asyncio>=0.24",
+    "hypothesis>=6.0",
 ]
 
 [tool.setuptools.packages.find]

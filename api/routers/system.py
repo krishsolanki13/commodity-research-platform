@@ -14,6 +14,7 @@ from api.models import (
     DataStatusResponse,
     IngestRequest,
     IngestResponse,
+    QCReportResponse,
 )
 
 router = APIRouter(prefix="/api/system", tags=["system"])
@@ -88,6 +89,60 @@ def get_data_status(asset: str | None = Query(None)) -> DataStatusResponse:
 
     total_flags = sum(s.flagged_anomalies for s in statuses)
     return DataStatusResponse(assets=statuses, total_flags=total_flags)
+
+
+@router.get("/data/qc", response_model=QCReportResponse)
+def get_data_qc(asset: str = Query(...)) -> QCReportResponse:
+    """On-demand data quality assessment for one asset's OHLCV history.
+
+    Loads the processed Parquet for the asset, runs QC checks, and
+    returns a QCReport. Computation is fast (< 100ms for 4,150 bars).
+    """
+    import datetime as _dt  # noqa: PLC0415
+
+    from src.core.config import Config  # noqa: PLC0415
+    from src.data.acquisition_qc import compute_qc  # noqa: PLC0415
+    from src.data.loader import DataLoader  # noqa: PLC0415
+
+    def _crit_response(reason: str) -> QCReportResponse:
+        return QCReportResponse(
+            asset=asset,
+            generated_at=_dt.datetime.now(_dt.UTC).isoformat(),
+            bar_count=0,
+            from_date="",
+            to_date="",
+            zero_volume_days=0,
+            ohlc_violations=0,
+            large_gap_flags=0,
+            data_health="crit",
+            anomalies=[reason],
+        )
+
+    if asset not in KNOWN_ASSETS:
+        # Match existing file's unknown-asset pattern (no HTTPException).
+        return _crit_response(
+            f"Unknown asset '{asset}'. Known assets: {sorted(KNOWN_ASSETS)}"
+        )
+
+    try:
+        config = Config.load()
+        ohlcv = DataLoader(config).load(asset)
+    except Exception as exc:  # noqa: BLE001
+        return _crit_response(f"Failed to load data: {exc}")
+
+    report = compute_qc(ohlcv, asset)
+    return QCReportResponse(
+        asset=report.asset,
+        generated_at=report.generated_at,
+        bar_count=report.bar_count,
+        from_date=report.from_date,
+        to_date=report.to_date,
+        zero_volume_days=report.zero_volume_days,
+        ohlc_violations=report.ohlc_violations,
+        large_gap_flags=report.large_gap_flags,
+        data_health=report.data_health,
+        anomalies=report.anomalies,
+    )
 
 
 @router.post("/ingest", response_model=IngestResponse, status_code=202)
