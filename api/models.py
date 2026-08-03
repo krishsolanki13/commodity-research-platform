@@ -845,3 +845,29 @@ class QCReportResponse(BaseModel):
     large_gap_flags: int
     data_health: str  # "ok" | "warn" | "crit"
     anomalies: list[str] = []
+
+
+class CurvePCAResponse(BaseModel):
+    """Response for GET /api/intelligence/pca.
+
+    Forward curve PCA result for one asset. Factor interpretation:
+      PC1 (Level):     uniform loading on back-month contracts -> parallel curve shift
+      PC2 (Slope):     sign-alternating -> steepening/flattening
+      PC3 (Curvature): U-shaped -> curve bowing
+
+    factor_series and factor_index_epoch_ms have equal length (n_observation_dates).
+    Front-month loading (index 0 in each PC vector) is zero — correct consequence
+    of front-price normalization.
+    """
+
+    asset: str
+    n_components: int
+    n_contracts: int
+    n_observation_dates: int
+    computation_date: str
+    explained_variance_ratio: list[float]
+    cumulative_variance_ratio: list[float]
+    loadings: dict[str, list[float]]
+    factor_series: dict[str, list[float | None]]
+    factor_index_epoch_ms: list[int]
+    pc_labels: list[str]

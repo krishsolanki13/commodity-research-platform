@@ -1041,3 +1041,38 @@ class SweepResult:
     n_failed: int
     computation_date: datetime.date
     runs: list[SweepRunSummary] = field(default_factory=list)
+
+
+@dataclass
+class CurvePCAResult:
+    """Result of Principal Component Analysis on a commodity forward curve.
+
+    Decomposes the time-series of forward curve shapes into orthogonal factors:
+      PC1 (Level)     — parallel shift of entire curve (~60-80% variance)
+      PC2 (Slope)     — steepening/flattening (~10-25% variance)
+      PC3 (Curvature) — bowing of the middle relative to ends (~5-15% variance)
+
+    loadings: dict mapping PC label to loading vector across maturities.
+      e.g. {'PC1': [0.0, 0.58, 0.58, 0.58], 'PC2': [0.0, 0.70, -0.50, -0.50]}
+      Length of each list = n_contracts.
+      Note: index 0 (front-month) has zero loading after front-price normalization.
+
+    factor_series: dict mapping PC label to list of daily factor values.
+      Each list has length n_observation_dates.
+      factor_index_epoch_ms: epoch-ms timestamps for the factor_series values.
+
+    explained_variance_ratio: fraction of variance explained by each PC.
+      Sums to <= 1.0 (may be < 1.0 when n_components < n_contracts).
+    """
+
+    asset: str
+    n_components: int
+    n_contracts: int
+    n_observation_dates: int
+    computation_date: datetime.date
+    explained_variance_ratio: list[float]
+    cumulative_variance_ratio: list[float]
+    loadings: dict[str, list[float]]
+    factor_series: dict[str, list[float | None]]
+    factor_index_epoch_ms: list[int]
+    pc_labels: list[str] = field(default_factory=list)
