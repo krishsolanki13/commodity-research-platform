@@ -204,6 +204,34 @@ def _load_strategy_catalog() -> list[StrategyMeta]:
             ],
             default_params=raw.get("carry", {}),
         ),
+        StrategyMeta(
+            name="wti_brent_spread",
+            display_name="WTI-Brent Spread",
+            description=(
+                "Mean-reversion signal based on the WTI-Brent crude oil spread z-score. "
+                "Long WTI when spread is narrow (WTI cheap); short WTI when wide. "
+                "Requires asset='wti'. Single-asset approximation of a spread trade."
+            ),
+            params_schema=[
+                ParamSpec(
+                    name="lookback",
+                    kind="int",
+                    default=63,
+                    min=20,
+                    max=252,
+                    description="Rolling window for spread mean and std (trading days)",
+                ),
+                ParamSpec(
+                    name="threshold",
+                    kind="float",
+                    default=1.0,
+                    min=0.5,
+                    max=3.0,
+                    description="Entry threshold (|z| > threshold to enter position)",
+                ),
+            ],
+            default_params=raw.get("wti_brent_spread", {}),
+        ),
     ]
     return strategies
 

@@ -80,6 +80,17 @@ def build_pipeline_components(
         )
         return indicators, signal_gen
 
+    if strategy_name == "wti_brent_spread":
+        from src.signal.spread import WTIBrentSpreadSignal  # noqa: PLC0415
+
+        indicators = []
+        signal_gen = WTIBrentSpreadSignal(
+            config=config,
+            lookback=int(parameters.get("lookback", 63)),
+            threshold=float(parameters.get("threshold", 1.0)),
+        )
+        return indicators, signal_gen
+
     raise ValueError(
         f"MultiAssetRunner: unknown strategy '{strategy_name}'. "
         "Valid: ema_crossover, momentum, rsi_reversion, donchian_breakout, carry"

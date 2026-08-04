@@ -19,3 +19,7 @@ rsi_reversion:
 carry:
   threshold: 0.0
   n_contracts: 4
+
+wti_brent_spread:
+  lookback: 63
+  threshold: 1.0

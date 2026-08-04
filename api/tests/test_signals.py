@@ -48,6 +48,7 @@ def test_get_strategies_returns_four(client: TestClient) -> None:
         "rsi_reversion",
         "donchian_breakout",
         "carry",
+        "wti_brent_spread",
     }
 
 
