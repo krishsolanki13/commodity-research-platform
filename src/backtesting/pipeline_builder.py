@@ -102,6 +102,16 @@ def build_pipeline_components(
         )
         return indicators, signal_gen
 
+    if strategy_name == "eia_inventory":
+        from src.signal.eia import EIAInventorySignal  # noqa: PLC0415
+
+        indicators = []
+        signal_gen = EIAInventorySignal(
+            config=config,
+            threshold=float(parameters.get("threshold", 1.0)),
+        )
+        return indicators, signal_gen
+
     raise ValueError(
         f"MultiAssetRunner: unknown strategy '{strategy_name}'. "
         "Valid: ema_crossover, momentum, rsi_reversion, donchian_breakout, carry"

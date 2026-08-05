@@ -847,6 +847,37 @@ class QCReportResponse(BaseModel):
     anomalies: list[str] = []
 
 
+class COTRecordResponse(BaseModel):
+    date: str
+    net_speculative: float | None = None
+    percentile_rank: float | None = None
+
+
+class COTDataResponse(BaseModel):
+    """Response for GET /api/system/data/cot."""
+
+    asset: str
+    available: bool
+    records: list[COTRecordResponse]
+    message: str = ""
+
+
+class EIARecordResponse(BaseModel):
+    date: str
+    inventory: float | None = None
+    surprise: float | None = None
+    surprise_zscore: float | None = None
+
+
+class EIADataResponse(BaseModel):
+    """Response for GET /api/system/data/eia."""
+
+    asset: str
+    available: bool
+    records: list[EIARecordResponse]
+    message: str = ""
+
+
 class CurvePCAResponse(BaseModel):
     """Response for GET /api/intelligence/pca.
 

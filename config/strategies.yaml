@@ -27,3 +27,6 @@ wti_brent_spread:
 cot_positioning:
   upper_pct: 80.0
   lower_pct: 20.0
+
+eia_inventory:
+  threshold: 1.0

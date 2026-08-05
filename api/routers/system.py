@@ -10,8 +10,12 @@ from api.dependencies import KNOWN_ASSETS
 from api.models import (
     AssetDataStatus,
     ConfigResponse,
+    COTDataResponse,
+    COTRecordResponse,
     DataFlag,
     DataStatusResponse,
+    EIADataResponse,
+    EIARecordResponse,
     IngestRequest,
     IngestResponse,
     QCReportResponse,
@@ -142,6 +146,99 @@ def get_data_qc(asset: str = Query(...)) -> QCReportResponse:
         large_gap_flags=report.large_gap_flags,
         data_health=report.data_health,
         anomalies=report.anomalies,
+    )
+
+
+@router.get("/data/cot", response_model=COTDataResponse)
+def get_cot_data(asset: str = Query(...)) -> COTDataResponse:
+    """Return weekly COT positioning history for an asset."""
+    import math as _math  # noqa: PLC0415
+
+    from src.data.cot_loader import COTDataLoader  # noqa: PLC0415
+
+    loader = COTDataLoader()
+    df = loader.load(asset)
+
+    if df.empty:
+        return COTDataResponse(
+            asset=asset,
+            available=False,
+            records=[],
+            message=f"No COT data for '{asset}'. Run scripts/acquire_cot_data.py.",
+        )
+
+    records = []
+    for dt, row in df.iterrows():
+        net_spec = row.get("net_speculative", float("nan"))
+        pct_rank = row.get("percentile_rank", float("nan"))
+        records.append(
+            COTRecordResponse(
+                date=str(dt.date()),
+                net_speculative=None
+                if _math.isnan(float(net_spec))
+                else float(net_spec),
+                percentile_rank=None
+                if _math.isnan(float(pct_rank))
+                else float(pct_rank),
+            )
+        )
+
+    return COTDataResponse(
+        asset=asset,
+        available=True,
+        records=records,
+        message=f"{len(records)} weekly COT records",
+    )
+
+
+@router.get("/data/eia", response_model=EIADataResponse)
+def get_eia_data(asset: str = Query(...)) -> EIADataResponse:
+    """Return weekly EIA inventory history for an asset (WTI and Brent only)."""
+    import math as _math  # noqa: PLC0415
+
+    from src.data.eia_loader import EIA_SUPPORTED_ASSETS, EIADataLoader  # noqa: PLC0415
+
+    if asset not in EIA_SUPPORTED_ASSETS:
+        return EIADataResponse(
+            asset=asset,
+            available=False,
+            records=[],
+            message=(
+                f"EIA data only available for crude oil assets: "
+                f"{sorted(EIA_SUPPORTED_ASSETS)}"
+            ),
+        )
+
+    loader = EIADataLoader()
+    df = loader.load(asset)
+
+    if df.empty:
+        return EIADataResponse(
+            asset=asset,
+            available=False,
+            records=[],
+            message=f"No EIA data for '{asset}'. Run scripts/acquire_eia_data.py.",
+        )
+
+    records = []
+    for dt, row in df.iterrows():
+        inv = row.get("inventory", float("nan"))
+        surp = row.get("surprise", float("nan"))
+        zsc = row.get("surprise_zscore", float("nan"))
+        records.append(
+            EIARecordResponse(
+                date=str(dt.date()),
+                inventory=None if _math.isnan(float(inv)) else float(inv),
+                surprise=None if _math.isnan(float(surp)) else float(surp),
+                surprise_zscore=None if _math.isnan(float(zsc)) else float(zsc),
+            )
+        )
+
+    return EIADataResponse(
+        asset=asset,
+        available=True,
+        records=records,
+        message=f"{len(records)} weekly EIA records",
     )
 
 

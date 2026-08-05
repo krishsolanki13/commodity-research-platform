@@ -259,6 +259,26 @@ def _load_strategy_catalog() -> list[StrategyMeta]:
             ],
             default_params=raw.get("cot_positioning", {}),
         ),
+        StrategyMeta(
+            name="eia_inventory",
+            display_name="EIA Inventory",
+            description=(
+                "Fundamental signal from EIA weekly petroleum inventory surprise. "
+                "WTI and Brent only. Drawdown (negative surprise) -> long. "
+                "Build (positive) -> short. Flat for all non-crude assets."
+            ),
+            params_schema=[
+                ParamSpec(
+                    name="threshold",
+                    kind="float",
+                    default=1.0,
+                    min=0.5,
+                    max=3.0,
+                    description="Z-score threshold for inventory surprise entry",
+                ),
+            ],
+            default_params=raw.get("eia_inventory", {}),
+        ),
     ]
     return strategies
 
