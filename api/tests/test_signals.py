@@ -49,6 +49,7 @@ def test_get_strategies_returns_four(client: TestClient) -> None:
         "donchian_breakout",
         "carry",
         "wti_brent_spread",
+        "cot_positioning",
     }
 
 

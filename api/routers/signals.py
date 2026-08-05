@@ -232,6 +232,33 @@ def _load_strategy_catalog() -> list[StrategyMeta]:
             ],
             default_params=raw.get("wti_brent_spread", {}),
         ),
+        StrategyMeta(
+            name="cot_positioning",
+            display_name="COT Positioning",
+            description=(
+                "Contrarian signal from CFTC net speculative positioning. "
+                "Percentile rank > 80 → short (overcrowded long). < 20 → long."
+            ),
+            params_schema=[
+                ParamSpec(
+                    name="upper_pct",
+                    kind="float",
+                    default=80.0,
+                    min=50.0,
+                    max=99.0,
+                    description="Percentile rank above which to go short (overcrowded long)",
+                ),
+                ParamSpec(
+                    name="lower_pct",
+                    kind="float",
+                    default=20.0,
+                    min=1.0,
+                    max=50.0,
+                    description="Percentile rank below which to go long (overcrowded short)",
+                ),
+            ],
+            default_params=raw.get("cot_positioning", {}),
+        ),
     ]
     return strategies
 

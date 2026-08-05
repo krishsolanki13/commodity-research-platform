@@ -91,6 +91,17 @@ def build_pipeline_components(
         )
         return indicators, signal_gen
 
+    if strategy_name == "cot_positioning":
+        from src.signal.cot import COTPositioningSignal  # noqa: PLC0415
+
+        indicators = []
+        signal_gen = COTPositioningSignal(
+            config=config,
+            upper_pct=float(parameters.get("upper_pct", 80.0)),
+            lower_pct=float(parameters.get("lower_pct", 20.0)),
+        )
+        return indicators, signal_gen
+
     raise ValueError(
         f"MultiAssetRunner: unknown strategy '{strategy_name}'. "
         "Valid: ema_crossover, momentum, rsi_reversion, donchian_breakout, carry"

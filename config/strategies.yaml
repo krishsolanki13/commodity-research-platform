@@ -23,3 +23,7 @@ carry:
 wti_brent_spread:
   lookback: 63
   threshold: 1.0
+
+cot_positioning:
+  upper_pct: 80.0
+  lower_pct: 20.0
