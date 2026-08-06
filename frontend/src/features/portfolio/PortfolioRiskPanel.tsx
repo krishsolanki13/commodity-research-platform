@@ -19,7 +19,9 @@ function CalibrationValue({ pvalue }: { pvalue: number | null | undefined }) {
       <TooltipProvider delayDuration={300}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="cursor-help font-mono font-medium text-text-secondary">—</span>
+            <span className="cursor-help font-mono font-medium text-metric text-text-secondary">
+              —
+            </span>
           </TooltipTrigger>
           <TooltipContent>
             <p className="max-w-xs font-mono text-xs">Insufficient data</p>
@@ -31,16 +33,12 @@ function CalibrationValue({ pvalue }: { pvalue: number | null | undefined }) {
 
   if (pvalue >= 0.05) {
     return (
-      <span className="inline-flex items-center rounded bg-gain-fill px-1.5 py-0.5 text-xs font-medium text-gain">
-        ✓ Calibrated
-      </span>
+      <span className="font-mono font-medium text-metric text-gain">✓ Calibrated</span>
     )
   }
 
   return (
-    <span className="inline-flex items-center rounded bg-loss-fill px-1.5 py-0.5 text-xs font-medium text-loss">
-      ✗ Miscalibrated
-    </span>
+    <span className="font-mono font-medium text-metric text-loss">✗ Miscalibrated</span>
   )
 }
 

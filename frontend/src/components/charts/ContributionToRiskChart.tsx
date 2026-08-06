@@ -14,6 +14,7 @@ import { useEffect, useRef } from 'react'
 import { echarts } from '@/lib/echarts-setup'
 import { ChartFrame, useChartFrame } from '@/components/charts/ChartFrame'
 import { resolveCssVar, useChartTheme, type EChartsTheme } from '@/lib/chart-theme'
+import { displayName } from '@/lib/commodity'
 import { pct } from '@/lib/fmt'
 
 interface ContributionToRiskChartProps {
@@ -47,7 +48,7 @@ function ContributionToRiskInner({ data, theme }: InnerProps) {
 
     chart.setOption({
       backgroundColor: 'transparent',
-      grid: { left: 80, right: 40, top: 8, bottom: 28, containLabel: false },
+      grid: { left: 110, right: 80, top: '5%', bottom: '5%' },
       xAxis: {
         type: 'value',
         axisLabel: {
@@ -61,7 +62,7 @@ function ContributionToRiskInner({ data, theme }: InnerProps) {
       },
       yAxis: {
         type: 'category',
-        data: assets,
+        data: assets.map((a) => displayName(a)),
         axisLabel: { color: textSecondary, fontSize: 11 },
         axisLine: { show: false },
         axisTick: { show: false },
@@ -70,14 +71,13 @@ function ContributionToRiskInner({ data, theme }: InnerProps) {
         {
           type: 'bar',
           data: values,
-          barMaxWidth: 20,
           itemStyle: { color: infoColor, borderRadius: [0, 2, 2, 0] },
           label: {
             show: true,
             position: 'right',
             formatter: (p: { value: number }) => pct(p.value, 1),
             color: textSecondary,
-            fontSize: 11,
+            fontSize: 10,
           },
         },
       ],

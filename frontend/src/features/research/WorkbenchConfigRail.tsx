@@ -187,7 +187,7 @@ export function WorkbenchConfigRail({
   const toDate = urlState.to_date ?? defaults.to_date
 
   return (
-    <div className="w-80 flex shrink-0 flex-col gap-4 overflow-y-auto border-r border-border-default px-4 pb-4">
+    <div className="flex flex-col gap-4">
       <Panel title="Asset & Strategy">
         <div className="flex flex-col gap-4">
           <AssetSelector

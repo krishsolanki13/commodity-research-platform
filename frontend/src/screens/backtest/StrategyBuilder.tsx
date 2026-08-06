@@ -129,10 +129,10 @@ export default function StrategyBuilder() {
       </div>
 
       {/* Two-column body — fills remaining height */}
-      <div className="flex min-h-0 flex-1 gap-6 overflow-hidden px-6 pb-6">
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-6 overflow-hidden px-6 pb-6">
 
         {/* Left column — scrolls independently */}
-        <div className="w-96 shrink-0 overflow-y-auto flex flex-col gap-4">
+        <div className="min-h-0 overflow-y-auto flex flex-col gap-4">
           <Panel title="Strategy">
             <div className="flex flex-col gap-4">
               <AssetSelector
@@ -172,7 +172,7 @@ export default function StrategyBuilder() {
         </div>
 
         {/* Right column — does NOT scroll, stays fixed */}
-        <div className="flex-1 overflow-hidden">
+        <div className="min-h-0 overflow-hidden">
           <LaunchPanel
             config={config}
             evalSummary={evaluation}

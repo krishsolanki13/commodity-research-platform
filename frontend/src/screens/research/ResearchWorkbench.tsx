@@ -108,27 +108,29 @@ export default function ResearchWorkbenchScreen() {
         <h1 className="text-xl font-semibold text-text-primary">Research Workbench</h1>
       </div>
 
-      <div className="flex min-h-0 flex-1 overflow-hidden">
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-6 overflow-hidden px-6 pb-6">
         {/* Left rail — scrolls independently */}
-        <WorkbenchConfigRail
-          onEvaluate={(p) => {
-            void handleEvaluate(p)
-          }}
-          onCanEvaluateChange={(can, reason) => {
-            setCanEvaluate(can)
-            setEvaluateReason(reason)
-          }}
-          onEvaluateReady={(trigger) => {
-            evaluateTriggerRef.current = trigger
-          }}
-        />
+        <div className="min-h-0 overflow-y-auto">
+          <WorkbenchConfigRail
+            onEvaluate={(p) => {
+              void handleEvaluate(p)
+            }}
+            onCanEvaluateChange={(can, reason) => {
+              setCanEvaluate(can)
+              setEvaluateReason(reason)
+            }}
+            onEvaluateReady={(trigger) => {
+              evaluateTriggerRef.current = trigger
+            }}
+          />
+        </div>
 
         {/* Right half */}
-        <div className="relative flex flex-1 flex-col overflow-hidden px-6 pb-6">
+        <div className="relative flex min-h-0 flex-col overflow-hidden">
 
           {/* Evaluate button — hidden when results are fresh */}
           {showEvaluateButton && (
-            <div className="shrink-0 mb-4">
+            <div className="mb-4 shrink-0">
               <Panel title="Evaluate">
                 <div className="flex flex-col gap-3">
                   <Button
@@ -152,7 +154,7 @@ export default function ResearchWorkbenchScreen() {
           {/* Results area */}
           <div className="relative min-h-0 flex-1 overflow-y-auto">
             {blurResults && (
-              <div className="absolute inset-0 z-10 flex items-start justify-center pt-8 backdrop-blur-sm bg-bg-app/40 rounded">
+              <div className="absolute inset-0 z-10 flex items-start justify-center rounded bg-bg-app/40 pt-8 backdrop-blur-sm">
                 <span className="rounded border border-border-default bg-bg-raised px-3 py-1.5 text-xs text-text-secondary">
                   Config changed — click Evaluate to update
                 </span>
