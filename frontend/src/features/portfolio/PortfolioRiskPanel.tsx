@@ -1,5 +1,9 @@
 import { MetricGrid } from '@/components/data/MetricGrid'
+import { MetricStat } from '@/components/data/MetricStat'
 import { AssetRiskBarChart } from '@/components/charts/AssetRiskBarChart'
+import { ContributionToRiskChart } from '@/components/charts/ContributionToRiskChart'
+import { pct, dec } from '@/lib/fmt'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
 import type { components } from '@/api/schema'
 
 type RiskReportResponse = components['schemas']['RiskReportResponse']
@@ -7,6 +11,37 @@ type RiskReportResponse = components['schemas']['RiskReportResponse']
 interface PortfolioRiskPanelProps {
   risk: RiskReportResponse | null
   loading?: boolean
+}
+
+function CalibrationValue({ pvalue }: { pvalue: number | null | undefined }) {
+  if (pvalue == null) {
+    return (
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="cursor-help font-mono font-medium text-text-secondary">—</span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="max-w-xs font-mono text-xs">Insufficient data</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
+
+  if (pvalue >= 0.05) {
+    return (
+      <span className="inline-flex items-center rounded bg-gain-fill px-1.5 py-0.5 text-xs font-medium text-gain">
+        ✓ Calibrated
+      </span>
+    )
+  }
+
+  return (
+    <span className="inline-flex items-center rounded bg-loss-fill px-1.5 py-0.5 text-xs font-medium text-loss">
+      ✗ Miscalibrated
+    </span>
+  )
 }
 
 export function PortfolioRiskPanel({ risk, loading }: PortfolioRiskPanelProps) {
@@ -59,6 +94,59 @@ export function PortfolioRiskPanel({ risk, loading }: PortfolioRiskPanelProps) {
           loading={loading}
         />
       )}
+      <ContributionToRiskChart
+        data={risk?.asset_contribution_to_vol_pct ?? {}}
+        loading={loading}
+      />
+      <div>
+        <p className="mb-2 font-mono text-xs uppercase text-text-secondary">
+          KUPIEC BACKTESTING VALIDATION
+        </p>
+        {loading ? (
+          <MetricGrid loading columns={4} metrics={[]} />
+        ) : (
+          <div className="grid w-full grid-cols-5 gap-4">
+            <MetricStat
+              label="DAYS TESTED"
+              value={
+                risk?.n_backtesting_days != null
+                  ? risk.n_backtesting_days.toLocaleString()
+                  : null
+              }
+              format="raw"
+              tone="neutral"
+            />
+            <MetricStat
+              label="EXCEPTIONS 99%"
+              value={risk?.exceptions_99 ?? null}
+              format="integer"
+              tone="neutral"
+            />
+            <MetricStat
+              label="EXCEPTION RATE"
+              value={
+                risk?.exception_rate_99 != null ? pct(risk.exception_rate_99, 2) : null
+              }
+              format="raw"
+              tone="neutral"
+            />
+            <MetricStat
+              label="KUPIEC p-VALUE"
+              value={
+                risk?.kupiec_pvalue_99 != null ? dec(risk.kupiec_pvalue_99, 3) : null
+              }
+              format="raw"
+              tone="neutral"
+            />
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-xs uppercase tracking-wider text-text-secondary">
+                CALIBRATION
+              </span>
+              <CalibrationValue pvalue={risk?.kupiec_pvalue_99} />
+            </div>
+          </div>
+        )}
+      </div>
       <div>
         <p className="mb-2 font-mono text-xs uppercase text-text-secondary">Notional Exposure</p>
         <MetricGrid
