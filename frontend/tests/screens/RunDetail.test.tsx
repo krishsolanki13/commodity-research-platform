@@ -137,4 +137,10 @@ describe('RunDetail', () => {
     expect(screen.getByRole('alertdialog')).toBeInTheDocument()
     expect(screen.getByText(/permanently remove/i)).toBeInTheDocument()
   })
+
+  it('renders Validation tab in the tab bar', async () => {
+    renderRunDetail()
+    await waitFor(() => screen.getByRole('tab', { name: 'Validation' }))
+    expect(screen.getByRole('tab', { name: 'Validation' })).toBeInTheDocument()
+  })
 })
