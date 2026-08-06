@@ -90,7 +90,9 @@ export function RunValidationTab({
                 Parameters
               </p>
               <p className="font-mono text-xs text-text-secondary">
-                {JSON.stringify(parameters)}
+                {Object.entries(parameters)
+                  .map(([k, v]) => `${k}: ${v}`)
+                  .join(' · ')}
               </p>
             </div>
           )}

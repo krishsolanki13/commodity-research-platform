@@ -173,7 +173,10 @@ export default function RunDetail() {
                       <RunValidationTab
                         asset={run?.asset ?? null}
                         strategyName={run?.strategy ?? null}
-                        parameters={run?.params ?? null}
+                        parameters={
+                          (run?.params as { parameters?: Record<string, unknown> } | undefined)
+                            ?.parameters ?? null
+                        }
                       />
                     </Suspense>
                   ),
