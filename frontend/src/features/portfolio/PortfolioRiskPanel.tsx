@@ -1,6 +1,5 @@
 import { MetricGrid } from '@/components/data/MetricGrid'
 import { AssetRiskBarChart } from '@/components/charts/AssetRiskBarChart'
-import { cn } from '@/lib/cn'
 import type { components } from '@/api/schema'
 
 type RiskReportResponse = components['schemas']['RiskReportResponse']

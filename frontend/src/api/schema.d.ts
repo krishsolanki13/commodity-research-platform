@@ -463,6 +463,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/runs/{run_id}/regime-attribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Regime Attribution
+         * @description Compute regime-conditional performance attribution for a completed run.
+         *
+         *     Loads run artifacts via RunManager.load_run(), reconstructs the data
+         *     needed by RegimeAttributionEngine, and returns per-regime metrics.
+         *     On-demand — not cached in run artifacts. NaN → null for regimes with
+         *     < 20 trading days.
+         */
+        get: operations["get_regime_attribution_api_runs__run_id__regime_attribution_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/strategies": {
         parameters: {
             query?: never;
@@ -523,6 +548,36 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/signals/rolling-ic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Rolling Ic
+         * @description Rolling IC: Pearson(RawSignal, forward_return) over a rolling window.
+         *
+         *     Query parameters:
+         *       asset:    Asset identifier (e.g. 'gold')
+         *       strategy: Strategy name (e.g. 'ema_crossover')
+         *       params:   JSON-encoded parameter dict
+         *       window:   Rolling window in bars (default 63, min 10, max 252)
+         *
+         *     Returns RollingICResponse with ColumnarSeries (epoch-ms index,
+         *     rolling_ic column). Null for first window-1 bars.
+         *     Invalid params JSON → 422.
+         */
+        get: operations["get_rolling_ic_api_signals_rolling_ic_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/system/data-status": {
         parameters: {
             query?: never;
@@ -535,6 +590,69 @@ export interface paths {
          * @description Per-asset ingestion status: bar count, date range, health.
          */
         get: operations["get_data_status_api_system_data_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/data/qc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Data Qc
+         * @description On-demand data quality assessment for one asset's OHLCV history.
+         *
+         *     Loads the processed Parquet for the asset, runs QC checks, and
+         *     returns a QCReport. Computation is fast (< 100ms for 4,150 bars).
+         */
+        get: operations["get_data_qc_api_system_data_qc_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/data/cot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Cot Data
+         * @description Return weekly COT positioning history for an asset.
+         */
+        get: operations["get_cot_data_api_system_data_cot_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/data/eia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Eia Data
+         * @description Return weekly EIA inventory history for an asset (WTI and Brent only).
+         */
+        get: operations["get_eia_data_api_system_data_eia_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -646,6 +764,192 @@ export interface paths {
          *     curve.points is omitted from history (too large); use /snapshot for that.
          */
         get: operations["get_curve_history_api_curves__asset__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/validation/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Launch Validation
+         * @description Launch a walk-forward validation run asynchronously.
+         *
+         *     Returns immediately with validation_run_id and status='queued'.
+         *     Poll GET /api/validation/{id}/status to detect completion.
+         *     Retrieve results with GET /api/validation/{id}/report once complete.
+         */
+        post: operations["launch_validation_api_validation_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/validation/{validation_run_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Validation Status
+         * @description Poll validation run status.
+         *
+         *     Returns queued / running / complete / failed.
+         *     Falls back to disk when run_id is not in memory (e.g. after server restart).
+         */
+        get: operations["get_validation_status_api_validation__validation_run_id__status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/validation/{validation_run_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Validation Report
+         * @description Return the full validation report.
+         *
+         *     Returns 409 if the run exists but is not yet complete.
+         *     Returns 404 if the run_id is not found in memory or on disk.
+         *     Disk artifact is the authoritative source — always read from JSON on disk.
+         */
+        get: operations["get_validation_report_api_validation__validation_run_id__report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sweeps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Sweeps
+         * @description List recent sweep runs from disk, newest first.
+         *
+         *     Scans data/sweeps/ for directories containing sweep_result.json.
+         *     Returns summary items only (not full run details).
+         */
+        get: operations["list_sweeps_api_sweeps_get"];
+        put?: never;
+        /**
+         * Launch Sweep
+         * @description Launch a parameter sweep asynchronously.
+         *
+         *     Generates all combinations from param_grid (itertools.product order),
+         *     runs each as an independent backtest, tags each in MLflow with sweep_id.
+         *
+         *     Returns immediately with sweep_id and total combination count.
+         *     Poll GET /api/sweeps/{sweep_id}/status for completion.
+         */
+        post: operations["launch_sweep_api_sweeps_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sweeps/{sweep_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Sweep Status
+         * @description Poll sweep status.
+         */
+        get: operations["get_sweep_status_api_sweeps__sweep_id__status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sweeps/{sweep_id}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Sweep Results
+         * @description Return complete sweep results when status is complete.
+         *
+         *     Results are sorted by the specified metric (default: Sharpe, descending).
+         *     Failed runs always appear last regardless of sort order.
+         *
+         *     Query parameters:
+         *         sort_by:  sharpe (default) | total_return | max_drawdown
+         *         sort_dir: desc (default) | asc
+         */
+        get: operations["get_sweep_results_api_sweeps__sweep_id__results_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/intelligence/pca": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Curve Pca
+         * @description Forward curve PCA for a commodity asset.
+         *
+         *     Computes principal components of the forward curve shape over time.
+         *     Results are computed on-demand — not cached.
+         *
+         *     The three standard PCs for commodity curves:
+         *       PC1 (Level):     parallel shift of the entire curve
+         *       PC2 (Slope):     steepening or flattening
+         *       PC3 (Curvature): bowing of the middle relative to ends
+         *
+         *     Query parameters:
+         *       asset:        Asset identifier (e.g. 'gold'). Must have contract data.
+         *       n_components: Number of PCs to compute (default 3).
+         *       n_contracts:  Number of forward contracts to include (default 4).
+         *       from_date:    Optional start date filter (ISO 8601: YYYY-MM-DD).
+         *       to_date:      Optional end date filter (ISO 8601: YYYY-MM-DD).
+         */
+        get: operations["get_curve_pca_api_intelligence_pca_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -793,6 +1097,32 @@ export interface components {
             signal_evaluation?: components["schemas"]["SignalEvaluationData"] | null;
         };
         /**
+         * COTDataResponse
+         * @description Response for GET /api/system/data/cot.
+         */
+        COTDataResponse: {
+            /** Asset */
+            asset: string;
+            /** Available */
+            available: boolean;
+            /** Records */
+            records: components["schemas"]["COTRecordResponse"][];
+            /**
+             * Message
+             * @default
+             */
+            message: string;
+        };
+        /** COTRecordResponse */
+        COTRecordResponse: {
+            /** Date */
+            date: string;
+            /** Net Speculative */
+            net_speculative?: number | null;
+            /** Percentile Rank */
+            percentile_rank?: number | null;
+        };
+        /**
          * ColumnarSeries
          * @description Time series in columnar format.
          *
@@ -937,6 +1267,47 @@ export interface components {
             /** Snapshots */
             snapshots: components["schemas"]["TermStructureSnapshotSummary"][];
         };
+        /**
+         * CurvePCAResponse
+         * @description Response for GET /api/intelligence/pca.
+         *
+         *     Forward curve PCA result for one asset. Factor interpretation:
+         *       PC1 (Level):     uniform loading on back-month contracts -> parallel curve shift
+         *       PC2 (Slope):     sign-alternating -> steepening/flattening
+         *       PC3 (Curvature): U-shaped -> curve bowing
+         *
+         *     factor_series and factor_index_epoch_ms have equal length (n_observation_dates).
+         *     Front-month loading (index 0 in each PC vector) is zero — correct consequence
+         *     of front-price normalization.
+         */
+        CurvePCAResponse: {
+            /** Asset */
+            asset: string;
+            /** N Components */
+            n_components: number;
+            /** N Contracts */
+            n_contracts: number;
+            /** N Observation Dates */
+            n_observation_dates: number;
+            /** Computation Date */
+            computation_date: string;
+            /** Explained Variance Ratio */
+            explained_variance_ratio: number[];
+            /** Cumulative Variance Ratio */
+            cumulative_variance_ratio: number[];
+            /** Loadings */
+            loadings: {
+                [key: string]: number[];
+            };
+            /** Factor Series */
+            factor_series: {
+                [key: string]: (number | null)[];
+            };
+            /** Factor Index Epoch Ms */
+            factor_index_epoch_ms: number[];
+            /** Pc Labels */
+            pc_labels: string[];
+        };
         /** CurvePointResponse */
         CurvePointResponse: {
             /** Ticker */
@@ -977,6 +1348,34 @@ export interface components {
             deleted: boolean;
             /** Run Id */
             run_id: string;
+        };
+        /**
+         * EIADataResponse
+         * @description Response for GET /api/system/data/eia.
+         */
+        EIADataResponse: {
+            /** Asset */
+            asset: string;
+            /** Available */
+            available: boolean;
+            /** Records */
+            records: components["schemas"]["EIARecordResponse"][];
+            /**
+             * Message
+             * @default
+             */
+            message: string;
+        };
+        /** EIARecordResponse */
+        EIARecordResponse: {
+            /** Date */
+            date: string;
+            /** Inventory */
+            inventory?: number | null;
+            /** Surprise */
+            surprise?: number | null;
+            /** Surprise Zscore */
+            surprise_zscore?: number | null;
         };
         /** FeatureComputeRequest */
         FeatureComputeRequest: {
@@ -1326,6 +1725,114 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /**
+         * QCReportResponse
+         * @description Response for GET /api/system/data/qc.
+         *
+         *     On-demand data quality assessment for one asset's OHLCV history.
+         *     Computed from the processed Parquet file at request time.
+         */
+        QCReportResponse: {
+            /** Asset */
+            asset: string;
+            /** Generated At */
+            generated_at: string;
+            /** Bar Count */
+            bar_count: number;
+            /** From Date */
+            from_date: string;
+            /** To Date */
+            to_date: string;
+            /** Zero Volume Days */
+            zero_volume_days: number;
+            /** Ohlc Violations */
+            ohlc_violations: number;
+            /** Large Gap Flags */
+            large_gap_flags: number;
+            /** Data Health */
+            data_health: string;
+            /**
+             * Anomalies
+             * @default []
+             */
+            anomalies: string[];
+        };
+        /**
+         * RegimeAttributionResponse
+         * @description Response for GET /api/runs/{run_id}/regime-attribution.
+         */
+        RegimeAttributionResponse: {
+            /** Run Id */
+            run_id: string;
+            /** Asset */
+            asset: string;
+            /** Strategy Name */
+            strategy_name: string;
+            /** N Contracts */
+            n_contracts: number;
+            /** Computation Date */
+            computation_date: string;
+            /**
+             * Regime Metrics
+             * @default {}
+             */
+            regime_metrics: {
+                [key: string]: components["schemas"]["RegimeMetricsResponse"];
+            };
+            /**
+             * Regime Coverage
+             * @default {}
+             */
+            regime_coverage: {
+                [key: string]: number;
+            };
+            /**
+             * Dominant Regime
+             * @default
+             */
+            dominant_regime: string;
+            /**
+             * Total Days With Regime
+             * @default 0
+             */
+            total_days_with_regime: number;
+            /**
+             * Total Days In Run
+             * @default 0
+             */
+            total_days_in_run: number;
+        };
+        /**
+         * RegimeMetricsResponse
+         * @description Performance metrics for one regime in a regime attribution report.
+         */
+        RegimeMetricsResponse: {
+            /** Regime */
+            regime: string;
+            /**
+             * N Days
+             * @default 0
+             */
+            n_days: number;
+            /**
+             * Coverage
+             * @default 0
+             */
+            coverage: number;
+            /** Sharpe */
+            sharpe?: number | null;
+            /** Total Return */
+            total_return?: number | null;
+            /** Max Drawdown */
+            max_drawdown?: number | null;
+            /**
+             * N Trades
+             * @default 0
+             */
+            n_trades: number;
+            /** Win Rate */
+            win_rate?: number | null;
+        };
         /** RiskReportResponse */
         RiskReportResponse: {
             /** Run Id */
@@ -1412,6 +1919,30 @@ export interface components {
             asset_a: string;
             /** Asset B */
             asset_b: string;
+            data: components["schemas"]["ColumnarSeries"];
+        };
+        /**
+         * RollingICResponse
+         * @description Response for GET /api/signals/rolling-ic.
+         *
+         *     Contains the rolling IC time series as a ColumnarSeries:
+         *       - index: epoch-ms timestamps
+         *       - columns.rolling_ic: IC values in [-1, 1] or null for first window-1 bars
+         *
+         *     Consistent with static IC (RawSignal-based). ICRollingChart frontend
+         *     component (F5) consumes this response; wiring deferred to FEP.
+         */
+        RollingICResponse: {
+            /** Asset */
+            asset: string;
+            /** Strategy Name */
+            strategy_name: string;
+            /** Parameters */
+            parameters: {
+                [key: string]: unknown;
+            };
+            /** Window */
+            window: number;
             data: components["schemas"]["ColumnarSeries"];
         };
         /** RunDetailResponse */
@@ -1605,6 +2136,117 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** SweepLaunchRequest */
+        SweepLaunchRequest: {
+            /** Asset */
+            asset: string;
+            /** Strategy Name */
+            strategy_name: string;
+            /** Param Grid */
+            param_grid: {
+                [key: string]: unknown[];
+            };
+        };
+        /** SweepListItem */
+        SweepListItem: {
+            /** Sweep Id */
+            sweep_id: string;
+            /** Asset */
+            asset: string;
+            /** Strategy Name */
+            strategy_name: string;
+            /** N Combinations */
+            n_combinations: number;
+            /** N Complete */
+            n_complete: number;
+            /** N Failed */
+            n_failed: number;
+            /** Computation Date */
+            computation_date: string;
+        };
+        /** SweepListResponse */
+        SweepListResponse: {
+            /** Sweeps */
+            sweeps: components["schemas"]["SweepListItem"][];
+            /** Total */
+            total: number;
+        };
+        /** SweepResultResponse */
+        SweepResultResponse: {
+            /** Sweep Id */
+            sweep_id: string;
+            /** Asset */
+            asset: string;
+            /** Strategy Name */
+            strategy_name: string;
+            /** Param Grid */
+            param_grid: {
+                [key: string]: unknown[];
+            };
+            /** N Combinations */
+            n_combinations: number;
+            /** N Complete */
+            n_complete: number;
+            /** N Failed */
+            n_failed: number;
+            /** Computation Date */
+            computation_date: string;
+            /** Runs */
+            runs: components["schemas"]["SweepRunSummaryResponse"][];
+        };
+        /** SweepRunSummaryResponse */
+        SweepRunSummaryResponse: {
+            /** Sweep Id */
+            sweep_id: string;
+            /** Run Id */
+            run_id: string;
+            /** Parameters */
+            parameters: {
+                [key: string]: unknown;
+            };
+            /** Sharpe */
+            sharpe?: number | null;
+            /** Total Return */
+            total_return?: number | null;
+            /** Max Drawdown */
+            max_drawdown?: number | null;
+            /**
+             * N Trades
+             * @default 0
+             */
+            n_trades: number;
+            /**
+             * Status
+             * @default complete
+             */
+            status: string;
+            /** Error */
+            error?: string | null;
+        };
+        /** SweepStatusResponse */
+        SweepStatusResponse: {
+            /** Sweep Id */
+            sweep_id: string;
+            /** Status */
+            status: string;
+            /**
+             * N Combinations
+             * @default 0
+             */
+            n_combinations: number;
+            /**
+             * N Complete
+             * @default 0
+             */
+            n_complete: number;
+            /**
+             * N Failed
+             * @default 0
+             */
+            n_failed: number;
+            /** Error */
+            error?: string | null;
+        };
         /** TaskLaunchResponse */
         TaskLaunchResponse: {
             /** Run Id */
@@ -1704,6 +2346,28 @@ export interface components {
             total: number;
             stats: components["schemas"]["TradeStats"];
         };
+        /**
+         * TrainTestSplitResponse
+         * @description Date boundaries for one walk-forward fold — returned in ValidationReportResponse.
+         */
+        TrainTestSplitResponse: {
+            /** Fold Idx */
+            fold_idx: number;
+            /** Train Start */
+            train_start: string;
+            /** Train End */
+            train_end: string;
+            /** Test Start */
+            test_start: string;
+            /** Test End */
+            test_end: string;
+            /** N Train Bars */
+            n_train_bars: number;
+            /** N Test Bars */
+            n_test_bars: number;
+            /** Embargo Bars */
+            embargo_bars: number;
+        };
         /** UniverseResponse */
         UniverseResponse: {
             /** Assets */
@@ -1729,6 +2393,115 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /**
+         * ValidationLaunchRequest
+         * @description Request body for POST /api/validation/run.
+         */
+        ValidationLaunchRequest: {
+            /** Asset */
+            asset: string;
+            /** Strategy Name */
+            strategy_name: string;
+            /** Parameters */
+            parameters: {
+                [key: string]: unknown;
+            };
+            /**
+             * N Splits
+             * @default 5
+             */
+            n_splits: number;
+            /**
+             * Embargo Bars
+             * @default 10
+             */
+            embargo_bars: number;
+        };
+        /**
+         * ValidationReportResponse
+         * @description Response for GET /api/validation/{id}/report.
+         */
+        ValidationReportResponse: {
+            /** Validation Run Id */
+            validation_run_id: string;
+            /** Asset */
+            asset: string;
+            /** Strategy Name */
+            strategy_name: string;
+            /** Parameters */
+            parameters: {
+                [key: string]: unknown;
+            };
+            /** N Splits */
+            n_splits: number;
+            /** Embargo Bars */
+            embargo_bars: number;
+            /** Computation Date */
+            computation_date: string;
+            /** Folds */
+            folds: components["schemas"]["WalkForwardFoldResponse"][];
+            /** Insample Sharpe */
+            insample_sharpe: number | null;
+            /** Outsample Sharpe */
+            outsample_sharpe: number | null;
+            /** Insample Return */
+            insample_return: number | null;
+            /** Outsample Return */
+            outsample_return: number | null;
+            /** Overfitting Ratio */
+            overfitting_ratio: number | null;
+            /** Sharpe Se */
+            sharpe_se: number | null;
+            /** Psr */
+            psr: number | null;
+            /** N Trials */
+            n_trials: number;
+            /** Sr Benchmark */
+            sr_benchmark: number | null;
+            /** Dsr */
+            dsr: number | null;
+            /** Is Significant */
+            is_significant: boolean;
+            /** Dsr Threshold */
+            dsr_threshold: number;
+        };
+        /**
+         * ValidationStatusResponse
+         * @description Response for GET /api/validation/{id}/status.
+         */
+        ValidationStatusResponse: {
+            /** Validation Run Id */
+            validation_run_id: string;
+            /** Status */
+            status: string;
+            /** Error */
+            error?: string | null;
+        };
+        /**
+         * WalkForwardFoldResponse
+         * @description Per-fold train/test Sharpe and return metrics.
+         */
+        WalkForwardFoldResponse: {
+            split: components["schemas"]["TrainTestSplitResponse"];
+            /** Train Sharpe */
+            train_sharpe: number | null;
+            /** Test Sharpe */
+            test_sharpe: number | null;
+            /** Train Return */
+            train_return: number | null;
+            /** Test Return */
+            test_return: number | null;
+            /** Train Max Dd */
+            train_max_dd: number | null;
+            /** Test Max Dd */
+            test_max_dd: number | null;
+            /** Train N Trades */
+            train_n_trades: number;
+            /** Test N Trades */
+            test_n_trades: number;
+            /** Overfitting Ratio */
+            overfitting_ratio: number | null;
         };
     };
     responses: never;
@@ -2445,6 +3218,39 @@ export interface operations {
             };
         };
     };
+    get_regime_attribution_api_runs__run_id__regime_attribution_get: {
+        parameters: {
+            query?: {
+                n_contracts?: number;
+            };
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegimeAttributionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_strategies_api_strategies_get: {
         parameters: {
             query?: never;
@@ -2531,6 +3337,40 @@ export interface operations {
             };
         };
     };
+    get_rolling_ic_api_signals_rolling_ic_get: {
+        parameters: {
+            query: {
+                asset: string;
+                strategy: string;
+                params?: string;
+                window?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RollingICResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_data_status_api_system_data_status_get: {
         parameters: {
             query?: {
@@ -2549,6 +3389,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DataStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_data_qc_api_system_data_qc_get: {
+        parameters: {
+            query: {
+                asset: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QCReportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_cot_data_api_system_data_cot_get: {
+        parameters: {
+            query: {
+                asset: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["COTDataResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_eia_data_api_system_data_eia_get: {
+        parameters: {
+            query: {
+                asset: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EIADataResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2694,6 +3627,270 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CurveHistoryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    launch_validation_api_validation_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidationLaunchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_validation_status_api_validation__validation_run_id__status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                validation_run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_validation_report_api_validation__validation_run_id__report_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                validation_run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationReportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_sweeps_api_sweeps_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SweepListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    launch_sweep_api_sweeps_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SweepLaunchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SweepStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_sweep_status_api_sweeps__sweep_id__status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sweep_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SweepStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_sweep_results_api_sweeps__sweep_id__results_get: {
+        parameters: {
+            query?: {
+                sort_by?: string;
+                sort_dir?: string;
+            };
+            header?: never;
+            path: {
+                sweep_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SweepResultResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_curve_pca_api_intelligence_pca_get: {
+        parameters: {
+            query: {
+                /** @description Asset identifier, e.g. 'gold' */
+                asset: string;
+                /** @description Number of PCs */
+                n_components?: number;
+                /** @description Contracts in curve */
+                n_contracts?: number;
+                /** @description Start date YYYY-MM-DD */
+                from_date?: string | null;
+                /** @description End date YYYY-MM-DD */
+                to_date?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurvePCAResponse"];
                 };
             };
             /** @description Validation Error */
