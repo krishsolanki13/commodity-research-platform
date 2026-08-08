@@ -10,7 +10,7 @@
 import { useEffect, useRef } from 'react'
 import { echarts } from '@/lib/echarts-setup'
 import { ChartFrame, useChartFrame } from '@/components/charts/ChartFrame'
-import { resolveCssVar, useChartTheme, type EChartsTheme } from '@/lib/chart-theme'
+import { resolveCssVar, toRgba, useChartTheme, type EChartsTheme } from '@/lib/chart-theme'
 import { dec } from '@/lib/fmt'
 
 interface WalkForwardChartProps {
@@ -91,13 +91,22 @@ function WalkForwardInner({ folds, theme }: InnerProps) {
         {
           name: 'IS Sharpe',
           type: 'bar',
+          color: amberColor,
           barGap: '20%',
           data: folds.map((f) => ({
             value: f.is_sharpe ?? 0,
-            itemStyle: {
-              color:
-                f.is_sharpe !== null && f.is_sharpe < 0 ? lossColor : amberColor,
-            },
+            itemStyle:
+              f.is_sharpe !== null && f.is_sharpe < 0
+                ? {
+                    color: toRgba(lossColor, 0.12),
+                    borderColor: lossColor,
+                    borderWidth: 1,
+                  }
+                : {
+                    color: toRgba(amberColor, 0.12),
+                    borderColor: amberColor,
+                    borderWidth: 1,
+                  },
           })),
           markLine: {
             silent: true,
@@ -109,12 +118,21 @@ function WalkForwardInner({ folds, theme }: InnerProps) {
         {
           name: 'OOS Sharpe',
           type: 'bar',
+          color: infoColor,
           data: folds.map((f) => ({
             value: f.oos_sharpe ?? 0,
-            itemStyle: {
-              color:
-                f.oos_sharpe !== null && f.oos_sharpe < 0 ? lossColor : infoColor,
-            },
+            itemStyle:
+              f.oos_sharpe !== null && f.oos_sharpe < 0
+                ? {
+                    color: toRgba(lossColor, 0.12),
+                    borderColor: lossColor,
+                    borderWidth: 1,
+                  }
+                : {
+                    color: toRgba(infoColor, 0.12),
+                    borderColor: infoColor,
+                    borderWidth: 1,
+                  },
           })),
         },
       ],

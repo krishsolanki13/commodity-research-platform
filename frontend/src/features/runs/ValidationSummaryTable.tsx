@@ -101,7 +101,15 @@ function oosColorClass(
   _higherIsBetter: boolean,
   isDrawdown: boolean,
 ): string {
-  if (isVal === null || oosVal === null || isVal === 0) return 'text-text-secondary'
+  if (
+    isVal === null ||
+    oosVal === null ||
+    Number.isNaN(isVal) ||
+    Number.isNaN(oosVal) ||
+    isVal === 0
+  ) {
+    return 'text-text-secondary'
+  }
   if (isDrawdown) {
     // Smaller absolute drawdown is better
     return Math.abs(oosVal) <= Math.abs(isVal) ? 'text-gain' : 'text-loss'
@@ -110,6 +118,20 @@ function oosColorClass(
   if (ratio >= 0.8) return 'text-gain'
   if (ratio >= 0.5) return 'text-warn'
   return 'text-loss'
+}
+
+function isPresentNumber(v: number | null | undefined): v is number {
+  return v !== null && v !== undefined && Number.isFinite(v)
+}
+
+/** Format a cell; treat null/NaN/non-finite and formatters that yield "NaN" as em dash. */
+function formatCell(
+  format: (v: number) => string,
+  v: number | null | undefined,
+): string {
+  if (!isPresentNumber(v)) return '—'
+  const formatted = format(v)
+  return formatted === 'NaN' ? '—' : formatted
 }
 
 export function ValidationSummaryTable({ report }: ValidationSummaryTableProps) {
@@ -138,10 +160,14 @@ export function ValidationSummaryTable({ report }: ValidationSummaryTableProps) 
           {ROWS.map((row) => {
             const { isVal, oosVal } = row.get(report, folds)
             const ratio =
-              isVal !== null && oosVal !== null && isVal !== 0 ? oosVal / isVal : null
+              isPresentNumber(isVal) &&
+              isPresentNumber(oosVal) &&
+              isVal !== 0
+                ? oosVal / isVal
+                : null
             const oosClass = oosColorClass(
-              isVal,
-              oosVal,
+              isPresentNumber(isVal) ? isVal : null,
+              isPresentNumber(oosVal) ? oosVal : null,
               row.higherIsBetter,
               row.isDrawdown ?? false,
             )
@@ -150,13 +176,13 @@ export function ValidationSummaryTable({ report }: ValidationSummaryTableProps) 
               <tr key={row.label} className="hover:bg-bg-hover">
                 <td className="px-3 py-2 font-medium text-text-secondary">{row.label}</td>
                 <td className="px-3 py-2 text-right font-mono text-text-primary">
-                  {isVal !== null ? row.format(isVal) : '—'}
+                  {formatCell(row.format, isVal)}
                 </td>
                 <td className={`px-3 py-2 text-right font-mono ${oosClass}`}>
-                  {oosVal !== null ? row.format(oosVal) : '—'}
+                  {formatCell(row.format, oosVal)}
                 </td>
                 <td className="px-3 py-2 text-right font-mono text-text-secondary">
-                  {ratio !== null ? dec(ratio, 2) : '—'}
+                  {ratio !== null && Number.isFinite(ratio) ? dec(ratio, 2) : '—'}
                 </td>
               </tr>
             )

@@ -1,6 +1,9 @@
 /**
  * RunValidationTab — launch walk-forward validation and render report.
  *
+ * Layout matches FuturesCurve (TDR-015): grid-cols-2 config | action+results.
+ * Padding inherited from RunDetail (same as RunSignalQualityTab — no extra pad).
+ *
  * Corrections vs draft assumptions:
  *   - Launch response uses validation_run_id (Inc1)
  *   - Folds use WalkForwardFoldResponse: split.fold_idx, train_sharpe, test_sharpe
@@ -12,6 +15,8 @@ import { useValidationStatus } from '@/api/hooks/useValidationStatus'
 import { useValidationReport } from '@/api/hooks/useValidationReport'
 import { WalkForwardChart } from '@/components/charts/WalkForwardChart'
 import { ValidationSummaryTable } from '@/features/runs/ValidationSummaryTable'
+import { Panel } from '@/ui/Panel'
+import { Button } from '@/ui/button'
 
 interface RunValidationTabProps {
   // Passed from RunDetail — avoids duplicate fetch of run metadata
@@ -65,11 +70,11 @@ export function RunValidationTab({
     })) ?? []
 
   return (
-    <div className="space-y-4 p-4">
-      {/* Launch panel */}
-      {!validationId && (
-        <div className="space-y-4 rounded border border-border-default bg-bg-panel p-4">
-          <div className="grid grid-cols-2 gap-3 text-sm">
+    <div className="grid min-h-0 flex-1 grid-cols-2 gap-6 overflow-hidden">
+      {/* Left — config (read-only metadata + editable inputs) */}
+      <div className="min-h-0 overflow-y-auto">
+        <Panel title="Configuration">
+          <div className="flex flex-col gap-4">
             <div>
               <p className="mb-0.5 text-xs uppercase tracking-wider text-text-secondary">
                 Asset
@@ -82,22 +87,18 @@ export function RunValidationTab({
               </p>
               <p className="font-mono text-text-primary">{strategyName ?? '—'}</p>
             </div>
-          </div>
-
-          {parameters && (
-            <div>
-              <p className="mb-0.5 text-xs uppercase tracking-wider text-text-secondary">
-                Parameters
-              </p>
-              <p className="font-mono text-xs text-text-secondary">
-                {Object.entries(parameters)
-                  .map(([k, v]) => `${k}: ${v}`)
-                  .join(' · ')}
-              </p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-3">
+            {parameters && (
+              <div>
+                <p className="mb-0.5 text-xs uppercase tracking-wider text-text-secondary">
+                  Parameters
+                </p>
+                <p className="font-mono text-xs text-text-secondary">
+                  {Object.entries(parameters)
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join(' · ')}
+                </p>
+              </div>
+            )}
             <div>
               <label className="mb-1 block text-xs text-text-secondary">
                 Walk-forward splits
@@ -108,7 +109,8 @@ export function RunValidationTab({
                 max={20}
                 value={nSplits}
                 onChange={(e) => setNSplits(Math.max(2, Number(e.target.value)))}
-                className="w-full rounded border border-border-strong bg-bg-raised px-2 py-1.5 font-mono text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
+                disabled={!!validationId}
+                className="w-full rounded border border-border-strong bg-bg-raised px-2 py-1.5 font-mono text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring disabled:opacity-50"
               />
             </div>
             <div>
@@ -123,46 +125,57 @@ export function RunValidationTab({
                 onChange={(e) =>
                   setEmbargoBars(Math.max(0, Number(e.target.value)))
                 }
-                className="w-full rounded border border-border-strong bg-bg-raised px-2 py-1.5 font-mono text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
+                disabled={!!validationId}
+                className="w-full rounded border border-border-strong bg-bg-raised px-2 py-1.5 font-mono text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring disabled:opacity-50"
               />
             </div>
           </div>
+        </Panel>
+      </div>
 
-          <button
-            type="button"
-            onClick={handleLaunch}
-            disabled={!canLaunch}
-            className="w-full rounded bg-amber-500 px-4 py-2 text-sm font-medium text-gray-950 hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {launch.isPending ? 'Launching…' : 'Launch Walk-Forward Validation'}
-          </button>
-        </div>
-      )}
+      {/* Right — launch + results */}
+      <div className="min-h-0 overflow-y-auto">
+        <Panel title="Validation">
+          <div className="flex flex-col gap-4">
+            <Button
+              variant="primary"
+              disabled={!canLaunch}
+              onClick={handleLaunch}
+              className="w-full"
+              loading={launch.isPending}
+            >
+              {launch.isPending ? 'Launching…' : 'Launch Walk-Forward Validation'}
+            </Button>
 
-      {/* Polling */}
-      {isPolling && (
-        <div className="rounded border border-border-default bg-bg-panel px-4 py-8 text-center">
-          <p className="text-sm text-text-secondary">Running validation…</p>
-        </div>
-      )}
+            {!validationId && (
+              <p className="text-xs text-text-secondary">
+                Launch walk-forward validation to compare in-sample vs out-of-sample
+                Sharpe across folds.
+              </p>
+            )}
 
-      {/* Failed */}
-      {status?.status === 'failed' && (
-        <div className="rounded border border-border-default bg-bg-panel px-4 py-3">
-          <p className="text-sm text-loss">
-            Validation failed
-            {status.error ? `: ${status.error}` : '. Check the API logs for details.'}
-          </p>
-        </div>
-      )}
+            {isPolling && (
+              <p className="text-sm text-text-secondary">
+                Running validation ({nSplits} folds)…
+              </p>
+            )}
 
-      {/* Results */}
-      {report && (
-        <div className="space-y-4">
-          <WalkForwardChart folds={folds} />
-          <ValidationSummaryTable report={report} />
-        </div>
-      )}
+            {status?.status === 'failed' && (
+              <p className="text-sm text-loss">
+                Validation failed
+                {status.error ? `: ${status.error}` : '. Check the API logs for details.'}
+              </p>
+            )}
+
+            {report && (
+              <div className="flex flex-col gap-4">
+                <WalkForwardChart folds={folds} />
+                <ValidationSummaryTable report={report} />
+              </div>
+            )}
+          </div>
+        </Panel>
+      </div>
     </div>
   )
 }
