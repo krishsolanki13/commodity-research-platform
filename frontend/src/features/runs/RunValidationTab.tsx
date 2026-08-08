@@ -1,7 +1,8 @@
 /**
  * RunValidationTab — launch walk-forward validation and render report.
  *
- * Layout matches FuturesCurve (TDR-015): grid-cols-2 config | action+results.
+ * Pre-launch: grid-cols-2 (FuturesCurve / StrategyBuilder pattern).
+ * Post-launch: full-width results column (chart + table need full width).
  * Padding inherited from RunDetail (same as RunSignalQualityTab — no extra pad).
  *
  * Corrections vs draft assumptions:
@@ -17,6 +18,7 @@ import { WalkForwardChart } from '@/components/charts/WalkForwardChart'
 import { ValidationSummaryTable } from '@/features/runs/ValidationSummaryTable'
 import { Panel } from '@/ui/Panel'
 import { Button } from '@/ui/button'
+import { NumberInput } from '@/ui/NumberInput'
 
 interface RunValidationTabProps {
   // Passed from RunDetail — avoids duplicate fetch of run metadata
@@ -69,113 +71,109 @@ export function RunValidationTab({
       oos_sharpe: f.test_sharpe,
     })) ?? []
 
-  return (
-    <div className="grid min-h-0 flex-1 grid-cols-2 gap-6 overflow-hidden">
-      {/* Left — config (read-only metadata + editable inputs) */}
-      <div className="min-h-0 overflow-y-auto">
-        <Panel title="Configuration">
-          <div className="flex flex-col gap-4">
-            <div>
-              <p className="mb-0.5 text-xs uppercase tracking-wider text-text-secondary">
-                Asset
-              </p>
-              <p className="font-mono text-text-primary">{asset ?? '—'}</p>
-            </div>
-            <div>
-              <p className="mb-0.5 text-xs uppercase tracking-wider text-text-secondary">
-                Strategy
-              </p>
-              <p className="font-mono text-text-primary">{strategyName ?? '—'}</p>
-            </div>
-            {parameters && (
-              <div>
-                <p className="mb-0.5 text-xs uppercase tracking-wider text-text-secondary">
-                  Parameters
-                </p>
-                <p className="font-mono text-xs text-text-secondary">
-                  {Object.entries(parameters)
-                    .map(([k, v]) => `${k}: ${v}`)
-                    .join(' · ')}
-                </p>
+  if (validationId === null) {
+    return (
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-6 overflow-hidden">
+        {/* Left — config (FuturesCurve Configuration panel pattern) */}
+        <div className="min-h-0 overflow-y-auto">
+          <Panel title="Configuration">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
+                  Asset
+                </span>
+                <p className="font-mono text-sm text-text-primary">{asset ?? '—'}</p>
               </div>
-            )}
-            <div>
-              <label className="mb-1 block text-xs text-text-secondary">
-                Walk-forward splits
-              </label>
-              <input
-                type="number"
-                min={2}
-                max={20}
-                value={nSplits}
-                onChange={(e) => setNSplits(Math.max(2, Number(e.target.value)))}
-                disabled={!!validationId}
-                className="w-full rounded border border-border-strong bg-bg-raised px-2 py-1.5 font-mono text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring disabled:opacity-50"
-              />
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
+                  Strategy
+                </span>
+                <p className="font-mono text-sm text-text-primary">{strategyName ?? '—'}</p>
+              </div>
+              {parameters && (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
+                    Parameters
+                  </span>
+                  <p className="font-mono text-xs text-text-secondary">
+                    {Object.entries(parameters)
+                      .map(([k, v]) => `${k}: ${v}`)
+                      .join(' · ')}
+                  </p>
+                </div>
+              )}
+              <div className="flex flex-col gap-1">
+                <label className="text-sm text-text-secondary">Walk-forward splits</label>
+                <NumberInput
+                  value={nSplits}
+                  onChange={(v) => setNSplits(Math.max(2, Math.min(20, v)))}
+                  min={2}
+                  max={20}
+                  step={1}
+                  aria-label="Walk-forward splits"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm text-text-secondary">Embargo bars</label>
+                <NumberInput
+                  value={embargoBars}
+                  onChange={(v) => setEmbargoBars(Math.max(0, Math.min(63, v)))}
+                  min={0}
+                  max={63}
+                  step={1}
+                  aria-label="Embargo bars"
+                />
+              </div>
             </div>
-            <div>
-              <label className="mb-1 block text-xs text-text-secondary">
-                Embargo bars
-              </label>
-              <input
-                type="number"
-                min={0}
-                max={63}
-                value={embargoBars}
-                onChange={(e) =>
-                  setEmbargoBars(Math.max(0, Number(e.target.value)))
-                }
-                disabled={!!validationId}
-                className="w-full rounded border border-border-strong bg-bg-raised px-2 py-1.5 font-mono text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring disabled:opacity-50"
-              />
-            </div>
-          </div>
-        </Panel>
-      </div>
+          </Panel>
+        </div>
 
-      {/* Right — launch + results */}
-      <div className="min-h-0 overflow-y-auto">
-        <Panel title="Validation">
-          <div className="flex flex-col gap-4">
-            <Button
-              variant="primary"
-              disabled={!canLaunch}
-              onClick={handleLaunch}
-              className="w-full"
-              loading={launch.isPending}
-            >
-              {launch.isPending ? 'Launching…' : 'Launch Walk-Forward Validation'}
-            </Button>
-
-            {!validationId && (
+        {/* Right — launch (FuturesCurve View panel pattern) */}
+        <div className="min-h-0">
+          <Panel title="Validation">
+            <div className="flex flex-col gap-4">
+              <Button
+                variant="primary"
+                disabled={!canLaunch}
+                onClick={handleLaunch}
+                className="w-full"
+                loading={launch.isPending}
+              >
+                {launch.isPending ? 'Launching…' : 'Launch Walk-Forward Validation'}
+              </Button>
               <p className="text-xs text-text-secondary">
                 Launch walk-forward validation to compare in-sample vs out-of-sample
                 Sharpe across folds.
               </p>
-            )}
-
-            {isPolling && (
-              <p className="text-sm text-text-secondary">
-                Running validation ({nSplits} folds)…
-              </p>
-            )}
-
-            {status?.status === 'failed' && (
-              <p className="text-sm text-loss">
-                Validation failed
-                {status.error ? `: ${status.error}` : '. Check the API logs for details.'}
-              </p>
-            )}
-
-            {report && (
-              <div className="flex flex-col gap-4">
-                <WalkForwardChart folds={folds} />
-                <ValidationSummaryTable report={report} />
-              </div>
-            )}
-          </div>
-        </Panel>
+            </div>
+          </Panel>
+        </div>
       </div>
+    )
+  }
+
+  // Post-launch — full-width results
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+      {isPolling && (
+        <p className="text-sm text-text-secondary">
+          Running validation ({nSplits} folds)…
+        </p>
+      )}
+
+      {status?.status === 'failed' && (
+        <p className="text-sm text-loss">
+          Validation failed
+          {status.error ? `: ${status.error}` : '. Check the API logs for details.'}
+        </p>
+      )}
+
+      {report && (
+        <>
+          <WalkForwardChart folds={folds} />
+          <ValidationSummaryTable report={report} />
+        </>
+      )}
     </div>
   )
 }

@@ -34,8 +34,6 @@ function WalkForwardInner({ folds, theme }: InnerProps) {
   useEffect(() => {
     if (!containerRef.current || !folds?.length) return
 
-    void theme
-
     const amberColor = resolveCssVar('--amber-500', '#E8A33D')
     const infoColor = resolveCssVar('--info-500', '#4E9CDB')
     const lossColor = resolveCssVar('--loss-500', '#E05D5D')
@@ -74,7 +72,15 @@ function WalkForwardInner({ folds, theme }: InnerProps) {
         axisTick: { show: false },
       },
       tooltip: {
-        trigger: 'axis',
+        trigger: 'axis' as const,
+        axisPointer: { type: 'shadow' as const },
+        backgroundColor: theme.tooltip.backgroundColor,
+        borderColor: theme.tooltip.borderColor,
+        textStyle: {
+          color: theme.tooltip.textStyle.color,
+          fontFamily: theme.monoFont,
+          fontSize: 12,
+        },
         formatter: (
           params: Array<{ marker: string; seriesName: string; value: number | null }>,
         ) =>
@@ -98,12 +104,12 @@ function WalkForwardInner({ folds, theme }: InnerProps) {
             itemStyle:
               f.is_sharpe !== null && f.is_sharpe < 0
                 ? {
-                    color: toRgba(lossColor, 0.12),
+                    color: toRgba(lossColor, 0.35),
                     borderColor: lossColor,
                     borderWidth: 1,
                   }
                 : {
-                    color: toRgba(amberColor, 0.12),
+                    color: toRgba(amberColor, 0.35),
                     borderColor: amberColor,
                     borderWidth: 1,
                   },
@@ -111,6 +117,7 @@ function WalkForwardInner({ folds, theme }: InnerProps) {
           markLine: {
             silent: true,
             symbol: 'none',
+            label: { show: false },
             lineStyle: { color: textSecondary, type: 'dashed', width: 1 },
             data: [{ yAxis: 0 }],
           },
@@ -124,12 +131,12 @@ function WalkForwardInner({ folds, theme }: InnerProps) {
             itemStyle:
               f.oos_sharpe !== null && f.oos_sharpe < 0
                 ? {
-                    color: toRgba(lossColor, 0.12),
+                    color: toRgba(lossColor, 0.35),
                     borderColor: lossColor,
                     borderWidth: 1,
                   }
                 : {
-                    color: toRgba(infoColor, 0.12),
+                    color: toRgba(infoColor, 0.35),
                     borderColor: infoColor,
                     borderWidth: 1,
                   },
