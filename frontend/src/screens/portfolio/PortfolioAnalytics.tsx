@@ -16,6 +16,7 @@ import { PortfolioPerAssetPanel } from '@/features/portfolio/PortfolioPerAssetPa
 import { PortfolioRiskPanel } from '@/features/portfolio/PortfolioRiskPanel'
 import { PortfolioCorrelationPanel } from '@/features/portfolio/PortfolioCorrelationPanel'
 import { PortfolioRollingCorrelationPanel } from '@/features/portfolio/PortfolioRollingCorrelationPanel'
+import { PortfolioRegimePanel } from '@/features/portfolio/PortfolioRegimePanel'
 import { PortfolioRunSelector } from '@/features/portfolio/PortfolioRunSelector'
 import { portfolioUrlDefaults, portfolioUrlSchema } from '@/features/portfolio/portfolioUrlState'
 import { EmptyState } from '@/components/layout/EmptyState'
@@ -205,6 +206,16 @@ export function PortfolioAnalytics() {
           loading={correlation.isLoading}
         />
       )}
+
+      <section>
+        <div className="mb-3">
+          <span className="font-mono text-sm">Regime Attribution</span>
+        </div>
+        <PortfolioRegimePanel
+          runId={run_id}
+          assetRunIds={assetsQuery.data?.asset_run_ids}
+        />
+      </section>
 
       <AlertDialog
         open={deleteConfirmId !== null}
