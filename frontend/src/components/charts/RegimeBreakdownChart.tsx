@@ -5,6 +5,9 @@
  *   RegimeBreakdownChart (outer) — renders ChartFrame, calls useChartTheme()
  *   ...Inner                     — accesses ChartFrameCtx, owns ECharts lifecycle
  *
+ * One series per regime (Contango / Backwardation / Flat) so legend chips match
+ * series-level colors. X-axis is metric (Sharpe | Total Return %).
+ *
  * F18 colors: contango=amber/warn, backwardation=gain, flat=gray.
  * Does NOT: fetch data, compute attribution, store filter state.
  */
@@ -28,6 +31,8 @@ interface InnerProps {
 }
 
 // F18-confirmed: contango=amber/warn, backwardation=gain/green, flat=gray
+const REGIME_ORDER = ['contango', 'backwardation', 'flat'] as const
+
 const REGIME_DISPLAY: Record<string, string> = {
   contango: 'Contango',
   backwardation: 'Backwardation',
@@ -56,33 +61,46 @@ function RegimeBreakdownInner({ data, theme }: InnerProps) {
     const textSecondary = resolveCssVar('--gray-400', '#7C8A9C')
     const borderColor = resolveCssVar('--gray-800', '#222A37')
 
-    const regimes = ['contango', 'backwardation', 'flat'].filter(
-      (r) => data.regime_metrics[r] !== undefined,
-    )
-    const categories = regimes.map((r) => REGIME_DISPLAY[r] ?? r)
+    const regimes = REGIME_ORDER.filter((r) => data.regime_metrics[r] !== undefined)
 
-    const sharpeData = regimes.map((r) => {
-      const color = resolveCssVar(REGIME_TOKEN[r], REGIME_FALLBACK[r])
+    const series = regimes.map((regime, idx) => {
+      const color = resolveCssVar(REGIME_TOKEN[regime], REGIME_FALLBACK[regime])
+      const metrics = data.regime_metrics[regime]
       return {
-        value: data.regime_metrics[r]?.sharpe ?? 0,
-        itemStyle: {
-          color: toRgba(color, 0.35),
-          borderColor: color,
-          borderWidth: 1,
-        },
-      }
-    })
-
-    const returnData = regimes.map((r) => {
-      const color = resolveCssVar(REGIME_TOKEN[r], REGIME_FALLBACK[r])
-      return {
-        value: (data.regime_metrics[r]?.total_return ?? 0) * 100,
-        itemStyle: {
-          color: toRgba(color, 0.18),
-          borderColor: color,
-          borderWidth: 1,
-          borderType: 'dashed' as const,
-        },
+        name: REGIME_DISPLAY[regime] ?? regime,
+        type: 'bar' as const,
+        color,
+        barGap: '10%',
+        data: [
+          {
+            value: metrics?.sharpe ?? 0,
+            itemStyle: {
+              color: toRgba(color, 0.35),
+              borderColor: color,
+              borderWidth: 1,
+            },
+          },
+          {
+            value: (metrics?.total_return ?? 0) * 100,
+            itemStyle: {
+              color: toRgba(color, 0.18),
+              borderColor: color,
+              borderWidth: 1,
+              borderType: 'dashed' as const,
+            },
+          },
+        ],
+        ...(idx === 0
+          ? {
+              markLine: {
+                silent: true,
+                symbol: 'none',
+                label: { show: false },
+                lineStyle: { color: textSecondary, type: 'dashed', width: 1 },
+                data: [{ yAxis: 0 }],
+              },
+            }
+          : {}),
       }
     })
 
@@ -99,7 +117,7 @@ function RegimeBreakdownInner({ data, theme }: InnerProps) {
       grid: { left: 12, right: 12, top: 36, bottom: 28, containLabel: true },
       xAxis: {
         type: 'category',
-        data: categories,
+        data: ['Sharpe', 'Total Return %'],
         axisLabel: { color: textSecondary, fontSize: 11 },
         axisLine: { lineStyle: { color: borderColor } },
         axisTick: { show: false },
@@ -134,39 +152,20 @@ function RegimeBreakdownInner({ data, theme }: InnerProps) {
             name: string
           }>,
         ) => {
-          const heading = params[0]?.name ?? ''
+          const metricName = params[0]?.name ?? ''
           const rows = params
             .map((p) => {
               const formatted =
-                p.seriesName === 'Total Return %'
+                metricName === 'Total Return %'
                   ? pct(p.value / 100, 1)
                   : dec(p.value, 2)
               return `${p.marker}${p.seriesName}&nbsp;&nbsp;<b>${formatted}</b>`
             })
             .join('<br>')
-          return `${heading}<br>${rows}`
+          return `${metricName}<br>${rows}`
         },
       },
-      series: [
-        {
-          name: 'Sharpe',
-          type: 'bar',
-          barGap: '20%',
-          data: sharpeData,
-          markLine: {
-            silent: true,
-            symbol: 'none',
-            label: { show: false },
-            lineStyle: { color: textSecondary, type: 'dashed', width: 1 },
-            data: [{ yAxis: 0 }],
-          },
-        },
-        {
-          name: 'Total Return %',
-          type: 'bar',
-          data: returnData,
-        },
-      ],
+      series,
     })
 
     const handleResize = () => chart.resize()
