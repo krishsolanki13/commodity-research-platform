@@ -1,20 +1,16 @@
 /**
  * PortfolioRegimePanel — per-asset regime attribution for a portfolio run.
  *
- * Prefetches regime attribution for all assets in parallel via useQueries so
- * dropdown switches hit the TanStack Query cache (staleTime: Infinity).
+ * Lazy single-asset fetch via useRegimeAttribution (staleTime: Infinity).
+ * Parallel prefetch lives in useRegimeAttributionParallel.ts — see TD-FEP-REGIME-ASYNC.
  */
 import { useMemo, useState } from 'react'
-import { useQueries } from '@tanstack/react-query'
-import { client } from '@/api/client'
-import { qk } from '@/api/queryKeys'
+import { Info } from 'lucide-react'
+import { useRegimeAttribution } from '@/api/hooks/useRegimeAttribution'
 import { RegimeBreakdownChart } from '@/components/charts/RegimeBreakdownChart'
 import { displayName } from '@/lib/commodity'
 import { pct } from '@/lib/fmt'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
-import type { components } from '@/api/schema'
-
-type RegimeAttributionResponse = components['schemas']['RegimeAttributionResponse']
 
 interface PortfolioRegimePanelProps {
   runId: string
@@ -45,48 +41,17 @@ export function PortfolioRegimePanel({
     [assetRunIds],
   )
 
-  // Prefetch all assets in parallel on mount
-  const regimeQueries = useQueries({
-    queries: availableAssets.map((asset) => {
-      const assetRunId = assetRunIds?.[asset] ?? null
-      const qs = new URLSearchParams({ n_contracts: '4' })
-      return {
-        queryKey: qk.regimeAttribution(assetRunId!, 4),
-        queryFn: (): Promise<RegimeAttributionResponse> =>
-          client.get(`/api/runs/${assetRunId}/regime-attribution?${qs}`),
-        enabled: !!assetRunId,
-        staleTime: Infinity,
-      }
-    }),
-  })
-
-  // Build a lookup map: asset → { data, isLoading }
-  const regimeByAsset = useMemo(
-    () =>
-      Object.fromEntries(
-        availableAssets.map((asset, i) => [
-          asset,
-          {
-            data: regimeQueries[i]?.data ?? null,
-            isLoading: regimeQueries[i]?.isLoading ?? false,
-          },
-        ]),
-      ),
-    [availableAssets, regimeQueries],
-  )
-
   // Selected asset state — default to first alphabetically
   const defaultAsset = availableAssets[0] ?? ''
   const [selectedAsset, setSelectedAsset] = useState<string>('')
   const effectiveAsset = selectedAsset || defaultAsset
 
-  // Read selected asset data from the parallel query map
-  const selectedData = regimeByAsset[effectiveAsset]?.data ?? null
-  const selectedLoading = regimeByAsset[effectiveAsset]?.isLoading ?? false
+  const selectedRunId = effectiveAsset
+    ? (assetRunIds?.[effectiveAsset] ?? null)
+    : null
 
-  // Overall loading: any assets still loading (for the hint text)
-  const anyLoading = regimeQueries.some((q) => q.isLoading)
-  const loadedCount = regimeQueries.filter((q) => q.isSuccess).length
+  const { data: selectedData, isLoading: selectedLoading } =
+    useRegimeAttribution(selectedRunId, 4)
 
   // Guard: portfolio run predates asset_run_ids (pre-3abb078)
   if (!assetRunIds || availableAssets.length === 0) {
@@ -118,40 +83,37 @@ export function PortfolioRegimePanel({
           onChange={(e) => setSelectedAsset(e.target.value)}
           className="rounded border border-border-strong bg-bg-raised px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
         >
-          {availableAssets.map((a) => {
-            const aData = regimeByAsset[a]
-            const assetDominant = aData?.data?.dominant_regime
-            const loading = aData?.isLoading
-            return (
-              <option key={a} value={a}>
-                {displayName(a)}
-                {assetDominant
-                  ? ` — ${capitalize(assetDominant)}`
-                  : loading
-                    ? ' — loading…'
-                    : ''}
-              </option>
-            )
-          })}
+          {availableAssets.map((a) => (
+            <option key={a} value={a}>
+              {displayName(a)}
+              {selectedData && effectiveAsset === a && selectedData.dominant_regime
+                ? ` — ${capitalize(selectedData.dominant_regime)}`
+                : selectedLoading && effectiveAsset === a
+                  ? ' — loading…'
+                  : ''}
+            </option>
+          ))}
         </select>
-        {anyLoading && (
+        {selectedLoading && (
           <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-            <span>
-              {loadedCount}/{availableAssets.length} assets loaded
-            </span>
+            <span>Computing regime attribution…</span>
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span
-                    className="inline-flex h-3.5 w-3.5 cursor-default items-center justify-center rounded-full border border-border-default text-[9px] text-text-secondary"
+                  <button
+                    type="button"
+                    aria-label="About regime attribution"
+                    className="inline-flex text-text-secondary transition-colors hover:text-text-primary"
                   >
-                    i
-                  </span>
+                    <Info className="h-3.5 w-3.5 cursor-default" />
+                  </button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-[220px] text-xs">
-                  Regime attribution classifies each trading day as contango,
-                  backwardation, or flat using the term structure. Each asset
-                  takes 30–90 seconds to compute.
+                <TooltipContent>
+                  <p className="max-w-xs font-mono text-xs">
+                    Classifies each trading day as contango, backwardation, or
+                    flat using the futures term structure. Takes 30–90 seconds
+                    per asset.
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
