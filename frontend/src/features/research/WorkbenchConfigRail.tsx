@@ -205,6 +205,7 @@ export function WorkbenchConfigRail({
             strategies={strategies ?? []}
             value={strategy ?? null}
             onChange={handleStrategyChange}
+            asset={urlState.asset ?? null}
           />
           {strategy && (
             <ParamForm

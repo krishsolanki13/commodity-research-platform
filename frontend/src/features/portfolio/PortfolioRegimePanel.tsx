@@ -11,6 +11,7 @@ import { qk } from '@/api/queryKeys'
 import { RegimeBreakdownChart } from '@/components/charts/RegimeBreakdownChart'
 import { displayName } from '@/lib/commodity'
 import { pct } from '@/lib/fmt'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
 import type { components } from '@/api/schema'
 
 type RegimeAttributionResponse = components['schemas']['RegimeAttributionResponse']
@@ -134,9 +135,27 @@ export function PortfolioRegimePanel({
           })}
         </select>
         {anyLoading && (
-          <span className="text-xs text-text-secondary">
-            {loadedCount}/{availableAssets.length} assets loaded
-          </span>
+          <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+            <span>
+              {loadedCount}/{availableAssets.length} assets loaded
+            </span>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    className="inline-flex h-3.5 w-3.5 cursor-default items-center justify-center rounded-full border border-border-default text-[9px] text-text-secondary"
+                  >
+                    i
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[220px] text-xs">
+                  Regime attribution classifies each trading day as contango,
+                  backwardation, or flat using the term structure. Each asset
+                  takes 30–90 seconds to compute.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         )}
       </div>
 

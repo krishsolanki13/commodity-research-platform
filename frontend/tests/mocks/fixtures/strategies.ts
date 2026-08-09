@@ -140,5 +140,108 @@ export const strategyCatalogFixture: StrategyCatalogResponse = {
         channel_period: 20,
       },
     },
+    {
+      name: 'carry',
+      display_name: 'Carry',
+      description:
+        'Long in backwardation (positive roll yield), short in contango. Commodity risk premium from the futures curve.',
+      params_schema: [
+        {
+          name: 'threshold',
+          kind: 'float',
+          default: 0.0,
+          min: 0.0,
+          max: 0.5,
+          description: 'Minimum annualized roll yield magnitude to generate signal',
+        },
+        {
+          name: 'n_contracts',
+          kind: 'int',
+          default: 4,
+          min: 2,
+          max: 12,
+          description: 'Number of contracts used in forward curve construction',
+        },
+      ],
+      default_params: {
+        threshold: 0.0,
+        n_contracts: 4,
+      },
+    },
+    {
+      name: 'wti_brent_spread',
+      display_name: 'WTI-Brent Spread',
+      description:
+        "Mean-reversion signal based on the WTI-Brent crude oil spread z-score. Long WTI when spread is narrow (WTI cheap); short WTI when wide. Requires asset='wti'. Single-asset approximation of a spread trade.",
+      params_schema: [
+        {
+          name: 'lookback',
+          kind: 'int',
+          default: 63,
+          min: 20,
+          max: 252,
+          description: 'Rolling window for spread mean and std (trading days)',
+        },
+        {
+          name: 'threshold',
+          kind: 'float',
+          default: 1.0,
+          min: 0.5,
+          max: 3.0,
+          description: 'Entry threshold (|z| > threshold to enter position)',
+        },
+      ],
+      default_params: {
+        lookback: 63,
+        threshold: 1.0,
+      },
+    },
+    {
+      name: 'cot_positioning',
+      display_name: 'COT Positioning',
+      description:
+        'Contrarian signal from CFTC net speculative positioning. Percentile rank > 80 → short (overcrowded long). < 20 → long.',
+      params_schema: [
+        {
+          name: 'upper_pct',
+          kind: 'float',
+          default: 80.0,
+          min: 50.0,
+          max: 99.0,
+          description: 'Percentile rank above which to go short (overcrowded long)',
+        },
+        {
+          name: 'lower_pct',
+          kind: 'float',
+          default: 20.0,
+          min: 1.0,
+          max: 50.0,
+          description: 'Percentile rank below which to go long (overcrowded short)',
+        },
+      ],
+      default_params: {
+        upper_pct: 80.0,
+        lower_pct: 20.0,
+      },
+    },
+    {
+      name: 'eia_inventory',
+      display_name: 'EIA Inventory',
+      description:
+        'Fundamental signal from EIA weekly petroleum inventory surprise. WTI and Brent only. Drawdown (negative surprise) -> long. Build (positive) -> short. Flat for all non-crude assets.',
+      params_schema: [
+        {
+          name: 'threshold',
+          kind: 'float',
+          default: 1.0,
+          min: 0.5,
+          max: 3.0,
+          description: 'Z-score threshold for inventory surprise entry',
+        },
+      ],
+      default_params: {
+        threshold: 1.0,
+      },
+    },
   ],
 }

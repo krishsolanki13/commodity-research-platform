@@ -145,6 +145,7 @@ export default function StrategyBuilder() {
                 strategies={strategies}
                 value={strategy || null}
                 onChange={handleStrategyChange}
+                asset={asset || null}
               />
               {strategy && (selectedStrategy?.params_schema?.length ?? 0) > 0 && (
                 <ParamForm
