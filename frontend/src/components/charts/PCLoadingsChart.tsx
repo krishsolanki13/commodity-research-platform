@@ -87,6 +87,8 @@ function PCLoadingsInner({ loadings, nContracts, theme }: InnerProps) {
             )
             .join('<br>'),
       },
+      barCategoryGap: '30%',
+      barGap: '10%',
       series: pcKeys.map((pc, i) => {
         const colorDef =
           SERIES_COLORS[i % SERIES_COLORS.length]
@@ -95,6 +97,7 @@ function PCLoadingsInner({ loadings, nContracts, theme }: InnerProps) {
           name: pc,
           type: 'bar',
           color,
+          barGap: '10%',
           data: (loadings[pc] ?? []).map((v) => ({
             value: v,
             itemStyle: {

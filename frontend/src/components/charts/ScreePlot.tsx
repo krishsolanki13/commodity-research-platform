@@ -52,8 +52,6 @@ function ScreePlotInner({ evr, cumEvr, pcLabels, theme }: InnerProps) {
       yAxis: [
         {
           type: 'value',
-          name: 'EVR',
-          nameTextStyle: { color: textSecondary, fontSize: 10 },
           axisLabel: {
             color: textSecondary,
             fontSize: 11,
@@ -67,8 +65,6 @@ function ScreePlotInner({ evr, cumEvr, pcLabels, theme }: InnerProps) {
         },
         {
           type: 'value',
-          name: 'Cumulative',
-          nameTextStyle: { color: textSecondary, fontSize: 10 },
           axisLabel: {
             color: textSecondary,
             fontSize: 11,

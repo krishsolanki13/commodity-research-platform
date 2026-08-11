@@ -77,8 +77,8 @@ function ParallelCoordinatesInner({ runs, paramKeys, theme }: InnerProps) {
       parallel: {
         left: 40,
         right: 40,
-        top: 48,
-        bottom: 20,
+        top: 36,
+        bottom: 48,
         lineStyle: { width: 1, opacity: 0.6 },
       },
       visualMap: {
@@ -87,10 +87,10 @@ function ParallelCoordinatesInner({ runs, paramKeys, theme }: InnerProps) {
         max: maxSharpe,
         dimension: sharpeAxisIndex,
         orient: 'horizontal',
-        top: 4,
-        right: 0,
+        bottom: 4,
+        left: 'center',
         itemWidth: 12,
-        itemHeight: 80,
+        itemHeight: 60,
         textStyle: { color: textSecondary, fontSize: 10 },
         inRange: {
           color: [lossColor, grayColor, gainColor],

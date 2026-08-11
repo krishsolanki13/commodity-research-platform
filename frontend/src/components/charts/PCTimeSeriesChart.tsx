@@ -55,7 +55,7 @@ function PCTimeSeriesInner({
       xAxis: {
         type: 'category',
         data: categories,
-        axisLabel: { color: textSecondary, fontSize: 10 },
+        axisLabel: { color: textSecondary, fontSize: 11 },
         axisLine: { lineStyle: { color: borderColor } },
         axisTick: { show: false },
         axisPointer: {

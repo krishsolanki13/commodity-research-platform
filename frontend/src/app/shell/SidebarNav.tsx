@@ -9,6 +9,7 @@ import {
   Database,
   ChevronLeft,
   ChevronRight,
+  Activity,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useWorkspace } from '@/stores/workspace'
@@ -21,6 +22,8 @@ interface NavItem {
   icon: LucideIcon
   route: string
   phase: string | null
+  /** Exact pathname match only (prevents /intelligence matching /intelligence/pca) */
+  end?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -29,8 +32,8 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'backtest', label: 'Backtest', icon: Zap, route: '/backtest/new', phase: null },
   { id: 'runs', label: 'Runs', icon: Layers, route: '/runs', phase: null },
   { id: 'sweeps', label: 'Sweep Explorer', icon: Zap, route: '/sweeps', phase: null },
-  { id: 'intel', label: 'Intelligence', icon: Globe, route: '/intelligence', phase: null },
-  { id: 'curve-pca', label: 'Curve PCA', icon: TrendingUp, route: '/intelligence/pca', phase: null },
+  { id: 'intel', label: 'Intelligence', icon: Globe, route: '/intelligence', phase: null, end: true },
+  { id: 'curve-pca', label: 'Curve PCA', icon: Activity, route: '/intelligence/pca', phase: null, end: true },
   { id: 'portfolio', label: 'Portfolio', icon: BarChart2, route: '/portfolio', phase: null },
   { id: 'system', label: 'System', icon: Database, route: '/system/data', phase: null },
 ]
@@ -82,6 +85,7 @@ export function SidebarNav() {
               <li key={item.id} className="relative">
                 <NavLink
                   to={item.route}
+                  end={item.end === true}
                   title={navCollapsed ? item.label : undefined}
                   className={({ isActive }) =>
                     cn(

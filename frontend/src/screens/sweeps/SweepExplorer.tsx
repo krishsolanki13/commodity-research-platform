@@ -85,6 +85,8 @@ export function SweepExplorer() {
   ) as Record<string, 'int' | 'float'>
 
   const recentSweeps = (sweepList?.sweeps ?? []).slice(0, 8)
+  const nCombinations =
+    status?.n_combinations || launch.data?.n_combinations || undefined
 
   function setActiveSweepId(id: string | null) {
     setUrlState({ sweep_id: id })
@@ -114,6 +116,86 @@ export function SweepExplorer() {
           addSweep(data.sweep_id)
         },
       },
+    )
+  }
+
+  function handleNewSweep() {
+    setActiveSweepId(null)
+  }
+
+  if (activeSweepId !== null) {
+    return (
+      <div className="flex h-full flex-col overflow-hidden">
+        <div className="shrink-0 px-6 pt-6 pb-4">
+          <h1 className="text-xl font-semibold text-text-primary">Sweep Explorer</h1>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6">
+          <div className="flex items-center justify-between gap-4">
+            <button
+              type="button"
+              onClick={handleNewSweep}
+              className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary"
+            >
+              ← New Sweep
+            </button>
+
+            {recentSweeps.length > 0 && (
+              <Select
+                value={activeSweepId}
+                onValueChange={(id) => setActiveSweepId(id)}
+              >
+                <SelectTrigger
+                  className="w-[280px] font-mono text-xs"
+                  aria-label="Recent sweeps"
+                >
+                  <SelectValue placeholder="Recent sweeps…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {recentSweeps.map((s) => (
+                    <SelectItem key={s.sweep_id} value={s.sweep_id}>
+                      {s.sweep_id.slice(0, 8)}… — {s.asset} / {s.strategy_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          {isPolling && (
+            <p className="text-center text-xs text-text-secondary">
+              {status?.n_complete
+                ? `Running sweep… ${status.n_complete} of ${nCombinations ?? '?'} complete`
+                : `Running sweep of ${nCombinations ?? '?'} combinations…`}
+            </p>
+          )}
+
+          {status?.status === 'failed' && (
+            <p className="text-center text-xs text-loss">
+              Sweep failed{status.error ? `: ${status.error}` : ''}
+            </p>
+          )}
+
+          {status?.status === 'complete' && (
+            <>
+              <SweepResultsTable
+                runs={results?.runs ?? []}
+                sortBy={sortBy}
+                sortDir={sortDir}
+                onSort={handleSort}
+              />
+              <ParallelCoordinatesChart
+                runs={results?.runs ?? []}
+                paramKeys={
+                  Object.keys(paramGrid).length > 0
+                    ? Object.keys(paramGrid)
+                    : Object.keys(results?.param_grid ?? {})
+                }
+              />
+            </>
+          )}
+        </div>
+      </div>
     )
   }
 
@@ -187,12 +269,6 @@ export function SweepExplorer() {
               >
                 {launch.isPending ? 'Launching…' : 'Launch Sweep'}
               </Button>
-
-              {launch.data?.n_combinations ? (
-                <p className="text-center text-xs text-text-secondary">
-                  Running sweep of {launch.data.n_combinations} combinations…
-                </p>
-              ) : null}
             </div>
           </Panel>
         </div>
@@ -201,7 +277,7 @@ export function SweepExplorer() {
           <Panel title="Results">
             <div className="flex flex-col gap-4">
               {recentSweeps.length > 0 && (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1.5">
                   <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
                     Recent Sweeps
                   </span>
@@ -213,9 +289,7 @@ export function SweepExplorer() {
                         onClick={() => setActiveSweepId(s.sweep_id)}
                         className={cn(
                           'rounded px-2 py-1.5 text-left font-mono text-xs transition-colors',
-                          activeSweepId === s.sweep_id
-                            ? 'bg-bg-selected text-text-accent'
-                            : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary',
+                          'text-text-secondary hover:bg-bg-hover hover:text-text-primary',
                         )}
                       >
                         {s.sweep_id.slice(0, 8)}… — {s.asset} / {s.strategy_name}
@@ -225,40 +299,10 @@ export function SweepExplorer() {
                 </div>
               )}
 
-              {activeSweepId && isPolling && (
-                <p className="font-mono text-xs text-text-secondary">
-                  Sweep {activeSweepId.slice(0, 8)}… — {status?.status ?? 'loading'}
-                  {status?.n_complete != null && status?.n_combinations
-                    ? ` (${status.n_complete}/${status.n_combinations})`
-                    : ''}
-                </p>
-              )}
-
-              {activeSweepId && status?.status === 'complete' && (
-                <>
-                  <SweepResultsTable
-                    runs={results?.runs ?? []}
-                    sortBy={sortBy}
-                    sortDir={sortDir}
-                    onSort={handleSort}
-                  />
-                  <ParallelCoordinatesChart
-                    runs={results?.runs ?? []}
-                    paramKeys={
-                      Object.keys(paramGrid).length > 0
-                        ? Object.keys(paramGrid)
-                        : Object.keys(results?.param_grid ?? {})
-                    }
-                  />
-                </>
-              )}
-
-              {!activeSweepId && (
-                <p className="text-xs text-text-secondary">
-                  Configure and launch a sweep, or select a recent sweep to view
-                  results.
-                </p>
-              )}
+              <p className="text-xs text-text-secondary">
+                Configure and launch a sweep, or select a recent sweep to view
+                results.
+              </p>
             </div>
           </Panel>
         </div>

@@ -139,13 +139,15 @@ export function PortfolioRegimePanel({
             Regime attribution classifies term structure conditions across the
             full price history. This computation takes 30–90 seconds per asset.
           </p>
-          <Button
-            variant="primary"
-            onClick={() => setShouldFetch(true)}
-            className="w-full text-sm"
-          >
-            Compute Regime Attribution
-          </Button>
+          <div className="flex justify-center">
+            <Button
+              variant="primary"
+              onClick={() => setShouldFetch(true)}
+              className="px-6 text-sm"
+            >
+              Compute Regime Attribution
+            </Button>
+          </div>
         </div>
       ) : (
         <>

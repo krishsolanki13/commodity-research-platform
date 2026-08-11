@@ -83,6 +83,64 @@ export function CurvePCA() {
     setSubmitted(false)
   }, [asset])
 
+  function handleNewAnalysis() {
+    setSubmitted(false)
+    setUrlState({
+      asset: null,
+      n_components: 3,
+      n_contracts: 4,
+      from_date: null,
+      to_date: null,
+    })
+  }
+
+  if (submitted) {
+    return (
+      <div className="flex h-full flex-col overflow-hidden">
+        <div className="shrink-0 px-6 pt-6 pb-4">
+          <h1 className="text-xl font-semibold text-text-primary">Curve PCA</h1>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6">
+          <button
+            type="button"
+            onClick={handleNewAnalysis}
+            className="flex w-fit items-center gap-1 text-xs text-text-secondary hover:text-text-primary"
+          >
+            ← New Analysis
+          </button>
+
+          {pca ? (
+            <>
+              <ScreePlot
+                evr={pca.explained_variance_ratio}
+                cumEvr={pca.cumulative_variance_ratio}
+                pcLabels={pca.pc_labels}
+              />
+              <PCLoadingsChart
+                loadings={pca.loadings}
+                nContracts={nContracts}
+              />
+              <PCTimeSeriesChart
+                factorSeries={pca.factor_series}
+                indexEpochMs={pca.factor_index_epoch_ms}
+                pcLabels={pca.pc_labels}
+              />
+            </>
+          ) : (
+            <div className="flex items-center justify-center py-16">
+              <p className="text-sm text-text-secondary">
+                {isLoading
+                  ? 'Computing PCA — this may take a moment…'
+                  : 'Unable to load PCA results.'}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="shrink-0 px-6 pt-6 pb-4">
@@ -205,32 +263,10 @@ export function CurvePCA() {
 
         <div className="min-h-0 overflow-y-auto">
           <Panel title="Results">
-            {!submitted ? (
-              <p className="text-xs text-text-secondary">
-                Select an asset and click View PCA to analyze forward curve
-                principal components.
-              </p>
-            ) : (
-              <div className="flex flex-col gap-4">
-                <ScreePlot
-                  evr={pca?.explained_variance_ratio ?? []}
-                  cumEvr={pca?.cumulative_variance_ratio ?? []}
-                  pcLabels={pca?.pc_labels ?? []}
-                  loading={isLoading}
-                />
-                <PCLoadingsChart
-                  loadings={pca?.loadings ?? {}}
-                  nContracts={nContracts}
-                  loading={isLoading}
-                />
-                <PCTimeSeriesChart
-                  factorSeries={pca?.factor_series ?? {}}
-                  indexEpochMs={pca?.factor_index_epoch_ms ?? []}
-                  pcLabels={pca?.pc_labels ?? []}
-                  loading={isLoading}
-                />
-              </div>
-            )}
+            <p className="text-xs text-text-secondary">
+              Select an asset and click View PCA to analyze forward curve
+              principal components.
+            </p>
           </Panel>
         </div>
       </div>
