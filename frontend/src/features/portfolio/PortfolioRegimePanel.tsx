@@ -140,9 +140,9 @@ export function PortfolioRegimePanel({
             full price history. This computation takes 30–90 seconds per asset.
           </p>
           <Button
-            variant="outline"
+            variant="primary"
             onClick={() => setShouldFetch(true)}
-            className="text-sm"
+            className="w-full text-sm"
           >
             Compute Regime Attribution
           </Button>
