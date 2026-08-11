@@ -24,7 +24,7 @@ function CalibrationValue({ pvalue }: { pvalue: number | null | undefined }) {
             </span>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="max-w-xs font-mono text-xs">Insufficient data</p>
+            <p className="max-w-xs">Insufficient data</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

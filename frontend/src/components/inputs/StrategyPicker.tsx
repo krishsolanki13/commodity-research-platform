@@ -72,7 +72,7 @@ export function StrategyPicker({
               <TooltipTrigger asChild>
                 <span className="block w-full">{card}</span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-[220px] text-xs">
+              <TooltipContent side="top" className="max-w-[220px]">
                 WTI-Brent spread requires WTI as the primary asset
               </TooltipContent>
             </Tooltip>

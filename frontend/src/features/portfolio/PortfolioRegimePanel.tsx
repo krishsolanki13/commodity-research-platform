@@ -1,8 +1,9 @@
 /**
  * PortfolioRegimePanel — per-asset regime attribution for a portfolio run.
  *
- * Lazy single-asset fetch via useRegimeAttribution (staleTime: Infinity).
- * Parallel prefetch lives in useRegimeAttributionParallel.ts — see TD-FEP-REGIME-ASYNC.
+ * Opt-in compute via shouldFetch — does not auto-fetch on mount (avoids
+ * blocking the single-worker API). Parallel prefetch preserved in
+ * useRegimeAttributionParallel.ts — see TD-FEP-REGIME-ASYNC.
  */
 import { useMemo, useState } from 'react'
 import { Info } from 'lucide-react'
@@ -10,6 +11,7 @@ import { useRegimeAttribution } from '@/api/hooks/useRegimeAttribution'
 import { RegimeBreakdownChart } from '@/components/charts/RegimeBreakdownChart'
 import { displayName } from '@/lib/commodity'
 import { pct } from '@/lib/fmt'
+import { Button } from '@/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
 
 interface PortfolioRegimePanelProps {
@@ -46,12 +48,19 @@ export function PortfolioRegimePanel({
   const [selectedAsset, setSelectedAsset] = useState<string>('')
   const effectiveAsset = selectedAsset || defaultAsset
 
+  const [shouldFetch, setShouldFetch] = useState(false)
+
   const selectedRunId = effectiveAsset
     ? (assetRunIds?.[effectiveAsset] ?? null)
     : null
 
   const { data: selectedData, isLoading: selectedLoading } =
-    useRegimeAttribution(selectedRunId, 4)
+    useRegimeAttribution(shouldFetch ? selectedRunId : null, 4)
+
+  function handleAssetChange(asset: string) {
+    setSelectedAsset(asset)
+    setShouldFetch(false)
+  }
 
   // Guard: portfolio run predates asset_run_ids (pre-3abb078)
   if (!assetRunIds || availableAssets.length === 0) {
@@ -80,21 +89,24 @@ export function PortfolioRegimePanel({
         </span>
         <select
           value={effectiveAsset}
-          onChange={(e) => setSelectedAsset(e.target.value)}
+          onChange={(e) => handleAssetChange(e.target.value)}
           className="rounded border border-border-strong bg-bg-raised px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
         >
           {availableAssets.map((a) => (
             <option key={a} value={a}>
               {displayName(a)}
-              {selectedData && effectiveAsset === a && selectedData.dominant_regime
+              {shouldFetch &&
+              selectedData &&
+              effectiveAsset === a &&
+              selectedData.dominant_regime
                 ? ` — ${capitalize(selectedData.dominant_regime)}`
-                : selectedLoading && effectiveAsset === a
+                : shouldFetch && selectedLoading && effectiveAsset === a
                   ? ' — loading…'
                   : ''}
             </option>
           ))}
         </select>
-        {selectedLoading && (
+        {shouldFetch && selectedLoading && (
           <div className="flex items-center gap-1.5 text-xs text-text-secondary">
             <span>Computing regime attribution…</span>
             <TooltipProvider delayDuration={300}>
@@ -105,11 +117,11 @@ export function PortfolioRegimePanel({
                     aria-label="About regime attribution"
                     className="inline-flex text-text-secondary transition-colors hover:text-text-primary"
                   >
-                    <Info className="h-3.5 w-3.5 cursor-default" />
+                    <Info className="h-3 w-3 cursor-default" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="max-w-xs font-mono text-xs">
+                  <p className="max-w-xs">
                     Classifies each trading day as contango, backwardation, or
                     flat using the futures term structure. Takes 30–90 seconds
                     per asset.
@@ -121,31 +133,49 @@ export function PortfolioRegimePanel({
         )}
       </div>
 
-      <RegimeBreakdownChart
-        data={selectedData!}
-        loading={selectedLoading || !selectedData}
-      />
-
-      {selectedData && (
-        <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
-          <span>
-            {daysWithData.toLocaleString()} of {totalDays.toLocaleString()} days
-            had regime data
-          </span>
-          {Object.keys(coverage).length > 0 && (
-            <>
-              <span>·</span>
-              {Object.entries(coverage).map(([regime, fraction]) => (
-                <span
-                  key={regime}
-                  className={`font-medium ${REGIME_TEXT_CLASS[regime] ?? 'text-text-secondary'}`}
-                >
-                  {capitalize(regime)} {pct(fraction, 0)}
-                </span>
-              ))}
-            </>
-          )}
+      {!shouldFetch ? (
+        <div className="flex flex-col items-center gap-3 py-8 text-center">
+          <p className="text-sm text-text-secondary">
+            Regime attribution classifies term structure conditions across the
+            full price history. This computation takes 30–90 seconds per asset.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => setShouldFetch(true)}
+            className="text-sm"
+          >
+            Compute Regime Attribution
+          </Button>
         </div>
+      ) : (
+        <>
+          <RegimeBreakdownChart
+            data={selectedData!}
+            loading={selectedLoading || !selectedData}
+          />
+
+          {selectedData && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
+              <span>
+                {daysWithData.toLocaleString()} of{' '}
+                {totalDays.toLocaleString()} days had regime data
+              </span>
+              {Object.keys(coverage).length > 0 && (
+                <>
+                  <span>·</span>
+                  {Object.entries(coverage).map(([regime, fraction]) => (
+                    <span
+                      key={regime}
+                      className={`font-medium ${REGIME_TEXT_CLASS[regime] ?? 'text-text-secondary'}`}
+                    >
+                      {capitalize(regime)} {pct(fraction, 0)}
+                    </span>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
