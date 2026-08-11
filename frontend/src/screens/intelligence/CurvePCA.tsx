@@ -94,7 +94,7 @@ export function CurvePCA() {
     })
   }
 
-  if (submitted) {
+  if (pca != null) {
     return (
       <div className="flex h-full flex-col overflow-hidden">
         <div className="shrink-0 px-6 pt-6 pb-4">
@@ -110,32 +110,17 @@ export function CurvePCA() {
             ← New Analysis
           </button>
 
-          {pca ? (
-            <>
-              <ScreePlot
-                evr={pca.explained_variance_ratio}
-                cumEvr={pca.cumulative_variance_ratio}
-                pcLabels={pca.pc_labels}
-              />
-              <PCLoadingsChart
-                loadings={pca.loadings}
-                nContracts={nContracts}
-              />
-              <PCTimeSeriesChart
-                factorSeries={pca.factor_series}
-                indexEpochMs={pca.factor_index_epoch_ms}
-                pcLabels={pca.pc_labels}
-              />
-            </>
-          ) : (
-            <div className="flex items-center justify-center py-16">
-              <p className="text-sm text-text-secondary">
-                {isLoading
-                  ? 'Computing PCA — this may take a moment…'
-                  : 'Unable to load PCA results.'}
-              </p>
-            </div>
-          )}
+          <ScreePlot
+            evr={pca.explained_variance_ratio}
+            cumEvr={pca.cumulative_variance_ratio}
+            pcLabels={pca.pc_labels}
+          />
+          <PCLoadingsChart loadings={pca.loadings} nContracts={nContracts} />
+          <PCTimeSeriesChart
+            factorSeries={pca.factor_series}
+            indexEpochMs={pca.factor_index_epoch_ms}
+            pcLabels={pca.pc_labels}
+          />
         </div>
       </div>
     )
@@ -242,7 +227,13 @@ export function CurvePCA() {
                 </div>
                 <p className="text-xs text-text-disabled">Optional</p>
               </div>
+            </div>
+          </Panel>
+        </div>
 
+        <div className="min-h-0 overflow-y-auto">
+          <Panel title="View">
+            <div className="flex flex-col gap-4">
               <Button
                 variant="primary"
                 className="w-full"
@@ -257,16 +248,20 @@ export function CurvePCA() {
                   Select an asset to run curve PCA
                 </p>
               )}
-            </div>
-          </Panel>
-        </div>
 
-        <div className="min-h-0 overflow-y-auto">
-          <Panel title="Results">
-            <p className="text-xs text-text-secondary">
-              Select an asset and click View PCA to analyze forward curve
-              principal components.
-            </p>
+              {submitted && (
+                <p className="mt-4 text-center text-sm text-text-secondary">
+                  Computing PCA — this may take a moment…
+                </p>
+              )}
+
+              {!submitted && asset && (
+                <p className="text-xs text-text-secondary">
+                  Select an asset and click View PCA to analyze forward curve
+                  principal components.
+                </p>
+              )}
+            </div>
           </Panel>
         </div>
       </div>

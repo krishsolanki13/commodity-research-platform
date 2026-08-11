@@ -90,8 +90,10 @@ function ParallelCoordinatesInner({ runs, paramKeys, theme }: InnerProps) {
         bottom: 4,
         left: 'center',
         itemWidth: 12,
-        itemHeight: 60,
+        itemHeight: 80,
+        text: ['High Sharpe', 'Low Sharpe'],
         textStyle: { color: textSecondary, fontSize: 10 },
+        formatter: (v: number) => dec(v, 2),
         inRange: {
           color: [lossColor, grayColor, gainColor],
         },
@@ -124,8 +126,13 @@ export function ParallelCoordinatesChart({
 }: ParallelCoordinatesChartProps) {
   const theme = useChartTheme()
   return (
-    <ChartFrame title="Parameter Sensitivity" height={320} loading={loading}>
-      <ParallelCoordinatesInner runs={runs} paramKeys={paramKeys} theme={theme} />
-    </ChartFrame>
+    <div>
+      <ChartFrame title="Parameter Sensitivity" height={320} loading={loading}>
+        <ParallelCoordinatesInner runs={runs} paramKeys={paramKeys} theme={theme} />
+      </ChartFrame>
+      <p className="mt-1 text-center text-xs text-text-secondary">
+        Line color = Sharpe ratio — green = higher, red = lower
+      </p>
+    </div>
   )
 }

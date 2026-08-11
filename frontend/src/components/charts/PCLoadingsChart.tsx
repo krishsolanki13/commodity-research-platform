@@ -87,8 +87,8 @@ function PCLoadingsInner({ loadings, nContracts, theme }: InnerProps) {
             )
             .join('<br>'),
       },
-      barCategoryGap: '30%',
-      barGap: '10%',
+      barCategoryGap: '35%',
+      barGap: '8%',
       series: pcKeys.map((pc, i) => {
         const colorDef =
           SERIES_COLORS[i % SERIES_COLORS.length]
@@ -97,7 +97,8 @@ function PCLoadingsInner({ loadings, nContracts, theme }: InnerProps) {
           name: pc,
           type: 'bar',
           color,
-          barGap: '10%',
+          barGap: '8%',
+          barMaxWidth: 16,
           data: (loadings[pc] ?? []).map((v) => ({
             value: v,
             itemStyle: {
@@ -138,7 +139,7 @@ export function PCLoadingsChart({
   return (
     <ChartFrame
       title="PC Loadings by Contract Position"
-      height={240}
+      height={340}
       loading={loading}
     >
       <PCLoadingsInner

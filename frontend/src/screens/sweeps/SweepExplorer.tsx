@@ -27,6 +27,7 @@ import { cn } from '@/lib/cn'
 import type { components } from '@/api/schema'
 
 type ParamSpec = components['schemas']['ParamSpec']
+type SweepListItem = components['schemas']['SweepListItem']
 
 const sweepSchema = z.object({
   sweep_id: z.string().optional(),
@@ -43,6 +44,14 @@ const sweepDefaults = {
 
 function sweepableParams(schema: ParamSpec[] | undefined) {
   return (schema ?? []).filter((p) => p.kind === 'int' || p.kind === 'float')
+}
+
+function deriveSweepStatus(s: SweepListItem): string {
+  const done = s.n_complete + s.n_failed
+  if (done >= s.n_combinations) {
+    return s.n_complete === 0 && s.n_failed > 0 ? 'failed' : 'complete'
+  }
+  return 'running'
 }
 
 export function SweepExplorer() {
@@ -63,8 +72,6 @@ export function SweepExplorer() {
 
   const launch = useSweepLaunch()
   const { data: status } = useSweepStatus(activeSweepId)
-  const isPolling =
-    status?.status === 'queued' || status?.status === 'running'
   const { data: results } = useSweepResults(
     status?.status === 'complete' ? activeSweepId : null,
     sortBy,
@@ -87,6 +94,7 @@ export function SweepExplorer() {
   const recentSweeps = (sweepList?.sweeps ?? []).slice(0, 8)
   const nCombinations =
     status?.n_combinations || launch.data?.n_combinations || undefined
+  const hasResults = !!(results?.runs && results.runs.length > 0)
 
   function setActiveSweepId(id: string | null) {
     setUrlState({ sweep_id: id })
@@ -123,7 +131,7 @@ export function SweepExplorer() {
     setActiveSweepId(null)
   }
 
-  if (activeSweepId !== null) {
+  if (hasResults) {
     return (
       <div className="flex h-full flex-col overflow-hidden">
         <div className="shrink-0 px-6 pt-6 pb-4">
@@ -131,69 +139,28 @@ export function SweepExplorer() {
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6">
-          <div className="flex items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={handleNewSweep}
-              className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary"
-            >
-              ← New Sweep
-            </button>
+          <button
+            type="button"
+            onClick={handleNewSweep}
+            className="flex w-fit items-center gap-1 text-xs text-text-secondary hover:text-text-primary"
+          >
+            ← New Sweep
+          </button>
 
-            {recentSweeps.length > 0 && (
-              <Select
-                value={activeSweepId}
-                onValueChange={(id) => setActiveSweepId(id)}
-              >
-                <SelectTrigger
-                  className="w-[280px] font-mono text-xs"
-                  aria-label="Recent sweeps"
-                >
-                  <SelectValue placeholder="Recent sweeps…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {recentSweeps.map((s) => (
-                    <SelectItem key={s.sweep_id} value={s.sweep_id}>
-                      {s.sweep_id.slice(0, 8)}… — {s.asset} / {s.strategy_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          {isPolling && (
-            <p className="text-center text-xs text-text-secondary">
-              {status?.n_complete
-                ? `Running sweep… ${status.n_complete} of ${nCombinations ?? '?'} complete`
-                : `Running sweep of ${nCombinations ?? '?'} combinations…`}
-            </p>
-          )}
-
-          {status?.status === 'failed' && (
-            <p className="text-center text-xs text-loss">
-              Sweep failed{status.error ? `: ${status.error}` : ''}
-            </p>
-          )}
-
-          {status?.status === 'complete' && (
-            <>
-              <SweepResultsTable
-                runs={results?.runs ?? []}
-                sortBy={sortBy}
-                sortDir={sortDir}
-                onSort={handleSort}
-              />
-              <ParallelCoordinatesChart
-                runs={results?.runs ?? []}
-                paramKeys={
-                  Object.keys(paramGrid).length > 0
-                    ? Object.keys(paramGrid)
-                    : Object.keys(results?.param_grid ?? {})
-                }
-              />
-            </>
-          )}
+          <SweepResultsTable
+            runs={results?.runs ?? []}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            onSort={handleSort}
+          />
+          <ParallelCoordinatesChart
+            runs={results?.runs ?? []}
+            paramKeys={
+              Object.keys(paramGrid).length > 0
+                ? Object.keys(paramGrid)
+                : Object.keys(results?.param_grid ?? {})
+            }
+          />
         </div>
       </div>
     )
@@ -258,7 +225,13 @@ export function SweepExplorer() {
                   }}
                 />
               </div>
+            </div>
+          </Panel>
+        </div>
 
+        <div className="min-h-0 overflow-y-auto">
+          <Panel title="Launch">
+            <div className="flex flex-col gap-4">
               <Button
                 variant="primary"
                 className="w-full"
@@ -269,40 +242,69 @@ export function SweepExplorer() {
               >
                 {launch.isPending ? 'Launching…' : 'Launch Sweep'}
               </Button>
-            </div>
-          </Panel>
-        </div>
 
-        <div className="min-h-0 overflow-y-auto">
-          <Panel title="Results">
-            <div className="flex flex-col gap-4">
-              {recentSweeps.length > 0 && (
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
-                    Recent Sweeps
-                  </span>
-                  <div className="flex flex-col gap-0.5">
-                    {recentSweeps.map((s) => (
-                      <button
-                        key={s.sweep_id}
-                        type="button"
-                        onClick={() => setActiveSweepId(s.sweep_id)}
-                        className={cn(
-                          'rounded px-2 py-1.5 text-left font-mono text-xs transition-colors',
-                          'text-text-secondary hover:bg-bg-hover hover:text-text-primary',
-                        )}
-                      >
-                        {s.sweep_id.slice(0, 8)}… — {s.asset} / {s.strategy_name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              {activeSweepId && status?.status === 'queued' && (
+                <p className="mt-4 text-center text-sm text-text-secondary">
+                  Queued…
+                </p>
+              )}
+              {activeSweepId && status?.status === 'running' && (
+                <p className="mt-4 text-center text-sm text-text-secondary">
+                  Running sweep of {nCombinations ?? '?'} combinations…
+                </p>
+              )}
+              {activeSweepId && status?.status === 'failed' && (
+                <p className="mt-4 text-center text-sm text-loss">
+                  Sweep failed{status.error ? `: ${status.error}` : ''}
+                </p>
               )}
 
-              <p className="text-xs text-text-secondary">
-                Configure and launch a sweep, or select a recent sweep to view
-                results.
-              </p>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
+                  Recent Sweeps
+                </span>
+                {recentSweeps.length === 0 ? (
+                  <p className="text-xs text-text-secondary">
+                    No previous sweeps. Configure and launch above.
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-0.5">
+                    {recentSweeps.map((s) => {
+                      const badge = deriveSweepStatus(s)
+                      return (
+                        <button
+                          key={s.sweep_id}
+                          type="button"
+                          onClick={() => setActiveSweepId(s.sweep_id)}
+                          className={cn(
+                            'flex items-center justify-between gap-2 rounded px-2 py-1.5 text-left font-mono text-xs transition-colors',
+                            activeSweepId === s.sweep_id
+                              ? 'bg-bg-selected text-text-accent'
+                              : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary',
+                          )}
+                        >
+                          <span className="min-w-0 truncate">
+                            {s.sweep_id.slice(0, 8)}… · {s.asset} /{' '}
+                            {s.strategy_name}
+                          </span>
+                          <span
+                            className={cn(
+                              'shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+                              badge === 'complete'
+                                ? 'bg-gain-fill text-gain'
+                                : badge === 'failed'
+                                  ? 'bg-loss-fill text-loss'
+                                  : 'bg-bg-raised text-text-secondary',
+                            )}
+                          >
+                            {badge}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </Panel>
         </div>

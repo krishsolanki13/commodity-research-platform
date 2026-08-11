@@ -83,33 +83,44 @@ export function SweepResultsTable({
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border-default">
+        <tbody className="divide-y divide-border-default pb-1">
           {runs.map((run, i) => {
             const isBest =
               run.sharpe != null && run.sharpe === maxSharpe
+            const isLast = i === runs.length - 1
             return (
               <tr
                 key={i}
                 className={isBest ? 'bg-bg-selected' : 'hover:bg-bg-hover'}
               >
-                <td className="truncate px-3 py-2 font-mono text-xs text-text-secondary">
+                <td
+                  className={`truncate px-3 py-2 font-mono text-xs text-text-secondary${isLast ? ' pb-3' : ''}`}
+                >
                   {formatParams(
                     (run.parameters as Record<string, unknown>) ?? {},
                   )}
                 </td>
-                <td className="px-3 py-2 text-right font-mono text-text-primary">
+                <td
+                  className={`px-3 py-2 text-right font-mono text-text-primary${isLast ? ' pb-3' : ''}`}
+                >
                   {run.sharpe != null ? dec(run.sharpe, 2) : '—'}
                 </td>
-                <td className="px-3 py-2 text-right font-mono text-loss">
+                <td
+                  className={`px-3 py-2 text-right font-mono text-loss${isLast ? ' pb-3' : ''}`}
+                >
                   {run.max_drawdown != null ? pct(run.max_drawdown, 1) : '—'}
                 </td>
-                <td className="px-3 py-2 text-right font-mono text-text-primary">
+                <td
+                  className={`px-3 py-2 text-right font-mono text-text-primary${isLast ? ' pb-3' : ''}`}
+                >
                   {run.total_return != null ? pct(run.total_return, 1) : '—'}
                 </td>
-                <td className="px-3 py-2 text-right font-mono text-text-secondary">
+                <td
+                  className={`px-3 py-2 text-right font-mono text-text-secondary${isLast ? ' pb-3' : ''}`}
+                >
                   {run.n_trades ?? '—'}
                 </td>
-                <td className="px-3 py-2 text-right">
+                <td className={`px-3 py-2 text-right${isLast ? ' pb-3' : ''}`}>
                   <span
                     className={`inline-block rounded-full px-1.5 py-0.5 text-xs font-medium ${
                       run.status === 'complete'

@@ -9,7 +9,8 @@ import {
   Database,
   ChevronLeft,
   ChevronRight,
-  Activity,
+  SlidersHorizontal,
+  Network,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useWorkspace } from '@/stores/workspace'
@@ -31,9 +32,9 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'research', label: 'Research', icon: FlaskConical, route: '/research', phase: null },
   { id: 'backtest', label: 'Backtest', icon: Zap, route: '/backtest/new', phase: null },
   { id: 'runs', label: 'Runs', icon: Layers, route: '/runs', phase: null },
-  { id: 'sweeps', label: 'Sweep Explorer', icon: Zap, route: '/sweeps', phase: null },
+  { id: 'sweeps', label: 'Sweep Explorer', icon: SlidersHorizontal, route: '/sweeps', phase: null },
   { id: 'intel', label: 'Intelligence', icon: Globe, route: '/intelligence', phase: null, end: true },
-  { id: 'curve-pca', label: 'Curve PCA', icon: Activity, route: '/intelligence/pca', phase: null, end: true },
+  { id: 'curve-pca', label: 'Curve PCA', icon: Network, route: '/intelligence/pca', phase: null, end: true },
   { id: 'portfolio', label: 'Portfolio', icon: BarChart2, route: '/portfolio', phase: null },
   { id: 'system', label: 'System', icon: Database, route: '/system/data', phase: null },
 ]
