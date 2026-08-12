@@ -142,7 +142,7 @@ export function SweepExplorer() {
           <button
             type="button"
             onClick={handleNewSweep}
-            className="flex w-fit items-center gap-1 text-xs text-text-secondary hover:text-text-primary"
+            className="flex w-fit shrink-0 items-center gap-1 text-xs text-text-secondary hover:text-text-primary"
           >
             ← New Sweep
           </button>
@@ -153,14 +153,16 @@ export function SweepExplorer() {
             sortDir={sortDir}
             onSort={handleSort}
           />
-          <ParallelCoordinatesChart
-            runs={results?.runs ?? []}
-            paramKeys={
-              Object.keys(paramGrid).length > 0
-                ? Object.keys(paramGrid)
-                : Object.keys(results?.param_grid ?? {})
-            }
-          />
+          <div className="shrink-0">
+            <ParallelCoordinatesChart
+              runs={results?.runs ?? []}
+              paramKeys={
+                Object.keys(paramGrid).length > 0
+                  ? Object.keys(paramGrid)
+                  : Object.keys(results?.param_grid ?? {})
+              }
+            />
+          </div>
         </div>
       </div>
     )

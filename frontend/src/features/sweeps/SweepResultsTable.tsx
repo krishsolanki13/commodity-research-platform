@@ -2,9 +2,11 @@
 // Sort state controlled via props from SweepExplorer URL state
 
 import type { components } from '@/api/schema'
+import { RunStatusBadge } from '@/components/data/RunStatusBadge'
 import { dec, pct } from '@/lib/fmt'
 
 type SweepRunSummaryResponse = components['schemas']['SweepRunSummaryResponse']
+type RunStatus = 'queued' | 'running' | 'complete' | 'failed'
 
 interface SweepResultsTableProps {
   runs: SweepRunSummaryResponse[]
@@ -25,6 +27,18 @@ function formatParams(params: Record<string, unknown>): string {
   return Object.entries(params)
     .map(([k, v]) => `${k}=${v}`)
     .join(', ')
+}
+
+function toRunStatus(status: string): RunStatus {
+  if (
+    status === 'queued' ||
+    status === 'running' ||
+    status === 'complete' ||
+    status === 'failed'
+  ) {
+    return status
+  }
+  return 'running'
 }
 
 const SORTABLE_COLS: { key: string; label: string }[] = [
@@ -50,7 +64,7 @@ export function SweepResultsTable({
   const maxSharpe = Math.max(...runs.map((r) => r.sharpe ?? -Infinity))
 
   return (
-    <div className="overflow-hidden rounded border border-border-default">
+    <div className="shrink-0 rounded border border-border-default">
       <table className="w-full table-fixed border-collapse text-sm">
         <colgroup>
           <col className="w-[38%]" />
@@ -83,54 +97,35 @@ export function SweepResultsTable({
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border-default pb-1">
+        <tbody className="divide-y divide-border-default">
           {runs.map((run, i) => {
             const isBest =
               run.sharpe != null && run.sharpe === maxSharpe
-            const isLast = i === runs.length - 1
             return (
               <tr
                 key={i}
                 className={isBest ? 'bg-bg-selected' : 'hover:bg-bg-hover'}
               >
-                <td
-                  className={`truncate px-3 py-2 font-mono text-xs text-text-secondary${isLast ? ' pb-3' : ''}`}
-                >
+                <td className="truncate px-3 py-2 font-mono text-xs text-text-secondary">
                   {formatParams(
                     (run.parameters as Record<string, unknown>) ?? {},
                   )}
                 </td>
-                <td
-                  className={`px-3 py-2 text-right font-mono text-text-primary${isLast ? ' pb-3' : ''}`}
-                >
+                <td className="px-3 py-2 text-right font-mono text-text-primary">
                   {run.sharpe != null ? dec(run.sharpe, 2) : '—'}
                 </td>
-                <td
-                  className={`px-3 py-2 text-right font-mono text-loss${isLast ? ' pb-3' : ''}`}
-                >
+                <td className="px-3 py-2 text-right font-mono text-loss">
                   {run.max_drawdown != null ? pct(run.max_drawdown, 1) : '—'}
                 </td>
-                <td
-                  className={`px-3 py-2 text-right font-mono text-text-primary${isLast ? ' pb-3' : ''}`}
-                >
+                <td className="px-3 py-2 text-right font-mono text-text-primary">
                   {run.total_return != null ? pct(run.total_return, 1) : '—'}
                 </td>
-                <td
-                  className={`px-3 py-2 text-right font-mono text-text-secondary${isLast ? ' pb-3' : ''}`}
-                >
+                <td className="px-3 py-2 text-right font-mono text-text-secondary">
                   {run.n_trades ?? '—'}
                 </td>
-                <td className={`px-3 py-2 text-right${isLast ? ' pb-3' : ''}`}>
-                  <span
-                    className={`inline-block rounded-full px-1.5 py-0.5 text-xs font-medium ${
-                      run.status === 'complete'
-                        ? 'bg-gain-fill text-gain'
-                        : run.status === 'failed'
-                          ? 'bg-loss-fill text-loss'
-                          : 'bg-bg-raised text-text-secondary'
-                    }`}
-                  >
-                    {run.status}
+                <td className="px-3 py-2 text-right">
+                  <span className="inline-flex justify-end">
+                    <RunStatusBadge status={toRunStatus(run.status)} />
                   </span>
                 </td>
               </tr>
