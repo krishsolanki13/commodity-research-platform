@@ -122,7 +122,7 @@ function PCTimeSeriesInner({ factorSeries, indexEpochMs, pcLabels, theme }: Inne
       globalThis.removeEventListener('resize', handleResize)
       chart.dispose()
     }
-  }, [factorSeries, indexEpochMs, pcLabels, theme])
+  }, [factorSeries, indexEpochMs, pcLabels, theme, ctx])
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }

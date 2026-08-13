@@ -111,7 +111,7 @@ function ParallelCoordinatesInner({ runs, paramKeys, theme }: InnerProps) {
       globalThis.removeEventListener('resize', handleResize)
       chart.dispose()
     }
-  }, [runs, paramKeys, theme])
+  }, [runs, paramKeys, theme, ctx])
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }

@@ -35,4 +35,14 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     '@typescript-eslint/no-explicit-any': 'error',
   },
+  overrides: [
+    {
+      // ECharts requires concrete hex via resolveCssVar() fallbacks (TDR-012).
+      // Hex literals elsewhere remain banned; tokens.css is the design-token source.
+      files: ['src/components/charts/**/*.{ts,tsx}'],
+      rules: {
+        'no-restricted-syntax': 'off',
+      },
+    },
+  ],
 }

@@ -22,7 +22,7 @@ function SortIndicator({ active, dir }: { active: boolean; dir: string }) {
 
 function formatParams(params: Record<string, unknown>): string {
   return Object.entries(params)
-    .map(([k, v]) => `${k}=${v}`)
+    .map(([k, v]) => `${k}=${String(v)}`)
     .join(', ')
 }
 
@@ -90,7 +90,7 @@ export function SweepResultsTable({ runs, sortBy, sortDir, onSort }: SweepResult
             return (
               <tr key={i} className={isBest ? 'bg-bg-selected' : 'hover:bg-bg-hover'}>
                 <td className="truncate px-3 py-2 font-mono text-xs text-text-secondary">
-                  {formatParams((run.parameters as Record<string, unknown>) ?? {})}
+                  {formatParams(run.parameters ?? {})}
                 </td>
                 <td className="px-3 py-2 text-right font-mono text-text-primary">
                   {run.sharpe != null ? dec(run.sharpe, 2) : '—'}

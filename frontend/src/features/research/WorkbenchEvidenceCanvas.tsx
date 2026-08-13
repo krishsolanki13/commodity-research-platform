@@ -94,11 +94,10 @@ export function WorkbenchEvidenceCanvas({
   const priceSeries = ohlcv?.data ?? evaluationResult.signal.raw_signal ?? EMPTY_SERIES
 
   // RollingICResponse.data.columns.rolling_ic → ICRollingChart ic.columns.value
-  const rollingCols = rollingIcData?.data.columns as Record<string, (number | null)[]> | undefined
   const icSeries: ColumnarSeries = rollingIcData?.data
     ? {
         index: rollingIcData.data.index,
-        columns: { value: rollingCols?.rolling_ic ?? [] },
+        columns: { value: rollingIcData.data.columns.rolling_ic ?? [] },
       }
     : EMPTY_SERIES
 

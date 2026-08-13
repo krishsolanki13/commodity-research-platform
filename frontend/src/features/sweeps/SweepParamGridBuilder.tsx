@@ -26,7 +26,7 @@ function parseValues(
     return type === 'int' ? parseInt(s, 10) : parseFloat(s)
   })
 
-  if (values.some((v) => isNaN(v as number))) {
+  if (values.some((v) => Number.isNaN(v))) {
     return { values: [], error: 'All values must be valid numbers' }
   }
 
@@ -54,10 +54,11 @@ export function SweepParamGridBuilder({
   )
 
   // Reset when paramNames changes (strategy switch)
+  const paramNamesKey = paramNames.join(',')
   useEffect(() => {
     setRawValues(Object.fromEntries(paramNames.map((n) => [n, ''])))
     setErrors(Object.fromEntries(paramNames.map((n) => [n, null])))
-  }, [paramNames.join(',')])
+  }, [paramNamesKey, paramNames])
 
   function handleChange(param: string, raw: string) {
     const nextRaw = { ...rawValues, [param]: raw }

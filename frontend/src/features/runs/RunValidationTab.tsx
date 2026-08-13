@@ -90,7 +90,7 @@ export function RunValidationTab({ asset, strategyName, parameters }: RunValidat
                   </span>
                   <p className="font-mono text-xs text-text-secondary">
                     {Object.entries(parameters)
-                      .map(([k, v]) => `${k}: ${v}`)
+                      .map(([k, v]) => `${k}: ${String(v)}`)
                       .join(' · ')}
                   </p>
                 </div>

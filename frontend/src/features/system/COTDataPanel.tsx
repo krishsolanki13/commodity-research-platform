@@ -1,8 +1,5 @@
 import { useCOTData } from '@/api/hooks'
 import { COTPositioningChart } from '@/components/charts/COTPositioningChart'
-import type { components } from '@/api/schema'
-
-type COTDataResponse = components['schemas']['COTDataResponse']
 
 interface COTDataPanelProps {
   asset: string | null

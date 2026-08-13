@@ -123,7 +123,7 @@ function ScreePlotInner({ evr, cumEvr, pcLabels, theme }: InnerProps) {
       globalThis.removeEventListener('resize', handleResize)
       chart.dispose()
     }
-  }, [evr, cumEvr, pcLabels, theme])
+  }, [evr, cumEvr, pcLabels, theme, ctx])
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }

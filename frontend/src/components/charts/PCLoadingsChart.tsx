@@ -116,7 +116,7 @@ function PCLoadingsInner({ loadings, nContracts, theme }: InnerProps) {
       globalThis.removeEventListener('resize', handleResize)
       chart.dispose()
     }
-  }, [loadings, nContracts, theme])
+  }, [loadings, nContracts, theme, ctx])
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }

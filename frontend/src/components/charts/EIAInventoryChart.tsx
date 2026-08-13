@@ -128,7 +128,7 @@ function EIAInventoryInner({ records, theme }: InnerProps) {
       globalThis.removeEventListener('resize', handleResize)
       chart.dispose()
     }
-  }, [records, theme])
+  }, [records, theme, ctx])
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }

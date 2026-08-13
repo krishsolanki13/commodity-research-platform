@@ -1,8 +1,5 @@
 import { useEIAData } from '@/api/hooks'
 import { EIAInventoryChart } from '@/components/charts/EIAInventoryChart'
-import type { components } from '@/api/schema'
-
-type EIADataResponse = components['schemas']['EIADataResponse']
 
 interface EIADataPanelProps {
   asset: string | null
