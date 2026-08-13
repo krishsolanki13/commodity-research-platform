@@ -10,9 +10,7 @@ export function usePortfolioRisk(runId: string) {
   return useQuery({
     queryKey: qk.portfolioRisk(runId),
     queryFn: () =>
-      fetchWithRaceRetry(() =>
-        client.get<RiskReportResponse>(`/api/portfolio/${runId}/risk`),
-      ),
+      fetchWithRaceRetry(() => client.get<RiskReportResponse>(`/api/portfolio/${runId}/risk`)),
     staleTime: Infinity,
     gcTime: 60 * 60 * 1000,
     enabled: !!runId,

@@ -8,13 +8,12 @@ type SweepResultResponse = components['schemas']['SweepResultResponse']
 export function useSweepResults(
   sweepId: string | null,
   sortBy: string = 'sharpe',
-  sortDir: string = 'desc',
+  sortDir: string = 'desc'
 ) {
   const qs = new URLSearchParams({ sort_by: sortBy, sort_dir: sortDir })
   return useQuery({
     queryKey: qk.sweep.results(sweepId!, sortBy, sortDir),
-    queryFn: (): Promise<SweepResultResponse> =>
-      client.get(`/api/sweeps/${sweepId}/results?${qs}`),
+    queryFn: (): Promise<SweepResultResponse> => client.get(`/api/sweeps/${sweepId}/results?${qs}`),
     enabled: !!sweepId,
     staleTime: Infinity,
   })

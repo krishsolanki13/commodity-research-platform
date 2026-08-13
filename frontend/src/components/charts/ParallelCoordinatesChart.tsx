@@ -61,10 +61,7 @@ function ParallelCoordinatesInner({ runs, paramKeys, theme }: InnerProps) {
     ]
 
     const seriesData = runs.map((run) => [
-      ...paramKeys.map(
-        (k) =>
-          ((run.parameters as Record<string, unknown>)?.[k] as number) ?? 0,
-      ),
+      ...paramKeys.map((k) => ((run.parameters as Record<string, unknown>)?.[k] as number) ?? 0),
       run.sharpe ?? 0,
     ])
 

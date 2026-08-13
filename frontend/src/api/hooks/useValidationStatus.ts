@@ -8,8 +8,7 @@ type ValidationStatusResponse = components['schemas']['ValidationStatusResponse'
 export function useValidationStatus(id: string | null) {
   return useQuery({
     queryKey: qk.validation.status(id!),
-    queryFn: (): Promise<ValidationStatusResponse> =>
-      client.get(`/api/validation/${id}/status`),
+    queryFn: (): Promise<ValidationStatusResponse> => client.get(`/api/validation/${id}/status`),
     enabled: !!id,
     refetchInterval: (query) => {
       const s = query.state.data?.status

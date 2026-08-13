@@ -55,7 +55,7 @@ export function EvalSummaryCard({
   return (
     <Panel title="Signal Evaluation">
       <div className="flex flex-col gap-4">
-        <div className="flex justify-around w-full">
+        <div className="flex w-full justify-around">
           <MetricStat label="IC" value={evaluation.ic} format="ic" />
           <MetricStat label="ICIR" value={evaluation.icir} format="ic" />
           <MetricStat label="TURNOVER" value={evaluation.turnover} format="percent" />

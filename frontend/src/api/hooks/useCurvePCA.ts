@@ -10,7 +10,7 @@ export function useCurvePCA(
   nComponents: number = 3,
   nContracts: number = 4,
   fromDate?: string,
-  toDate?: string,
+  toDate?: string
 ) {
   const qs = new URLSearchParams({
     asset: asset ?? '',
@@ -22,8 +22,7 @@ export function useCurvePCA(
 
   return useQuery({
     queryKey: qk.curvePca(asset!, nComponents, nContracts, fromDate, toDate),
-    queryFn: (): Promise<CurvePCAResponse> =>
-      client.get(`/api/intelligence/pca?${qs}`),
+    queryFn: (): Promise<CurvePCAResponse> => client.get(`/api/intelligence/pca?${qs}`),
     enabled: !!asset,
     staleTime: 10 * 60 * 1000,
   })

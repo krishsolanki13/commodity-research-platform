@@ -9,8 +9,7 @@ type SweepListResponse = components['schemas']['SweepListResponse']
 export function useSweeps() {
   return useQuery({
     queryKey: qk.sweep.list(),
-    queryFn: (): Promise<SweepListResponse> =>
-      client.get('/api/sweeps'),
+    queryFn: (): Promise<SweepListResponse> => client.get('/api/sweeps'),
     staleTime: 30_000,
   })
 }

@@ -8,8 +8,7 @@ type ValidationReportResponse = components['schemas']['ValidationReportResponse'
 export function useValidationReport(id: string | null) {
   return useQuery({
     queryKey: qk.validation.report(id!),
-    queryFn: (): Promise<ValidationReportResponse> =>
-      client.get(`/api/validation/${id}/report`),
+    queryFn: (): Promise<ValidationReportResponse> => client.get(`/api/validation/${id}/report`),
     enabled: !!id,
     staleTime: Infinity,
   })

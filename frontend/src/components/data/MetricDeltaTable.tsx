@@ -87,58 +87,58 @@ export function MetricDeltaTable({
 
   return (
     <div className={cn('overflow-hidden rounded border border-border-default', className)}>
-    <table className="w-full table-fixed border-collapse text-sm">
-      <thead>
-        <tr>
-          <th className="border-b border-border-default px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">
-            METRIC
-          </th>
-          {runs.map((run) => {
-            const label = columnName(run)
-            return (
-              <th
-                key={run.run_id}
-                className="border-b border-border-default px-3 py-2 text-right font-mono text-xs font-medium text-text-secondary"
-              >
-                {label}
-              </th>
-            )
-          })}
-        </tr>
-      </thead>
-      <tbody>
-        {metrics.map((metric) => (
-          <tr key={metric.key} className="border-b border-border-default">
-            <td className="px-3 py-2 text-xs text-text-secondary">{metric.label}</td>
+      <table className="w-full table-fixed border-collapse text-sm">
+        <thead>
+          <tr>
+            <th className="border-b border-border-default px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">
+              METRIC
+            </th>
             {runs.map((run) => {
-              const raw = run.metrics[metric.key]
-              const value = raw === undefined ? null : raw
-              const isBase = run.run_id === resolvedBaseId
-              const baseRaw = baseRun?.metrics[metric.key]
-              const baseValue = baseRaw === undefined ? null : baseRaw
-              let delta: number | null = null
-              if (!isBase && value !== null && baseValue !== null) {
-                delta = value - baseValue
-              }
-
+              const label = columnName(run)
               return (
-                <td key={run.run_id} className="px-3 py-2 text-right font-mono">
-                  <div>{formatMetricValue(metric.format, value)}</div>
-                  {delta !== null && (
-                    <span
-                      className="block text-xs"
-                      style={{ color: deltaColor(metric.higherIsBetter, delta) }}
-                    >
-                      {formatDelta(metric.format, delta)}
-                    </span>
-                  )}
-                </td>
+                <th
+                  key={run.run_id}
+                  className="border-b border-border-default px-3 py-2 text-right font-mono text-xs font-medium text-text-secondary"
+                >
+                  {label}
+                </th>
               )
             })}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {metrics.map((metric) => (
+            <tr key={metric.key} className="border-b border-border-default">
+              <td className="px-3 py-2 text-xs text-text-secondary">{metric.label}</td>
+              {runs.map((run) => {
+                const raw = run.metrics[metric.key]
+                const value = raw === undefined ? null : raw
+                const isBase = run.run_id === resolvedBaseId
+                const baseRaw = baseRun?.metrics[metric.key]
+                const baseValue = baseRaw === undefined ? null : baseRaw
+                let delta: number | null = null
+                if (!isBase && value !== null && baseValue !== null) {
+                  delta = value - baseValue
+                }
+
+                return (
+                  <td key={run.run_id} className="px-3 py-2 text-right font-mono">
+                    <div>{formatMetricValue(metric.format, value)}</div>
+                    {delta !== null && (
+                      <span
+                        className="block text-xs"
+                        style={{ color: deltaColor(metric.higherIsBetter, delta) }}
+                      >
+                        {formatDelta(metric.format, delta)}
+                      </span>
+                    )}
+                  </td>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

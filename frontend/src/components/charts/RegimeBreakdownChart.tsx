@@ -150,15 +150,13 @@ function RegimeBreakdownInner({ data, theme }: InnerProps) {
             seriesName: string
             value: number
             name: string
-          }>,
+          }>
         ) => {
           const metricName = params[0]?.name ?? ''
           const rows = params
             .map((p) => {
               const formatted =
-                metricName === 'Total Return %'
-                  ? pct(p.value / 100, 1)
-                  : dec(p.value, 2)
+                metricName === 'Total Return %' ? pct(p.value / 100, 1) : dec(p.value, 2)
               return `${p.marker}${p.seriesName}&nbsp;&nbsp;<b>${formatted}</b>`
             })
             .join('<br>')

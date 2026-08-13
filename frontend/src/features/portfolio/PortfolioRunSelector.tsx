@@ -1,4 +1,5 @@
 import { cn } from '@/lib/cn'
+import { percent } from '@/lib/fmt'
 import { useUrlState } from '@/lib/useUrlState'
 import { usePortfolioRuns } from '@/api/hooks/usePortfolioRuns'
 import { portfolioUrlDefaults, portfolioUrlSchema } from '@/features/portfolio/portfolioUrlState'
@@ -41,9 +42,7 @@ export function PortfolioRunSelector() {
                   (run.total_return ?? 0) >= 0 ? 'text-gain' : 'text-loss'
                 )}
               >
-                {run.total_return != null
-                  ? `${run.total_return >= 0 ? '+' : ''}${(run.total_return * 100).toFixed(2)}%`
-                  : '—'}
+                {run.total_return != null ? percent(run.total_return) : '—'}
               </span>
             </div>
           </SelectItem>

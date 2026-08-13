@@ -11,7 +11,7 @@ interface SweepParamGridBuilderProps {
 
 function parseValues(
   raw: string,
-  type: 'int' | 'float',
+  type: 'int' | 'float'
 ): { values: unknown[]; error: string | null } {
   const parts = raw
     .split(',')
@@ -47,10 +47,10 @@ export function SweepParamGridBuilder({
   onChange,
 }: SweepParamGridBuilderProps) {
   const [rawValues, setRawValues] = useState<Record<string, string>>(
-    Object.fromEntries(paramNames.map((n) => [n, ''])),
+    Object.fromEntries(paramNames.map((n) => [n, '']))
   )
   const [errors, setErrors] = useState<Record<string, string | null>>(
-    Object.fromEntries(paramNames.map((n) => [n, null])),
+    Object.fromEntries(paramNames.map((n) => [n, null]))
   )
 
   // Reset when paramNames changes (strategy switch)
@@ -90,7 +90,7 @@ export function SweepParamGridBuilder({
   return (
     <div className="space-y-3">
       {paramNames.map((param) => (
-        <div key={param} className="flex flex-col gap-1.5">
+        <div key={param} className="gap-1.5 flex flex-col">
           <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">
             {formatParamLabel(param)}
           </span>
@@ -102,11 +102,9 @@ export function SweepParamGridBuilder({
             placeholder="e.g. 10, 20, 50, 100"
             value={rawValues[param] ?? ''}
             onChange={(e) => handleChange(param, e.target.value)}
-            className="w-full rounded border border-border-strong bg-bg-raised px-2 py-1.5 text-sm font-mono text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-1 focus:ring-focus-ring"
+            className="py-1.5 w-full rounded border border-border-strong bg-bg-raised px-2 font-mono text-sm text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-1 focus:ring-focus-ring"
           />
-          {errors[param] && (
-            <p className="mt-0.5 text-xs text-loss">{errors[param]}</p>
-          )}
+          {errors[param] && <p className="mt-0.5 text-xs text-loss">{errors[param]}</p>}
         </div>
       ))}
     </div>

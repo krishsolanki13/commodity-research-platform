@@ -24,12 +24,7 @@ const SERIES_COLORS = [
   { token: '--gain-500', fallback: '#3FB68B' },
 ]
 
-function PCTimeSeriesInner({
-  factorSeries,
-  indexEpochMs,
-  pcLabels,
-  theme,
-}: InnerProps) {
+function PCTimeSeriesInner({ factorSeries, indexEpochMs, pcLabels, theme }: InnerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const ctx = useChartFrame()
 
@@ -60,8 +55,7 @@ function PCTimeSeriesInner({
         axisTick: { show: false },
         axisPointer: {
           label: {
-            formatter: (p: { value: string | number }) =>
-              String(p.value),
+            formatter: (p: { value: string | number }) => String(p.value),
           },
         },
       },
@@ -92,17 +86,15 @@ function PCTimeSeriesInner({
             seriesName: string
             value: number | null
             axisValue: string
-          }>,
+          }>
         ) => {
           const header = `<div class="mb-1 font-mono text-xs">${params[0]?.axisValue ?? ''}</div>`
           const rows = params
             .map(
               (p) =>
                 `${p.marker}${p.seriesName}&nbsp;&nbsp;<b>${
-                  p.value !== null && p.value !== undefined
-                    ? dec(p.value, 3)
-                    : '—'
-                }</b>`,
+                  p.value !== null && p.value !== undefined ? dec(p.value, 3) : '—'
+                }</b>`
             )
             .join('<br>')
           return header + rows

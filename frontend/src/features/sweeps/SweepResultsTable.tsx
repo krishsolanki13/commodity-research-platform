@@ -16,11 +16,8 @@ interface SweepResultsTableProps {
 }
 
 function SortIndicator({ active, dir }: { active: boolean; dir: string }) {
-  if (!active)
-    return <span className="ml-1 text-text-secondary opacity-40">↕</span>
-  return (
-    <span className="ml-1 text-text-accent">{dir === 'asc' ? '↑' : '↓'}</span>
-  )
+  if (!active) return <span className="ml-1 text-text-secondary opacity-40">↕</span>
+  return <span className="ml-1 text-text-accent">{dir === 'asc' ? '↑' : '↓'}</span>
 }
 
 function formatParams(params: Record<string, unknown>): string {
@@ -30,12 +27,7 @@ function formatParams(params: Record<string, unknown>): string {
 }
 
 function toRunStatus(status: string): RunStatus {
-  if (
-    status === 'queued' ||
-    status === 'running' ||
-    status === 'complete' ||
-    status === 'failed'
-  ) {
+  if (status === 'queued' || status === 'running' || status === 'complete' || status === 'failed') {
     return status
   }
   return 'running'
@@ -47,12 +39,7 @@ const SORTABLE_COLS: { key: string; label: string }[] = [
   { key: 'total_return', label: 'RETURN' },
 ]
 
-export function SweepResultsTable({
-  runs,
-  sortBy,
-  sortDir,
-  onSort,
-}: SweepResultsTableProps) {
+export function SweepResultsTable({ runs, sortBy, sortDir, onSort }: SweepResultsTableProps) {
   if (runs.length === 0) {
     return (
       <div className="rounded border border-border-default bg-bg-panel px-4 py-8 text-center">
@@ -99,17 +86,11 @@ export function SweepResultsTable({
         </thead>
         <tbody className="divide-y divide-border-default">
           {runs.map((run, i) => {
-            const isBest =
-              run.sharpe != null && run.sharpe === maxSharpe
+            const isBest = run.sharpe != null && run.sharpe === maxSharpe
             return (
-              <tr
-                key={i}
-                className={isBest ? 'bg-bg-selected' : 'hover:bg-bg-hover'}
-              >
+              <tr key={i} className={isBest ? 'bg-bg-selected' : 'hover:bg-bg-hover'}>
                 <td className="truncate px-3 py-2 font-mono text-xs text-text-secondary">
-                  {formatParams(
-                    (run.parameters as Record<string, unknown>) ?? {},
-                  )}
+                  {formatParams((run.parameters as Record<string, unknown>) ?? {})}
                 </td>
                 <td className="px-3 py-2 text-right font-mono text-text-primary">
                   {run.sharpe != null ? dec(run.sharpe, 2) : '—'}

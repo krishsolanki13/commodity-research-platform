@@ -19,7 +19,7 @@ function CalibrationValue({ pvalue }: { pvalue: number | null | undefined }) {
       <TooltipProvider delayDuration={300}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="cursor-help font-mono font-medium text-metric text-text-secondary">
+            <span className="cursor-help font-mono text-metric font-medium text-text-secondary">
               —
             </span>
           </TooltipTrigger>
@@ -32,14 +32,10 @@ function CalibrationValue({ pvalue }: { pvalue: number | null | undefined }) {
   }
 
   if (pvalue >= 0.05) {
-    return (
-      <span className="font-mono font-medium text-metric text-gain">✓ Calibrated</span>
-    )
+    return <span className="font-mono text-metric font-medium text-gain">✓ Calibrated</span>
   }
 
-  return (
-    <span className="font-mono font-medium text-metric text-loss">✗ Miscalibrated</span>
-  )
+  return <span className="font-mono text-metric font-medium text-loss">✗ Miscalibrated</span>
 }
 
 export function PortfolioRiskPanel({ risk, loading }: PortfolioRiskPanelProps) {
@@ -92,10 +88,7 @@ export function PortfolioRiskPanel({ risk, loading }: PortfolioRiskPanelProps) {
           loading={loading}
         />
       )}
-      <ContributionToRiskChart
-        data={risk?.asset_contribution_to_vol_pct ?? {}}
-        loading={loading}
-      />
+      <ContributionToRiskChart data={risk?.asset_contribution_to_vol_pct ?? {}} loading={loading} />
       <div>
         <p className="mb-2 font-mono text-xs uppercase text-text-secondary">
           KUPIEC BACKTESTING VALIDATION
@@ -107,9 +100,7 @@ export function PortfolioRiskPanel({ risk, loading }: PortfolioRiskPanelProps) {
             <MetricStat
               label="DAYS TESTED"
               value={
-                risk?.n_backtesting_days != null
-                  ? risk.n_backtesting_days.toLocaleString()
-                  : null
+                risk?.n_backtesting_days != null ? risk.n_backtesting_days.toLocaleString() : null
               }
               format="raw"
               tone="neutral"
@@ -122,21 +113,17 @@ export function PortfolioRiskPanel({ risk, loading }: PortfolioRiskPanelProps) {
             />
             <MetricStat
               label="EXCEPTION RATE"
-              value={
-                risk?.exception_rate_99 != null ? pct(risk.exception_rate_99, 2) : null
-              }
+              value={risk?.exception_rate_99 != null ? pct(risk.exception_rate_99, 2) : null}
               format="raw"
               tone="neutral"
             />
             <MetricStat
               label="KUPIEC p-VALUE"
-              value={
-                risk?.kupiec_pvalue_99 != null ? dec(risk.kupiec_pvalue_99, 3) : null
-              }
+              value={risk?.kupiec_pvalue_99 != null ? dec(risk.kupiec_pvalue_99, 3) : null}
               format="raw"
               tone="neutral"
             />
-            <div className="flex min-w-0 flex-col gap-0.5">
+            <div className="gap-0.5 flex min-w-0 flex-col">
               <span className="text-xs uppercase tracking-wider text-text-secondary">
                 CALIBRATION
               </span>

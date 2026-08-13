@@ -20,6 +20,6 @@ export const useSweepHistory = create<SweepHistoryState>()(
     {
       name: 'commodity-research-sweep-history',
       storage: createJSONStorage(() => localStorage),
-    },
-  ),
+    }
+  )
 )

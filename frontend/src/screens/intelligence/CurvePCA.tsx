@@ -10,13 +10,7 @@ import { PCLoadingsChart } from '@/components/charts/PCLoadingsChart'
 import { PCTimeSeriesChart } from '@/components/charts/PCTimeSeriesChart'
 import { Panel } from '@/ui/Panel'
 import { Button } from '@/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/select'
 import type { components } from '@/api/schema'
 
 type AssetMetadata = components['schemas']['AssetMetadata']
@@ -44,8 +38,7 @@ export function CurvePCA() {
 
   const [submitted, setSubmitted] = useState(false)
 
-  const { data: available, isLoading: availableLoading } =
-    useCurveAvailableAssets()
+  const { data: available, isLoading: availableLoading } = useCurveAvailableAssets()
   const { data: assetsData } = useAssets()
 
   const { data: pca, isLoading } = useCurvePCA(
@@ -53,7 +46,7 @@ export function CurvePCA() {
     nComponents,
     nContracts,
     fromDate,
-    toDate,
+    toDate
   )
 
   const assetMetaMap = useMemo(() => {
@@ -97,7 +90,7 @@ export function CurvePCA() {
   if (pca != null) {
     return (
       <div className="flex h-full flex-col overflow-hidden">
-        <div className="shrink-0 px-6 pt-6 pb-4">
+        <div className="shrink-0 px-6 pb-4 pt-6">
           <h1 className="text-xl font-semibold text-text-primary">Curve PCA</h1>
         </div>
 
@@ -128,7 +121,7 @@ export function CurvePCA() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="shrink-0 px-6 pt-6 pb-4">
+      <div className="shrink-0 px-6 pb-4 pt-6">
         <h1 className="text-xl font-semibold text-text-primary">Curve PCA</h1>
       </div>
 
@@ -136,7 +129,7 @@ export function CurvePCA() {
         <div className="min-h-0 overflow-y-auto">
           <Panel title="PCA Configuration">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
+              <div className="gap-1.5 flex flex-col">
                 <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
                   Asset
                 </span>
@@ -148,15 +141,13 @@ export function CurvePCA() {
                 />
               </div>
 
-              <div className="flex flex-col gap-1.5">
+              <div className="gap-1.5 flex flex-col">
                 <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
                   Components
                 </span>
                 <Select
                   value={String(nComponents)}
-                  onValueChange={(v) =>
-                    setUrlState({ n_components: Number(v) })
-                  }
+                  onValueChange={(v) => setUrlState({ n_components: Number(v) })}
                   disabled={availableLoading}
                 >
                   <SelectTrigger
@@ -175,7 +166,7 @@ export function CurvePCA() {
                 </Select>
               </div>
 
-              <div className="flex flex-col gap-1.5">
+              <div className="gap-1.5 flex flex-col">
                 <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
                   Contracts
                 </span>
@@ -200,7 +191,7 @@ export function CurvePCA() {
                 </Select>
               </div>
 
-              <div className="flex flex-col gap-1.5">
+              <div className="gap-1.5 flex flex-col">
                 <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
                   Date Range
                 </span>
@@ -208,20 +199,16 @@ export function CurvePCA() {
                   <input
                     type="date"
                     value={fromDate ?? ''}
-                    onChange={(e) =>
-                      setUrlState({ from_date: e.target.value || null })
-                    }
-                    className="rounded border border-border-strong bg-bg-raised px-2 py-1.5 font-mono text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
+                    onChange={(e) => setUrlState({ from_date: e.target.value || null })}
+                    className="py-1.5 rounded border border-border-strong bg-bg-raised px-2 font-mono text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
                     aria-label="From date"
                   />
                   <span className="text-xs text-text-secondary">→</span>
                   <input
                     type="date"
                     value={toDate ?? ''}
-                    onChange={(e) =>
-                      setUrlState({ to_date: e.target.value || null })
-                    }
-                    className="rounded border border-border-strong bg-bg-raised px-2 py-1.5 font-mono text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
+                    onChange={(e) => setUrlState({ to_date: e.target.value || null })}
+                    className="py-1.5 rounded border border-border-strong bg-bg-raised px-2 font-mono text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
                     aria-label="To date"
                   />
                 </div>
@@ -244,9 +231,7 @@ export function CurvePCA() {
               </Button>
 
               {!asset && (
-                <p className="text-xs text-text-secondary">
-                  Select an asset to run curve PCA
-                </p>
+                <p className="text-xs text-text-secondary">Select an asset to run curve PCA</p>
               )}
 
               {submitted && (
@@ -257,8 +242,7 @@ export function CurvePCA() {
 
               {!submitted && asset && (
                 <p className="text-xs text-text-secondary">
-                  Select an asset and click View PCA to analyze forward curve
-                  principal components.
+                  Select an asset and click View PCA to analyze forward curve principal components.
                 </p>
               )}
             </div>

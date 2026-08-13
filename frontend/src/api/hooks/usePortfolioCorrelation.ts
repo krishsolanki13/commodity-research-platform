@@ -11,9 +11,7 @@ export function usePortfolioCorrelation(runId: string) {
     queryKey: qk.portfolioCorrelation(runId),
     queryFn: () =>
       fetchWithRaceRetry(() =>
-        client.get<CorrelationReportResponse>(
-          `/api/portfolio/${runId}/correlation`,
-        ),
+        client.get<CorrelationReportResponse>(`/api/portfolio/${runId}/correlation`)
       ),
     staleTime: Infinity,
     gcTime: 60 * 60 * 1000,

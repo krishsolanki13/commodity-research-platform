@@ -82,13 +82,11 @@ function EIAInventoryInner({ records, theme }: InnerProps) {
             marker: string
             name: string
             value: number | null
-          }>,
+          }>
         ) => {
           const p = params[0]
           return `<div class="mb-1 font-mono text-xs">${p.name}</div>${p.marker}Inventory Surprise&nbsp;&nbsp;<b>${
-            p.value !== null && p.value !== undefined
-              ? `${dec(p.value, 2)}σ`
-              : '—'
+            p.value !== null && p.value !== undefined ? `${dec(p.value, 2)}σ` : '—'
           }</b>`
         },
       },
@@ -108,11 +106,7 @@ function EIAInventoryInner({ records, theme }: InnerProps) {
                     ? toRgba(lossColor, 0.35)
                     : toRgba(gainColor, 0.35),
               borderColor:
-                z === null || z === undefined
-                  ? borderColor
-                  : z >= 0
-                    ? lossColor
-                    : gainColor,
+                z === null || z === undefined ? borderColor : z >= 0 ? lossColor : gainColor,
               borderWidth: 1,
             },
           })),
@@ -139,17 +133,10 @@ function EIAInventoryInner({ records, theme }: InnerProps) {
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }
 
-export function EIAInventoryChart({
-  records,
-  loading,
-}: EIAInventoryChartProps) {
+export function EIAInventoryChart({ records, loading }: EIAInventoryChartProps) {
   const theme = useChartTheme()
   return (
-    <ChartFrame
-      title="EIA Inventory Surprise (z-score)"
-      height={240}
-      loading={loading}
-    >
+    <ChartFrame title="EIA Inventory Surprise (z-score)" height={240} loading={loading}>
       <EIAInventoryInner records={records} theme={theme} />
     </ChartFrame>
   )

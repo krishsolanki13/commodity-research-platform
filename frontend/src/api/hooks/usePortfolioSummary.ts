@@ -11,7 +11,7 @@ export function usePortfolioSummary(runId: string) {
     queryKey: qk.portfolioSummary(runId),
     queryFn: () =>
       fetchWithRaceRetry(() =>
-        client.get<PortfolioSummaryResponse>(`/api/portfolio/${runId}/summary`),
+        client.get<PortfolioSummaryResponse>(`/api/portfolio/${runId}/summary`)
       ),
     staleTime: Infinity,
     gcTime: 60 * 60 * 1000,

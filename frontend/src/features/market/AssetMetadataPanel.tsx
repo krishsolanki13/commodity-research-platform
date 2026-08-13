@@ -1,5 +1,5 @@
 import { Panel } from '@/ui/Panel'
-import { fmt } from '@/lib/fmt'
+import { fmt, dec } from '@/lib/fmt'
 import type { components } from '@/api/schema'
 
 type AssetMetadata = components['schemas']['AssetMetadata']
@@ -14,7 +14,7 @@ export function AssetMetadataPanel({ metadata }: AssetMetadataPanelProps) {
   const rows = [
     { label: 'CONTRACT MULTIPLIER', value: `${metadata.contract_multiplier} ${metadata.unit}` },
     { label: 'TICK SIZE', value: fmt.price(metadata.tick_size, metadata.name) },
-    { label: 'TICK VALUE', value: `$${metadata.tick_value.toFixed(2)}` },
+    { label: 'TICK VALUE', value: `$${dec(metadata.tick_value, 2)}` },
     { label: 'EXCHANGE', value: metadata.exchange },
     { label: 'UNIT', value: metadata.unit },
   ]

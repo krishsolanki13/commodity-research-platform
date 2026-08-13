@@ -96,7 +96,7 @@ export default function ResearchWorkbenchScreen() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Title — fixed, does not scroll */}
-      <div className="shrink-0 px-6 pt-6 pb-4">
+      <div className="shrink-0 px-6 pb-4 pt-6">
         <h1 className="text-xl font-semibold text-text-primary">Research Workbench</h1>
       </div>
 
@@ -133,8 +133,8 @@ export default function ResearchWorkbenchScreen() {
                 )}
                 {!evaluating && (
                   <p className="text-xs text-text-secondary">
-                    Assemble features and a signal, then click Evaluate. Evaluation
-                    must precede backtesting.
+                    Assemble features and a signal, then click Evaluate. Evaluation must precede
+                    backtesting.
                   </p>
                 )}
               </div>
@@ -146,7 +146,7 @@ export default function ResearchWorkbenchScreen() {
           <button
             type="button"
             onClick={() => setHasEvaluated(false)}
-            className="flex w-fit items-center gap-1.5 text-sm text-text-secondary transition-colors hover:text-text-primary"
+            className="gap-1.5 flex w-fit items-center text-sm text-text-secondary transition-colors hover:text-text-primary"
           >
             ← Modify signal
           </button>

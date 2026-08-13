@@ -20,66 +20,74 @@ export default function DataManagerScreen() {
   const selectedAsset = urlState.asset ?? null
   const { data: assetsData } = useAssets()
 
+  function handleChangeAsset() {
+    setUrlState({ asset: null })
+  }
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="shrink-0 px-6 pt-6 pb-4">
+      <div className="shrink-0 px-6 pb-4 pt-6">
         <h1 className="text-xl font-semibold text-text-primary">Data Manager</h1>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-3 gap-6 overflow-hidden px-6 pb-6">
-        {/* Left — asset config (1/3) */}
-        <div className="min-h-0 overflow-y-auto">
-          <Panel title="Asset">
-            <div className="flex flex-col gap-1.5">
-              <AssetSelector
-                value={selectedAsset}
-                onChange={(v) => setUrlState({ asset: v ?? null })}
-                assets={assetsData?.assets ?? []}
-                aria-label="Select commodity asset"
-              />
-              <p className="mt-3 text-xs text-text-secondary">
-                Select an asset to view data quality report, COT speculative
-                positioning, and EIA inventory data.
+      {!selectedAsset ? (
+        <div className="grid min-h-0 flex-1 grid-cols-2 gap-6 overflow-hidden px-6 pb-6">
+          <div className="min-h-0 overflow-y-auto">
+            <Panel title="Asset">
+              <div className="gap-1.5 flex flex-col">
+                <AssetSelector
+                  value={selectedAsset}
+                  onChange={(v) => setUrlState({ asset: v ?? null })}
+                  assets={assetsData?.assets ?? []}
+                  aria-label="Select commodity asset"
+                />
+                <p className="mt-3 text-xs text-text-secondary">
+                  Select an asset to view data quality, COT positioning, and EIA inventory data.
+                </p>
+              </div>
+            </Panel>
+          </div>
+
+          <div className="min-h-0 overflow-y-auto">
+            <Panel title="View">
+              <p className="text-xs text-text-secondary">
+                Select an asset to view QC report, COT positioning, and EIA inventory.
               </p>
-            </div>
-          </Panel>
+            </Panel>
+          </div>
         </div>
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-6 pb-6">
+          <button
+            type="button"
+            onClick={handleChangeAsset}
+            className="gap-1.5 flex w-fit items-center text-sm text-text-secondary transition-colors hover:text-text-primary"
+          >
+            ← Change Asset
+          </button>
 
-        {/* Right — live data (2/3) */}
-        <div className="col-span-2 min-h-0 overflow-y-auto">
-          {!selectedAsset ? (
-            <div className="rounded border border-border-default bg-bg-panel px-4 py-12 text-center">
-              <p className="text-sm text-text-secondary">
-                Select an asset to view QC report, COT positioning, and EIA
-                inventory.
-              </p>
+          <section>
+            <div className="mb-3">
+              <span className="font-mono text-sm">QC Report</span>
             </div>
-          ) : (
-            <div className="flex flex-col gap-8">
-              <section>
-                <div className="mb-3">
-                  <span className="font-mono text-sm">QC Report</span>
-                </div>
-                <DataQCPanel asset={selectedAsset} />
-              </section>
+            <DataQCPanel asset={selectedAsset} />
+          </section>
 
-              <section>
-                <div className="mb-3">
-                  <span className="font-mono text-sm">COT Positioning</span>
-                </div>
-                <COTDataPanel asset={selectedAsset} />
-              </section>
-
-              <section>
-                <div className="mb-3">
-                  <span className="font-mono text-sm">EIA Inventory</span>
-                </div>
-                <EIADataPanel asset={selectedAsset} />
-              </section>
+          <section>
+            <div className="mb-3">
+              <span className="font-mono text-sm">COT Positioning</span>
             </div>
-          )}
+            <COTDataPanel asset={selectedAsset} />
+          </section>
+
+          <section>
+            <div className="mb-3">
+              <span className="font-mono text-sm">EIA Inventory</span>
+            </div>
+            <EIADataPanel asset={selectedAsset} />
+          </section>
         </div>
-      </div>
+      )}
     </div>
   )
 }

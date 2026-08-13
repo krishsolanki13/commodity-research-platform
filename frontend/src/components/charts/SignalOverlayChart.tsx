@@ -103,7 +103,8 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
         if (periodType !== null && periodStart !== null) {
           const endIdx = Math.max(0, i - 1)
           if (periodType === 'long') longPeriods.push([periodStart, String(position.index[endIdx])])
-          if (periodType === 'short') shortPeriods.push([periodStart, String(position.index[endIdx])])
+          if (periodType === 'short')
+            shortPeriods.push([periodStart, String(position.index[endIdx])])
         }
         periodStart = currentType !== null ? String(position.index[i]) : null
         periodType = currentType
@@ -130,8 +131,8 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
       animation: true,
       backgroundColor: 'transparent',
       grid: [
-        { left: 60, right: 24, top: '2%',  height: '58%' },  // price pane
-        { left: 60, right: 24, top: '63%', bottom: 48 },      // signal pane (now bottom)
+        { left: 60, right: 24, top: '2%', height: '58%' }, // price pane
+        { left: 60, right: 24, top: '63%', bottom: 48 }, // signal pane (now bottom)
       ],
       dataZoom: [
         {
@@ -258,7 +259,9 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
           const lines: string[] = [dateLabel]
 
           if (candleItem) {
-            const rawVal = (Array.isArray(candleItem.value) ? candleItem.value : candleItem.data) as number[] | undefined
+            const rawVal = (
+              Array.isArray(candleItem.value) ? candleItem.value : candleItem.data
+            ) as number[] | undefined
             if (rawVal && rawVal.length >= 4) {
               const prices = rawVal.length >= 5 ? rawVal.slice(1, 5) : rawVal.slice(0, 4)
               const [o, c, l, h] = prices
@@ -266,7 +269,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
                 `O: ${Number(o).toFixed(2)}`,
                 `C: ${Number(c).toFixed(2)}`,
                 `L: ${Number(l).toFixed(2)}`,
-                `H: ${Number(h).toFixed(2)}`,
+                `H: ${Number(h).toFixed(2)}`
               )
             }
           }
@@ -377,7 +380,7 @@ export function SignalOverlayChart({
   // Inline legend: swatches rendered on the right side of the header row
   // via ChartFrame's `actions` prop (Panel places actions after justify-between)
   const legend = (
-    <div className="flex items-center gap-3 text-xs text-text-secondary font-mono">
+    <div className="flex items-center gap-3 font-mono text-xs text-text-secondary">
       <span className="flex items-center gap-1">
         <span className="inline-block h-3 w-4 rounded-sm bg-gain-fill opacity-70" />
         Long

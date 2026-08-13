@@ -32,10 +32,7 @@ function PCLoadingsInner({ loadings, nContracts, theme }: InnerProps) {
     const textSecondary = resolveCssVar('--gray-400', '#7C8A9C')
     const borderColor = resolveCssVar('--gray-800', '#222A37')
     const pcKeys = Object.keys(loadings)
-    const contractLabels = Array.from(
-      { length: nContracts },
-      (_, i) => `C${i + 1}`,
-    )
+    const contractLabels = Array.from({ length: nContracts }, (_, i) => `C${i + 1}`)
 
     const chart = echarts.init(containerRef.current, null, { renderer: 'canvas' })
     ctx?.onChartReady(chart)
@@ -77,21 +74,15 @@ function PCLoadingsInner({ loadings, nContracts, theme }: InnerProps) {
           color: resolveCssVar('--gray-200', '#C3CDD9'),
           fontSize: 12,
         },
-        formatter: (
-          params: Array<{ marker: string; seriesName: string; value: number }>,
-        ) =>
+        formatter: (params: Array<{ marker: string; seriesName: string; value: number }>) =>
           params
-            .map(
-              (p) =>
-                `${p.marker}${p.seriesName}&nbsp;&nbsp;<b>${dec(p.value, 3)}</b>`,
-            )
+            .map((p) => `${p.marker}${p.seriesName}&nbsp;&nbsp;<b>${dec(p.value, 3)}</b>`)
             .join('<br>'),
       },
       barCategoryGap: '35%',
       barGap: '8%',
       series: pcKeys.map((pc, i) => {
-        const colorDef =
-          SERIES_COLORS[i % SERIES_COLORS.length]
+        const colorDef = SERIES_COLORS[i % SERIES_COLORS.length]
         const color = resolveCssVar(colorDef.token, colorDef.fallback)
         return {
           name: pc,
@@ -130,23 +121,11 @@ function PCLoadingsInner({ loadings, nContracts, theme }: InnerProps) {
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }
 
-export function PCLoadingsChart({
-  loadings,
-  nContracts,
-  loading,
-}: PCLoadingsChartProps) {
+export function PCLoadingsChart({ loadings, nContracts, loading }: PCLoadingsChartProps) {
   const theme = useChartTheme()
   return (
-    <ChartFrame
-      title="PC Loadings by Contract Position"
-      height={340}
-      loading={loading}
-    >
-      <PCLoadingsInner
-        loadings={loadings}
-        nContracts={nContracts}
-        theme={theme}
-      />
+    <ChartFrame title="PC Loadings by Contract Position" height={340} loading={loading}>
+      <PCLoadingsInner loadings={loadings} nContracts={nContracts} theme={theme} />
     </ChartFrame>
   )
 }

@@ -29,7 +29,7 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
     run?.asset ?? null,
     run?.strategy ?? null,
     strategyParams,
-    63,
+    63
   )
 
   if (runQuery.isLoading) {
@@ -69,9 +69,7 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
   const icBand = evaluation.ic_band
 
   // RollingICResponse.data.columns.rolling_ic → ICRollingChart ic.columns.value
-  const rollingCols = rollingIcData?.data.columns as
-    | Record<string, (number | null)[]>
-    | undefined
+  const rollingCols = rollingIcData?.data.columns as Record<string, (number | null)[]> | undefined
   const icSeries: ColumnarSeries = rollingIcData?.data
     ? {
         index: rollingIcData.data.index,
@@ -82,11 +80,9 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid w-full grid-cols-3 gap-4">
-        <div className="flex flex-col gap-0.5">
+        <div className="gap-0.5 flex flex-col">
           <MetricStat label="IC" value={evaluation.ic} format="ic" tone="auto" />
-          {icBand && (
-            <span className="font-mono text-xs text-text-secondary pl-0">{icBand}</span>
-          )}
+          {icBand && <span className="pl-0 font-mono text-xs text-text-secondary">{icBand}</span>}
         </div>
         <MetricStat label="ICIR" value={evaluation.icir} format="ic" tone="neutral" />
         <MetricStat label="TURNOVER" value={evaluation.turnover} format="percent" tone="neutral" />

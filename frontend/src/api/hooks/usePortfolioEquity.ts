@@ -11,7 +11,7 @@ export function usePortfolioEquity(runId: string) {
     queryKey: qk.portfolioEquity(runId),
     queryFn: () =>
       fetchWithRaceRetry(() =>
-        client.get<PortfolioEquityResponse>(`/api/portfolio/${runId}/equity`),
+        client.get<PortfolioEquityResponse>(`/api/portfolio/${runId}/equity`)
       ),
     staleTime: Infinity,
     gcTime: 60 * 60 * 1000,

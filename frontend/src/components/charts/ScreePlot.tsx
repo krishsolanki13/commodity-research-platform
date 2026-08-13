@@ -88,13 +88,9 @@ function ScreePlotInner({ evr, cumEvr, pcLabels, theme }: InnerProps) {
           color: resolveCssVar('--gray-200', '#C3CDD9'),
           fontSize: 12,
         },
-        formatter: (
-          params: Array<{ marker: string; seriesName: string; value: number }>,
-        ) =>
+        formatter: (params: Array<{ marker: string; seriesName: string; value: number }>) =>
           params
-            .map(
-              (p) => `${p.marker}${p.seriesName}&nbsp;&nbsp;<b>${pct(p.value, 1)}</b>`,
-            )
+            .map((p) => `${p.marker}${p.seriesName}&nbsp;&nbsp;<b>${pct(p.value, 1)}</b>`)
             .join('<br>'),
       },
       series: [

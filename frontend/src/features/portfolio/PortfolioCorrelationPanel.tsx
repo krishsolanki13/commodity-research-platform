@@ -1,4 +1,5 @@
 import { CorrelationHeatmapChart } from '@/components/charts/CorrelationHeatmapChart'
+import { dec } from '@/lib/fmt'
 import type { ApiClientError } from '@/api/client'
 import type { components } from '@/api/schema'
 
@@ -31,7 +32,9 @@ export function PortfolioCorrelationPanel({
         <span>
           Avg Correlation:{' '}
           <span className="text-text-primary">
-            {correlation?.avg_pairwise_correlation?.toFixed(3) ?? '—'}
+            {correlation?.avg_pairwise_correlation != null
+              ? dec(correlation.avg_pairwise_correlation, 3)
+              : '—'}
           </span>
         </span>
         {correlation?.most_correlated_pair && (
@@ -39,7 +42,7 @@ export function PortfolioCorrelationPanel({
             Most:{' '}
             <span className="text-text-primary">
               {correlation.most_correlated_pair[0]} / {correlation.most_correlated_pair[1]} (
-              {correlation.most_correlated_pair[2].toFixed(2)})
+              {dec(correlation.most_correlated_pair[2], 2)})
             </span>
           </span>
         )}
@@ -48,7 +51,7 @@ export function PortfolioCorrelationPanel({
             Least:{' '}
             <span className="text-text-primary">
               {correlation.least_correlated_pair[0]} / {correlation.least_correlated_pair[1]} (
-              {correlation.least_correlated_pair[2].toFixed(2)})
+              {dec(correlation.least_correlated_pair[2], 2)})
             </span>
           </span>
         )}

@@ -7,6 +7,17 @@ import type { components } from '@/api/schema'
 
 type COTDataResponse = components['schemas']['COTDataResponse']
 
+function ordinalSuffix(n: number): string {
+  const abs = Math.round(Math.abs(n))
+  const mod100 = abs % 100
+  const mod10 = abs % 10
+  if (mod100 >= 11 && mod100 <= 13) return `${abs}th`
+  if (mod10 === 1) return `${abs}st`
+  if (mod10 === 2) return `${abs}nd`
+  if (mod10 === 3) return `${abs}rd`
+  return `${abs}th`
+}
+
 interface COTPositioningChartProps {
   records: COTDataResponse['records']
   loading?: boolean
@@ -101,7 +112,7 @@ function COTPositioningInner({ records, theme }: InnerProps) {
             seriesName: string
             value: number | null
             axisValue: string
-          }>,
+          }>
         ) => {
           const header = `<div class="mb-1 font-mono text-xs">${params[0]?.axisValue ?? ''}</div>`
           const rows = params
@@ -111,7 +122,7 @@ function COTPositioningInner({ records, theme }: InnerProps) {
               }
               const formatted =
                 p.seriesName === 'Pct Rank'
-                  ? `${p.value.toFixed(0)}th percentile`
+                  ? `${ordinalSuffix(p.value)} percentile`
                   : dec(p.value, 0)
               return `${p.marker}${p.seriesName}&nbsp;&nbsp;<b>${formatted}</b>`
             })
@@ -164,17 +175,10 @@ function COTPositioningInner({ records, theme }: InnerProps) {
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }
 
-export function COTPositioningChart({
-  records,
-  loading,
-}: COTPositioningChartProps) {
+export function COTPositioningChart({ records, loading }: COTPositioningChartProps) {
   const theme = useChartTheme()
   return (
-    <ChartFrame
-      title="COT Net Speculative Positioning"
-      height={280}
-      loading={loading}
-    >
+    <ChartFrame title="COT Net Speculative Positioning" height={280} loading={loading}>
       <COTPositioningInner records={records} theme={theme} />
     </ChartFrame>
   )

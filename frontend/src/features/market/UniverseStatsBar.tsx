@@ -114,7 +114,10 @@ export function UniverseStatsBar() {
                           const now = new Date()
                           setLastIngestedAt(now)
                           try {
-                            localStorage.setItem('commodity_research_last_ingested', now.toISOString())
+                            localStorage.setItem(
+                              'commodity_research_last_ingested',
+                              now.toISOString()
+                            )
                           } catch {
                             // localStorage not available — session-only fallback
                           }
@@ -128,7 +131,8 @@ export function UniverseStatsBar() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                Loads from local Parquet files. To download fresh data, run acquire_data.py from the terminal.
+                Loads from local Parquet files. To download fresh data, run acquire_data.py from the
+                terminal.
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

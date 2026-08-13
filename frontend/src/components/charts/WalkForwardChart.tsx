@@ -81,15 +81,13 @@ function WalkForwardInner({ folds, theme }: InnerProps) {
           fontFamily: theme.monoFont,
           fontSize: 12,
         },
-        formatter: (
-          params: Array<{ marker: string; seriesName: string; value: number | null }>,
-        ) =>
+        formatter: (params: Array<{ marker: string; seriesName: string; value: number | null }>) =>
           params
             .map(
               (p) =>
                 `${p.marker}${p.seriesName}&nbsp;&nbsp;<b>${
                   p.value !== null ? dec(p.value, 2) : '—'
-                }</b>`,
+                }</b>`
             )
             .join('<br>'),
       },

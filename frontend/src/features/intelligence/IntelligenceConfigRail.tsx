@@ -61,7 +61,7 @@ export function IntelligenceConfigRail({ availableAssets, loading }: Intelligenc
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
+      <div className="gap-1.5 flex flex-col">
         <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           Asset
         </span>
@@ -73,7 +73,7 @@ export function IntelligenceConfigRail({ availableAssets, loading }: Intelligenc
         />
       </div>
 
-      <div className="flex flex-col gap-1.5">
+      <div className="gap-1.5 flex flex-col">
         <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           Contracts
         </span>
@@ -95,7 +95,7 @@ export function IntelligenceConfigRail({ availableAssets, loading }: Intelligenc
         </Select>
       </div>
 
-      <div className="flex flex-col gap-1.5">
+      <div className="gap-1.5 flex flex-col">
         <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           History
         </span>

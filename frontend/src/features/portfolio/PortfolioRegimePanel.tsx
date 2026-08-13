@@ -30,17 +30,14 @@ function capitalize(s: string): string {
   return s.length === 0 ? s : s[0].toUpperCase() + s.slice(1)
 }
 
-export function PortfolioRegimePanel({
-  runId: _runId,
-  assetRunIds,
-}: PortfolioRegimePanelProps) {
+export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRegimePanelProps) {
   const availableAssets = useMemo(
     () =>
       Object.entries(assetRunIds ?? {})
         .filter(([, id]) => id !== null)
         .map(([asset]) => asset)
         .sort(),
-    [assetRunIds],
+    [assetRunIds]
   )
 
   // Selected asset state — default to first alphabetically
@@ -50,12 +47,12 @@ export function PortfolioRegimePanel({
 
   const [shouldFetch, setShouldFetch] = useState(false)
 
-  const selectedRunId = effectiveAsset
-    ? (assetRunIds?.[effectiveAsset] ?? null)
-    : null
+  const selectedRunId = effectiveAsset ? (assetRunIds?.[effectiveAsset] ?? null) : null
 
-  const { data: selectedData, isLoading: selectedLoading } =
-    useRegimeAttribution(shouldFetch ? selectedRunId : null, 4)
+  const { data: selectedData, isLoading: selectedLoading } = useRegimeAttribution(
+    shouldFetch ? selectedRunId : null,
+    4
+  )
 
   function handleAssetChange(asset: string) {
     setSelectedAsset(asset)
@@ -66,12 +63,10 @@ export function PortfolioRegimePanel({
   if (!assetRunIds || availableAssets.length === 0) {
     return (
       <div className="rounded border border-border-default bg-bg-panel p-6 text-center">
-        <p className="text-sm font-medium text-text-primary">
-          Regime attribution unavailable
-        </p>
+        <p className="text-sm font-medium text-text-primary">Regime attribution unavailable</p>
         <p className="mt-1 text-xs text-text-secondary">
-          This portfolio run was created before per-asset run IDs were recorded.
-          Re-run the portfolio analysis to enable regime attribution.
+          This portfolio run was created before per-asset run IDs were recorded. Re-run the
+          portfolio analysis to enable regime attribution.
         </p>
       </div>
     )
@@ -83,10 +78,8 @@ export function PortfolioRegimePanel({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-xs uppercase tracking-wider text-text-secondary">
-          Asset
-        </span>
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-xs uppercase tracking-wider text-text-secondary">Asset</span>
         <select
           value={effectiveAsset}
           onChange={(e) => handleAssetChange(e.target.value)}
@@ -95,10 +88,7 @@ export function PortfolioRegimePanel({
           {availableAssets.map((a) => (
             <option key={a} value={a}>
               {displayName(a)}
-              {shouldFetch &&
-              selectedData &&
-              effectiveAsset === a &&
-              selectedData.dominant_regime
+              {shouldFetch && selectedData && effectiveAsset === a && selectedData.dominant_regime
                 ? ` — ${capitalize(selectedData.dominant_regime)}`
                 : shouldFetch && selectedLoading && effectiveAsset === a
                   ? ' — loading…'
@@ -107,7 +97,7 @@ export function PortfolioRegimePanel({
           ))}
         </select>
         {shouldFetch && selectedLoading && (
-          <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+          <div className="gap-1.5 flex items-center text-xs text-text-secondary">
             <span>Computing regime attribution…</span>
             <TooltipProvider delayDuration={300}>
               <Tooltip>
@@ -122,9 +112,8 @@ export function PortfolioRegimePanel({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="max-w-xs">
-                    Classifies each trading day as contango, backwardation, or
-                    flat using the futures term structure. Takes 30–90 seconds
-                    per asset.
+                    Classifies each trading day as contango, backwardation, or flat using the
+                    futures term structure. Takes 30–90 seconds per asset.
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -136,31 +125,23 @@ export function PortfolioRegimePanel({
       {!shouldFetch ? (
         <div className="flex flex-col items-center gap-3 py-8 text-center">
           <p className="text-sm text-text-secondary">
-            Regime attribution classifies term structure conditions across the
-            full price history. This computation takes 30–90 seconds per asset.
+            Regime attribution classifies term structure conditions across the full price history.
+            This computation takes 30–90 seconds per asset.
           </p>
           <div className="flex justify-center">
-            <Button
-              variant="primary"
-              onClick={() => setShouldFetch(true)}
-              className="px-6 text-sm"
-            >
+            <Button variant="primary" onClick={() => setShouldFetch(true)} className="px-6 text-sm">
               Compute Regime Attribution
             </Button>
           </div>
         </div>
       ) : (
         <>
-          <RegimeBreakdownChart
-            data={selectedData!}
-            loading={selectedLoading || !selectedData}
-          />
+          <RegimeBreakdownChart data={selectedData!} loading={selectedLoading || !selectedData} />
 
           {selectedData && (
             <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
               <span>
-                {daysWithData.toLocaleString()} of{' '}
-                {totalDays.toLocaleString()} days had regime data
+                {daysWithData.toLocaleString()} of {totalDays.toLocaleString()} days had regime data
               </span>
               {Object.keys(coverage).length > 0 && (
                 <>

@@ -99,7 +99,7 @@ function oosColorClass(
   isVal: number | null,
   oosVal: number | null,
   _higherIsBetter: boolean,
-  isDrawdown: boolean,
+  isDrawdown: boolean
 ): string {
   if (
     isVal === null ||
@@ -125,10 +125,7 @@ function isPresentNumber(v: number | null | undefined): v is number {
 }
 
 /** Format a cell; treat null/NaN/non-finite and formatters that yield "NaN" as em dash. */
-function formatCell(
-  format: (v: number) => string,
-  v: number | null | undefined,
-): string {
+function formatCell(format: (v: number) => string, v: number | null | undefined): string {
   if (!isPresentNumber(v)) return '—'
   const formatted = format(v)
   return formatted === 'NaN' ? '—' : formatted
@@ -160,16 +157,14 @@ export function ValidationSummaryTable({ report }: ValidationSummaryTableProps) 
           {ROWS.map((row) => {
             const { isVal, oosVal } = row.get(report, folds)
             const ratio =
-              isPresentNumber(isVal) &&
-              isPresentNumber(oosVal) &&
-              isVal !== 0
+              isPresentNumber(isVal) && isPresentNumber(oosVal) && isVal !== 0
                 ? oosVal / isVal
                 : null
             const oosClass = oosColorClass(
               isPresentNumber(isVal) ? isVal : null,
               isPresentNumber(oosVal) ? oosVal : null,
               row.higherIsBetter,
-              row.isDrawdown ?? false,
+              row.isDrawdown ?? false
             )
 
             return (

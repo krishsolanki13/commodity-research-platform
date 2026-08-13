@@ -27,7 +27,7 @@ import {
 const RunValidationTab = lazy(() =>
   import('@/features/runs/RunValidationTab').then((m) => ({
     default: m.RunValidationTab,
-  })),
+  }))
 )
 
 export default function RunDetail() {

@@ -28,24 +28,17 @@ interface RunValidationTabProps {
   parameters: Record<string, unknown> | null
 }
 
-export function RunValidationTab({
-  asset,
-  strategyName,
-  parameters,
-}: RunValidationTabProps) {
+export function RunValidationTab({ asset, strategyName, parameters }: RunValidationTabProps) {
   const [validationId, setValidationId] = useState<string | null>(null)
   const [nSplits, setNSplits] = useState(5)
   const [embargoBars, setEmbargoBars] = useState(10)
 
   const launch = useValidationLaunch()
   const { data: status } = useValidationStatus(validationId)
-  const { data: report } = useValidationReport(
-    status?.status === 'complete' ? validationId : null,
-  )
+  const { data: report } = useValidationReport(status?.status === 'complete' ? validationId : null)
 
   const isPolling = status?.status === 'queued' || status?.status === 'running'
-  const canLaunch =
-    !!asset && !!strategyName && !!parameters && !launch.isPending && !validationId
+  const canLaunch = !!asset && !!strategyName && !!parameters && !launch.isPending && !validationId
 
   function handleLaunch() {
     if (!asset || !strategyName || !parameters) return
@@ -59,7 +52,7 @@ export function RunValidationTab({
       },
       {
         onSuccess: (data) => setValidationId(data.validation_run_id),
-      },
+      }
     )
   }
 
@@ -78,20 +71,20 @@ export function RunValidationTab({
         <div className="min-h-0 overflow-y-auto">
           <Panel title="Configuration">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
+              <div className="gap-1.5 flex flex-col">
                 <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
                   Asset
                 </span>
                 <p className="font-mono text-sm text-text-primary">{asset ?? '—'}</p>
               </div>
-              <div className="flex flex-col gap-1.5">
+              <div className="gap-1.5 flex flex-col">
                 <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
                   Strategy
                 </span>
                 <p className="font-mono text-sm text-text-primary">{strategyName ?? '—'}</p>
               </div>
               {parameters && (
-                <div className="flex flex-col gap-1.5">
+                <div className="gap-1.5 flex flex-col">
                   <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
                     Parameters
                   </span>
@@ -142,8 +135,8 @@ export function RunValidationTab({
                 {launch.isPending ? 'Launching…' : 'Launch Walk-Forward Validation'}
               </Button>
               <p className="text-xs text-text-secondary">
-                Launch walk-forward validation to compare in-sample vs out-of-sample
-                Sharpe across folds.
+                Launch walk-forward validation to compare in-sample vs out-of-sample Sharpe across
+                folds.
               </p>
             </div>
           </Panel>
@@ -156,9 +149,7 @@ export function RunValidationTab({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
       {isPolling && (
-        <p className="text-sm text-text-secondary">
-          Running validation ({nSplits} folds)…
-        </p>
+        <p className="text-sm text-text-secondary">Running validation ({nSplits} folds)…</p>
       )}
 
       {status?.status === 'failed' && (

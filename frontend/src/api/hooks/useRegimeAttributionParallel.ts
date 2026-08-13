@@ -25,7 +25,7 @@ type RegimeAttributionResponse = components['schemas']['RegimeAttributionRespons
  */
 export function useRegimeAttributionParallel(
   assetRunIds: Record<string, string | null>,
-  nContracts: number = 4,
+  nContracts: number = 4
 ) {
   const entries = Object.entries(assetRunIds).filter(([, id]) => id !== null)
 

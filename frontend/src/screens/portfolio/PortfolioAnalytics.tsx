@@ -91,8 +91,8 @@ export function PortfolioAnalytics() {
 
   if (!run_id) {
     return (
-      <div className="flex flex-col h-full overflow-hidden">
-        <div className="shrink-0 px-6 pt-6 pb-4">
+      <div className="flex h-full flex-col overflow-hidden">
+        <div className="shrink-0 px-6 pb-4 pt-6">
           <h1 className="text-xl font-semibold text-text-primary">Portfolio Analytics</h1>
         </div>
         <div className="grid min-h-0 flex-1 grid-cols-2 gap-6 overflow-hidden px-6 pb-6">
@@ -211,10 +211,7 @@ export function PortfolioAnalytics() {
         <div className="mb-3">
           <span className="font-mono text-sm">Regime Attribution</span>
         </div>
-        <PortfolioRegimePanel
-          runId={run_id}
-          assetRunIds={assetsQuery.data?.asset_run_ids}
-        />
+        <PortfolioRegimePanel runId={run_id} assetRunIds={assetsQuery.data?.asset_run_ids} />
       </section>
 
       <AlertDialog

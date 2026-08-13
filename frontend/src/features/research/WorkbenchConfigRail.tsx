@@ -198,8 +198,7 @@ export function WorkbenchConfigRail({
           />
           <DateRangePicker
             value={{ from: fromDate, to: toDate }}
-            onChange={({ from, to }) =>
-              setUrlState({ from_date: from, to_date: to })}
+            onChange={({ from, to }) => setUrlState({ from_date: from, to_date: to })}
           />
           <StrategyPicker
             strategies={strategies ?? []}
@@ -211,8 +210,7 @@ export function WorkbenchConfigRail({
             <ParamForm
               schema={selectedStrategy?.params_schema ?? []}
               values={parsedParams}
-              onChange={(newParams) =>
-                setUrlState({ params: JSON.stringify(newParams) })}
+              onChange={(newParams) => setUrlState({ params: JSON.stringify(newParams) })}
             />
           )}
         </div>
@@ -222,8 +220,7 @@ export function WorkbenchConfigRail({
         <IndicatorPicker
           catalog={indicators ?? []}
           selected={parsedFeatures}
-          onChange={(newSpecs) =>
-            setUrlState({ features: JSON.stringify(newSpecs) })}
+          onChange={(newSpecs) => setUrlState({ features: JSON.stringify(newSpecs) })}
           requiredSpecs={requiredSpecs}
         />
       </Panel>

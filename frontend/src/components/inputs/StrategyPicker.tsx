@@ -61,9 +61,7 @@ export function StrategyPicker({
         )
 
         if (!disabled) {
-          return (
-            <div key={strategy.name}>{card}</div>
-          )
+          return <div key={strategy.name}>{card}</div>
         }
 
         return (
