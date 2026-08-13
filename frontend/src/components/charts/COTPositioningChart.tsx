@@ -35,7 +35,11 @@ function COTPositioningInner({ records, theme }: InnerProps) {
 
     const dates = records.map((r) => fmtDate(new Date(r.date).getTime()))
     const netSpec = records.map((r) => r.net_speculative ?? null)
-    const pctRank = records.map((r) => r.percentile_rank ?? null)
+    // percentile_rank is 0–100 from API; null/undefined → gap (not spike to 0)
+    const pctRank = records.map((r) => {
+      const v = r.percentile_rank
+      return v === null || v === undefined ? null : v
+    })
 
     const chart = echarts.init(containerRef.current, null, { renderer: 'canvas' })
     ctx?.onChartReady(chart)
@@ -72,12 +76,12 @@ function COTPositioningInner({ records, theme }: InnerProps) {
         {
           type: 'value',
           min: 0,
-          max: 1,
+          max: 100,
           position: 'right',
           axisLabel: {
             color: textSecondary,
             fontSize: 10,
-            formatter: (v: number) => `${(v * 100).toFixed(0)}%`,
+            formatter: (v: number) => `${v.toFixed(0)}%`,
           },
           splitLine: { show: false },
           axisLine: { show: false },
@@ -95,16 +99,19 @@ function COTPositioningInner({ records, theme }: InnerProps) {
           params: Array<{
             marker: string
             seriesName: string
-            value: number
+            value: number | null
             axisValue: string
           }>,
         ) => {
           const header = `<div class="mb-1 font-mono text-xs">${params[0]?.axisValue ?? ''}</div>`
           const rows = params
             .map((p) => {
+              if (p.value === null || p.value === undefined) {
+                return `${p.marker}${p.seriesName}&nbsp;&nbsp;<b>—</b>`
+              }
               const formatted =
                 p.seriesName === 'Pct Rank'
-                  ? `${(p.value * 100).toFixed(0)}th pct`
+                  ? `${p.value.toFixed(0)}th percentile`
                   : dec(p.value, 0)
               return `${p.marker}${p.seriesName}&nbsp;&nbsp;<b>${formatted}</b>`
             })
@@ -131,6 +138,7 @@ function COTPositioningInner({ records, theme }: InnerProps) {
           lineStyle: { color: infoColor, width: 1.5 },
           itemStyle: { color: infoColor },
           symbol: 'none',
+          showAllSymbol: false,
           connectNulls: false,
           areaStyle: { color: infoColor, opacity: 0.08 },
           markLine: {
@@ -138,7 +146,7 @@ function COTPositioningInner({ records, theme }: InnerProps) {
             symbol: 'none',
             label: { show: false },
             lineStyle: { color: warnColor, type: 'dashed', width: 1 },
-            data: [{ yAxis: 0.8 }, { yAxis: 0.2 }],
+            data: [{ yAxis: 80 }, { yAxis: 20 }],
           },
         },
       ],

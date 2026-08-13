@@ -26,7 +26,12 @@ export function EIADataPanel({ asset }: EIADataPanelProps) {
         <p className="text-sm font-medium text-text-primary">
           No EIA data available
         </p>
-        <p className="mt-1 text-xs text-text-secondary">{eia.message}</p>
+        <p className="mt-1 text-xs text-text-secondary">
+          EIA weekly inventory reports cover US crude oil storage only.
+          {asset !== 'wti' && asset !== 'brent'
+            ? ' This asset is not tracked in EIA inventory data.'
+            : ''}
+        </p>
       </div>
     )
   }

@@ -26,7 +26,12 @@ export function COTDataPanel({ asset }: COTDataPanelProps) {
         <p className="text-sm font-medium text-text-primary">
           No COT data available
         </p>
-        <p className="mt-1 text-xs text-text-secondary">{cot.message}</p>
+        <p className="mt-1 text-xs text-text-secondary">
+          CFTC COT reports cover NYMEX-listed contracts only.
+          {asset === 'brent'
+            ? ' Brent Crude trades on ICE London and is excluded from CFTC reporting.'
+            : ' COT data is not available for this asset.'}
+        </p>
       </div>
     )
   }

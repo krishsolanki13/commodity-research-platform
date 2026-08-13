@@ -47,7 +47,7 @@ describe('COTDataPanel', () => {
         asset: 'brent',
         available: false,
         records: [],
-        message: 'COT data is not available for this asset.',
+        message: "No COT data for 'brent'. Run scripts/acquire_cot_data.py.",
       },
       isLoading: false,
       error: null,
@@ -56,8 +56,12 @@ describe('COTDataPanel', () => {
     render(<COTDataPanel asset="brent" />, { wrapper: Wrapper })
     expect(screen.getByText('No COT data available')).toBeInTheDocument()
     expect(
-      screen.getByText('COT data is not available for this asset.'),
+      screen.getByText(/CFTC COT reports cover NYMEX-listed contracts only/i),
     ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Brent Crude trades on ICE London/i),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/acquire_cot_data/i)).not.toBeInTheDocument()
   })
 })
 
@@ -68,7 +72,7 @@ describe('EIADataPanel', () => {
         asset: 'gold',
         available: false,
         records: [],
-        message: 'EIA inventory data is not available for this asset.',
+        message: "EIA data only available for crude oil assets: ['brent', 'wti']",
       },
       isLoading: false,
       error: null,
@@ -77,7 +81,11 @@ describe('EIADataPanel', () => {
     render(<EIADataPanel asset="gold" />, { wrapper: Wrapper })
     expect(screen.getByText('No EIA data available')).toBeInTheDocument()
     expect(
-      screen.getByText('EIA inventory data is not available for this asset.'),
+      screen.getByText(/EIA weekly inventory reports cover US crude oil storage only/i),
     ).toBeInTheDocument()
+    expect(
+      screen.getByText(/This asset is not tracked in EIA inventory data/i),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/acquire/i)).not.toBeInTheDocument()
   })
 })
