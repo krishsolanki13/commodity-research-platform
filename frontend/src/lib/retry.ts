@@ -8,14 +8,18 @@
  */
 import { ApiClientError } from '@/api/client'
 
-export async function fetchWithRaceRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
+export async function fetchWithRaceRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts = 4,
+): Promise<T> {
+  const delays = [1000, 3000, 6000, 10000]
   for (let i = 0; i < maxAttempts; i++) {
     try {
       return await fn()
     } catch (err) {
       const is404 = err instanceof ApiClientError && err.apiError.status === 404
       if (is404 && i < maxAttempts - 1) {
-        await new Promise((r) => setTimeout(r, 1000 * (i + 1)))
+        await new Promise((r) => setTimeout(r, delays[i] ?? 10000))
         continue
       }
       throw err

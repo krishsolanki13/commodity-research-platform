@@ -2,6 +2,7 @@ import { cn } from '@/lib/cn'
 import { percent } from '@/lib/fmt'
 import { useUrlState } from '@/lib/useUrlState'
 import { usePortfolioRuns } from '@/api/hooks/usePortfolioRuns'
+import { usePortfolioHistory } from '@/stores/portfolioHistory'
 import { portfolioUrlDefaults, portfolioUrlSchema } from '@/features/portfolio/portfolioUrlState'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/select'
 
@@ -15,8 +16,9 @@ function shortRunName(runId: string): string {
 export function PortfolioRunSelector() {
   const { data, isLoading, isError } = usePortfolioRuns()
   const [{ run_id: runId }, setUrlState] = useUrlState(portfolioUrlSchema, portfolioUrlDefaults)
+  const dismissedIds = usePortfolioHistory((s) => s.dismissedIds)
 
-  const runs = data?.runs ?? []
+  const runs = (data?.runs ?? []).filter((r) => !dismissedIds.includes(r.run_id))
 
   if (isLoading || isError || runs.length === 0) return null
 

@@ -19,16 +19,20 @@ export interface PortfolioRunRecord {
 
 interface PortfolioHistoryState {
   runs: PortfolioRunRecord[]
+  /** Run IDs known to 404 — filtered from API-backed selectors. */
+  dismissedIds: string[]
   addRun: (run: PortfolioRunRecord) => void
   removeRun: (runId: string) => void
   clear: () => void
   has: (runId: string) => boolean
+  isDismissed: (runId: string) => boolean
 }
 
 export const usePortfolioHistory = create<PortfolioHistoryState>()(
   persist(
     (set, get) => ({
       runs: [],
+      dismissedIds: [],
 
       addRun: (run) =>
         set((s) => {
@@ -36,22 +40,28 @@ export const usePortfolioHistory = create<PortfolioHistoryState>()(
           const filtered = s.runs.filter((r) => r.run_id !== run.run_id)
           // Add to front; evict oldest if over max
           const updated = [run, ...filtered].slice(0, MAX_HISTORY)
-          return { runs: updated }
+          return {
+            runs: updated,
+            dismissedIds: s.dismissedIds.filter((id) => id !== run.run_id),
+          }
         }),
 
       removeRun: (runId) =>
         set((s) => ({
           runs: s.runs.filter((r) => r.run_id !== runId),
+          dismissedIds: [runId, ...s.dismissedIds.filter((id) => id !== runId)].slice(0, 50),
         })),
 
-      clear: () => set({ runs: [] }),
+      clear: () => set({ runs: [], dismissedIds: [] }),
 
       has: (runId) => get().runs.some((r) => r.run_id === runId),
+
+      isDismissed: (runId) => get().dismissedIds.includes(runId),
     }),
     {
       name: 'commodity-research-portfolio-history',
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ runs: s.runs }),
+      partialize: (s) => ({ runs: s.runs, dismissedIds: s.dismissedIds }),
     }
   )
 )

@@ -247,43 +247,89 @@ export function SweepExplorer() {
                   Recent Sweeps
                 </span>
                 {recentSweeps.length === 0 ? (
-                  <p className="text-xs text-text-secondary">
+                  <p className="px-3 py-4 text-xs text-text-secondary">
                     No previous sweeps. Configure and launch above.
                   </p>
                 ) : (
-                  <div className="gap-0.5 flex flex-col">
-                    {recentSweeps.map((s) => {
-                      const badge = deriveSweepStatus(s)
-                      return (
-                        <button
-                          key={s.sweep_id}
-                          type="button"
-                          onClick={() => setActiveSweepId(s.sweep_id)}
-                          className={cn(
-                            'py-1.5 flex items-center justify-between gap-2 rounded px-2 text-left font-mono text-xs transition-colors',
-                            activeSweepId === s.sweep_id
-                              ? 'bg-bg-selected text-text-accent'
-                              : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
-                          )}
-                        >
-                          <span className="min-w-0 truncate">
-                            {s.sweep_id.slice(0, 8)}… · {s.asset} / {s.strategy_name}
-                          </span>
-                          <span
-                            className={cn(
-                              'px-1.5 py-0.5 shrink-0 rounded-full text-[10px] font-medium',
-                              badge === 'complete'
-                                ? 'bg-gain-fill text-gain'
-                                : badge === 'failed'
-                                  ? 'bg-loss-fill text-loss'
-                                  : 'bg-bg-raised text-text-secondary'
-                            )}
-                          >
-                            {badge}
-                          </span>
-                        </button>
-                      )
-                    })}
+                  <div className="overflow-hidden rounded border border-border-default">
+                    <table
+                      role="grid"
+                      aria-label="Recent sweeps"
+                      className="w-full table-fixed border-collapse text-sm"
+                    >
+                      <thead className="bg-bg-raised">
+                        <tr>
+                          {['SWEEP ID', 'ASSET / STRATEGY', 'STATUS'].map((heading) => (
+                            <th
+                              key={heading}
+                              scope="col"
+                              className="px-3 py-2 text-left text-xs font-medium text-text-secondary"
+                            >
+                              {heading}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recentSweeps.map((s) => {
+                          const badge = deriveSweepStatus(s)
+                          const isActive = activeSweepId === s.sweep_id
+                          return (
+                            <tr
+                              key={s.sweep_id}
+                              onClick={() => setActiveSweepId(s.sweep_id)}
+                              className={cn(
+                                'cursor-pointer border-b border-border-default last:border-b-0',
+                                isActive
+                                  ? 'bg-bg-selected'
+                                  : 'hover:bg-bg-hover'
+                              )}
+                            >
+                              <td
+                                className={cn(
+                                  'truncate px-3 py-2 font-mono text-xs',
+                                  isActive ? 'text-text-accent' : 'text-text-primary'
+                                )}
+                                title={s.sweep_id}
+                              >
+                                {s.sweep_id.length > 20
+                                  ? `${s.sweep_id.slice(0, 20)}…`
+                                  : s.sweep_id}
+                              </td>
+                              <td className="truncate px-3 py-2 text-xs text-text-secondary">
+                                {s.asset} / {s.strategy_name}
+                              </td>
+                              <td className="px-3 py-2">
+                                <span className="flex items-center gap-1.5">
+                                  <span
+                                    className={cn(
+                                      'h-1.5 w-1.5 rounded-full',
+                                      badge === 'complete'
+                                        ? 'bg-gain'
+                                        : badge === 'failed'
+                                          ? 'bg-loss'
+                                          : 'bg-info'
+                                    )}
+                                  />
+                                  <span
+                                    className={cn(
+                                      'font-mono text-xs',
+                                      badge === 'complete'
+                                        ? 'text-gain'
+                                        : badge === 'failed'
+                                          ? 'text-loss'
+                                          : 'text-text-secondary'
+                                    )}
+                                  >
+                                    {badge}
+                                  </span>
+                                </span>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
