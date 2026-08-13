@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -29,6 +30,8 @@ from api.models import (
     series_to_columnar,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/runs", tags=["runs"])
 
 
@@ -46,11 +49,19 @@ def _load_params(run_dir: Path) -> dict[str, Any]:
     return cast(dict[str, Any], json.loads(p.read_text()))
 
 
-def _load_metrics(run_dir: Path) -> dict[str, float | None]:
+def _load_metrics(run_dir: Path) -> dict[str, float | None] | None:
     p = run_dir / "metrics.json"
     if not p.exists():
         return {}
-    raw = json.loads(p.read_text())
+    try:
+        raw = json.loads(p.read_text())
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "Run Explorer: skipping corrupted metrics file %s — %s",
+            p,
+            exc,
+        )
+        return None
     metrics: dict[str, float | None] = {}
     for section in ("scalar_metrics", "signal_metrics"):
         for k, v in raw.get(section, {}).items():
@@ -117,6 +128,8 @@ def _list_all_runs() -> list[dict[str, Any]]:
         run_id = params_file.parent.name
         params = _load_params(params_file.parent)
         metrics = _load_metrics(params_file.parent)
+        if metrics is None:
+            continue
         task = state.get(run_id)
         status = task["status"] if task else "complete"
         runs.append(
@@ -212,7 +225,7 @@ def get_run_detail(run_id: str) -> RunDetailResponse:
             status=404,
         )
     params = _load_params(run_dir)
-    metrics = _load_metrics(run_dir)
+    metrics = _load_metrics(run_dir) or {}
     provenance = _build_provenance(params)
 
     raw_se = params.get("signal_evaluation")
@@ -326,7 +339,7 @@ def get_run_trades(
             )
         )
 
-    metrics = _load_metrics(run_dir)
+    metrics = _load_metrics(run_dir) or {}
     stats = TradeStats(
         n_trades=total,
         avg_duration_bars=metrics.get("avg_trade_duration_bars"),
@@ -364,7 +377,7 @@ def compare_runs(request: CompareRequest) -> CompareResponse:
                 status=404,
             )
         params = _load_params(run_dir)
-        metrics = _load_metrics(run_dir)
+        metrics = _load_metrics(run_dir) or {}
         summaries.append(
             CompareRunSummary(
                 run_id=artifact_id,
