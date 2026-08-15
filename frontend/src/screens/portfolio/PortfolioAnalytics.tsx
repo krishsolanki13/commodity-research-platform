@@ -169,7 +169,7 @@ export function PortfolioAnalytics() {
                       No previous portfolio runs this session.
                     </p>
                   ) : (
-                    <div className="overflow-hidden rounded border border-border-default">
+                    <div className="mt-3 overflow-hidden rounded border border-border-default">
                       <table
                         role="grid"
                         aria-label="Recent portfolio runs"

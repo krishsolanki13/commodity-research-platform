@@ -251,7 +251,7 @@ export function SweepExplorer() {
                     No previous sweeps. Configure and launch above.
                   </p>
                 ) : (
-                  <div className="overflow-hidden rounded border border-border-default">
+                  <div className="mt-3 overflow-hidden rounded border border-border-default">
                     <table
                       role="grid"
                       aria-label="Recent sweeps"
