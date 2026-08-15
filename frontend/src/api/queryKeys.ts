@@ -64,4 +64,24 @@ export const qk = {
     ['curves', asset, 'snapshot', { nContracts, observationDate }] as const,
   curveHistory: (asset: string, from: string, to: string, nContracts: number) =>
     ['curves', asset, 'history', { from, to, nContracts }] as const,
+
+  validation: {
+    status: (id: string) => ['validation', id, 'status'] as const,
+    report: (id: string) => ['validation', id, 'report'] as const,
+  },
+  rollingIc: (asset: string, strategy: string, params: string, window: number) =>
+    ['rolling-ic', asset, strategy, params, window] as const,
+  regimeAttribution: (runId: string, nContracts: number) =>
+    ['regime-attribution', runId, nContracts] as const,
+  sweep: {
+    list: () => ['sweeps'] as const,
+    status: (id: string) => ['sweeps', id, 'status'] as const,
+    results: (id: string, sortBy: string, sortDir: string) =>
+      ['sweeps', id, 'results', sortBy, sortDir] as const,
+  },
+  dataQc: (asset: string) => ['data-qc', asset] as const,
+  curvePca: (asset: string, nComponents: number, nContracts: number, from?: string, to?: string) =>
+    ['curve-pca', asset, nComponents, nContracts, from, to] as const,
+  cotData: (asset: string) => ['cot-data', asset] as const,
+  eiaData: (asset: string) => ['eia-data', asset] as const,
 } as const

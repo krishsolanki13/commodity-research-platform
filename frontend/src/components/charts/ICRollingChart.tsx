@@ -14,6 +14,7 @@ import type { ECharts } from '@/lib/echarts-setup'
 import { echarts } from '@/lib/echarts-setup'
 import { ChartFrame, useChartFrame } from '@/components/charts/ChartFrame'
 import { useChartTheme, type EChartsTheme } from '@/lib/chart-theme'
+import { dec, fmtDate } from '@/lib/fmt'
 import type { components } from '@/api/schema'
 
 type ColumnarSeries = components['schemas']['ColumnarSeries']
@@ -66,6 +67,12 @@ function ICRollingChartInner({ ic, window: _window, theme }: ICRollingChartInner
           color: theme.secondaryText,
           fontFamily: theme.monoFont,
           fontSize: 11,
+          formatter: (v: string | number) => fmtDate(Number(v)),
+        },
+        axisPointer: {
+          label: {
+            formatter: (p: { value: string | number }) => fmtDate(Number(p.value)),
+          },
         },
         splitLine: { show: false },
       },
@@ -86,6 +93,20 @@ function ICRollingChartInner({ ic, window: _window, theme }: ICRollingChartInner
           color: theme.tooltip.textStyle.color,
           fontFamily: theme.monoFont,
           fontSize: 12,
+        },
+        formatter: (params: unknown) => {
+          const items = (Array.isArray(params) ? params : [params]) as Array<{
+            axisValue?: string | number
+            name?: string | number
+            value?: number | null
+            marker?: string
+          }>
+          const p = items[0]
+          if (!p) return ''
+          const header = fmtDate(Number(p.axisValue ?? p.name))
+          const marker = p.marker ?? ''
+          if (p.value == null) return `${header}<br/>${marker}IC: —`
+          return `${header}<br/>${marker}IC: ${dec(Number(p.value), 3)}`
         },
       },
       series: [
@@ -109,22 +130,54 @@ function ICRollingChartInner({ ic, window: _window, theme }: ICRollingChartInner
               {
                 yAxis: 0.05,
                 lineStyle: { color: theme.icStrong, type: 'dashed' },
-                label: { formatter: '0.05', position: 'end' },
+                label: {
+                  formatter: '+0.05',
+                  position: 'end',
+                  offset: [4, -8],
+                  color: theme.secondaryText,
+                  fontWeight: 'normal',
+                  fontSize: 10,
+                  fontFamily: theme.monoFont,
+                },
               },
               {
                 yAxis: 0.02,
                 lineStyle: { color: theme.icWeak, type: 'dashed' },
-                label: { formatter: '0.02', position: 'end' },
+                label: {
+                  formatter: '+0.02',
+                  position: 'end',
+                  offset: [4, 8],
+                  color: theme.secondaryText,
+                  fontWeight: 'normal',
+                  fontSize: 10,
+                  fontFamily: theme.monoFont,
+                },
               },
               {
                 yAxis: -0.02,
                 lineStyle: { color: theme.icWeak, type: 'dashed' },
-                label: { formatter: '-0.02', position: 'end' },
+                label: {
+                  formatter: '-0.02',
+                  position: 'end',
+                  offset: [4, -8],
+                  color: theme.secondaryText,
+                  fontWeight: 'normal',
+                  fontSize: 10,
+                  fontFamily: theme.monoFont,
+                },
               },
               {
                 yAxis: -0.05,
                 lineStyle: { color: theme.icStrong, type: 'dashed' },
-                label: { formatter: '-0.05', position: 'end' },
+                label: {
+                  formatter: '-0.05',
+                  position: 'end',
+                  offset: [4, 8],
+                  color: theme.secondaryText,
+                  fontWeight: 'normal',
+                  fontSize: 10,
+                  fontFamily: theme.monoFont,
+                },
               },
               {
                 yAxis: 0,

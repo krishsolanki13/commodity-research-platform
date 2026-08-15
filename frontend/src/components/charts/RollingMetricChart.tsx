@@ -197,9 +197,7 @@ function RollingMetricChartInner({
             fontSize: 10,
             fontFamily: theme.monoFont,
             formatter: (p: { value: number | string }) =>
-              typeof p.value === 'number' && p.value > 1e9
-                ? fmtDate(p.value)
-                : String(p.value),
+              typeof p.value === 'number' && p.value > 1e9 ? fmtDate(p.value) : String(p.value),
           },
         },
         backgroundColor: theme.tooltip.backgroundColor,

@@ -1,16 +1,18 @@
 /**
- * RunSignalQualityTab — signal evaluation metrics and IC decay chart.
- *
- * Rolling IC chart deferred — no rolling IC series endpoint available yet.
- * When backend adds /api/signals/rolling-ic, wire the rolling IC chart here.
+ * RunSignalQualityTab — signal evaluation metrics, IC decay, and rolling IC.
  */
-import { useRunDetail } from '@/api/hooks'
+import { useRunDetail, useRollingIC } from '@/api/hooks'
 import { ICDecayChart } from '@/components/charts/ICDecayChart'
+import { ICRollingChart } from '@/components/charts/ICRollingChart'
 import { MetricStat } from '@/components/data/MetricStat'
-import { EmptyState } from '@/components/layout/EmptyState'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton'
 import { Panel } from '@/ui/Panel'
+import type { components } from '@/api/schema'
+
+type ColumnarSeries = components['schemas']['ColumnarSeries']
+
+const EMPTY_SERIES: ColumnarSeries = { index: [], columns: {} }
 
 interface RunSignalQualityTabProps {
   runId: string
@@ -19,6 +21,16 @@ interface RunSignalQualityTabProps {
 export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
   const runQuery = useRunDetail(runId)
   const run = runQuery.data
+
+  const strategyParams =
+    (run?.params as { parameters?: Record<string, unknown> } | undefined)?.parameters ?? null
+
+  const { data: rollingIcData, isLoading: rollingIcLoading } = useRollingIC(
+    run?.asset ?? null,
+    run?.strategy ?? null,
+    strategyParams,
+    63
+  )
 
   if (runQuery.isLoading) {
     return <LoadingSkeleton variant="metric-grid" columns={3} />
@@ -56,14 +68,20 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
   // STATE B — signal_evaluation present
   const icBand = evaluation.ic_band
 
+  // RollingICResponse.data.columns.rolling_ic → ICRollingChart ic.columns.value
+  const icSeries: ColumnarSeries = rollingIcData?.data
+    ? {
+        index: rollingIcData.data.index,
+        columns: { value: rollingIcData.data.columns.rolling_ic ?? [] },
+      }
+    : EMPTY_SERIES
+
   return (
     <div className="flex flex-col gap-6">
       <div className="grid w-full grid-cols-3 gap-4">
-        <div className="flex flex-col gap-0.5">
+        <div className="gap-0.5 flex flex-col">
           <MetricStat label="IC" value={evaluation.ic} format="ic" tone="auto" />
-          {icBand && (
-            <span className="font-mono text-xs text-text-secondary pl-0">{icBand}</span>
-          )}
+          {icBand && <span className="pl-0 font-mono text-xs text-text-secondary">{icBand}</span>}
         </div>
         <MetricStat label="ICIR" value={evaluation.icir} format="ic" tone="neutral" />
         <MetricStat label="TURNOVER" value={evaluation.turnover} format="percent" tone="neutral" />
@@ -71,13 +89,13 @@ export function RunSignalQualityTab({ runId }: RunSignalQualityTabProps) {
 
       <ICDecayChart decay={evaluation.decay} height={250} title="IC Decay at Horizons" />
 
-      {/* Rolling IC chart deferred — no rolling IC series endpoint available yet. */}
-      <Panel title="Rolling IC">
-        <EmptyState
-          title="Rolling IC chart pending"
-          body="Awaiting backend /api/signals/rolling-ic endpoint. Rolling IC chart will be wired when the endpoint ships."
-        />
-      </Panel>
+      <ICRollingChart
+        ic={icSeries}
+        window={rollingIcData?.window ?? 63}
+        title="Rolling IC"
+        height={250}
+        loading={rollingIcLoading || !rollingIcData}
+      />
     </div>
   )
 }

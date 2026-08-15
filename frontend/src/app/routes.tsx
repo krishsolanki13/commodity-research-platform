@@ -20,9 +20,15 @@ const ResearchWorkbench = React.lazy(() => import('@/screens/research/ResearchWo
 const StrategyBuilder = React.lazy(() => import('@/screens/backtest/StrategyBuilder'))
 const RunExplorer = React.lazy(() => import('@/screens/runs/RunExplorer'))
 const RunComparison = React.lazy(() => import('@/screens/runs/RunComparison'))
+const SweepExplorer = React.lazy(() =>
+  import('@/screens/sweeps/SweepExplorer').then((m) => ({ default: m.SweepExplorer }))
+)
 const RunDetail = React.lazy(() => import('@/screens/runs/RunDetail'))
 const PortfolioAnalytics = React.lazy(() => import('@/screens/portfolio/PortfolioAnalytics'))
 const FuturesCurve = React.lazy(() => import('@/screens/intelligence/FuturesCurve'))
+const CurvePCA = React.lazy(() =>
+  import('@/screens/intelligence/CurvePCA').then((m) => ({ default: m.CurvePCA }))
+)
 const CurveComparison = React.lazy(() =>
   import('@/screens/intelligence/CurveComparison').then((module) => ({
     default: module.CurveComparison,
@@ -44,9 +50,11 @@ export const router = createBrowserRouter([
       { path: '/backtest/new', element: wrap(<StrategyBuilder />) },
       { path: '/runs', element: wrap(<RunExplorer />) },
       { path: '/runs/compare', element: wrap(<RunComparison />) },
+      { path: '/sweeps', element: wrap(<SweepExplorer />) },
       { path: '/runs/:runId', element: wrap(<RunDetail />) },
       { path: '/portfolio', element: wrap(<PortfolioAnalytics />) },
       { path: '/intelligence', element: wrap(<FuturesCurve />) },
+      { path: '/intelligence/pca', element: wrap(<CurvePCA />) },
       { path: '/intelligence/compare', element: wrap(<CurveComparison />) },
       { path: '/system/data', element: wrap(<DataManager />) },
       { path: '/system/config', element: wrap(<Configuration />) },

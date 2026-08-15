@@ -12,13 +12,15 @@ function renderNav(initialPath = '/market') {
 }
 
 describe('SidebarNav', () => {
-  test('renders all 7 nav items', () => {
+  test('renders all 9 nav items', () => {
     renderNav()
     expect(screen.getByRole('link', { name: /market/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /research/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /backtest/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /runs/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /sweep explorer/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /intelligence/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /curve pca/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /portfolio/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /system/i })).toBeInTheDocument()
   })

@@ -12,10 +12,10 @@ function wrapper({ children }: { children: ReactNode }) {
 beforeEach(() => qc.clear())
 
 describe('useStrategies', () => {
-  it('returns strategy catalog with 4 strategies', async () => {
+  it('returns strategy catalog with 8 strategies', async () => {
     const { result } = renderHook(() => useStrategies(), { wrapper })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data?.strategies).toHaveLength(4)
+    expect(result.current.data?.strategies).toHaveLength(8)
   })
 
   it('ema_crossover default_params.fast_period === 50, slow_period === 200', async () => {

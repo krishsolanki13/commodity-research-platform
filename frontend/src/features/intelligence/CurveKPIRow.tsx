@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { components } from '@/api/schema'
 import { RegimeBadge } from '@/components/data/RegimeBadge'
 import { Skeleton } from '@/ui/skeleton'
-import { fmt } from '@/lib/fmt'
+import { fmt, pct, dec } from '@/lib/fmt'
 import type { Regime } from '@/lib/tone'
 
 type FuturesCurveResponse = components['schemas']['FuturesCurveResponse']
@@ -72,19 +72,13 @@ export function CurveKPIRow({ snapshot, loading }: CurveKPIRowProps) {
   const rollT = rollTone(snapshot?.roll_yield_annualized ?? null)
 
   const slopeVal =
-    snapshot?.annualized_slope_pct != null
-      ? `${(snapshot.annualized_slope_pct * 100).toFixed(2)}%/yr`
-      : '—'
+    snapshot?.annualized_slope_pct != null ? `${pct(snapshot.annualized_slope_pct, 2)}/yr` : '—'
 
   const rollVal =
-    snapshot?.roll_yield_annualized != null
-      ? `${(snapshot.roll_yield_annualized * 100).toFixed(2)}%/yr`
-      : '—'
+    snapshot?.roll_yield_annualized != null ? `${pct(snapshot.roll_yield_annualized, 2)}/yr` : '—'
 
   const basisVal =
-    snapshot?.basis != null
-      ? `${snapshot.basis.toFixed(2)} (${((snapshot.basis_pct ?? 0) * 100).toFixed(2)}%)`
-      : '—'
+    snapshot?.basis != null ? `${dec(snapshot.basis, 2)} (${pct(snapshot.basis_pct ?? 0, 2)})` : '—'
 
   return (
     <div className="bg-bg-surface flex flex-wrap gap-8 rounded-lg border border-border-strong px-6 py-4">

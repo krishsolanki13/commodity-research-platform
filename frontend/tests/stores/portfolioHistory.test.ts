@@ -4,7 +4,7 @@ import { usePortfolioHistory } from '@/stores/portfolioHistory'
 // Replicate the F7 comparisonBasket pattern exactly:
 // reset both Zustand state and localStorage before each test to prevent persist bleed.
 beforeEach(() => {
-  usePortfolioHistory.setState({ runs: [] })
+  usePortfolioHistory.setState({ runs: [], dismissedIds: [] })
   localStorage.clear()
 })
 

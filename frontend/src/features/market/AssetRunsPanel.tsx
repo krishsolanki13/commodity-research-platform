@@ -31,7 +31,7 @@ export function AssetRunsPanel({ asset, displayName }: AssetRunsPanelProps) {
     <div className="flex flex-col gap-2">
       <div className="overflow-auto rounded-md border border-border-default">
         {isLoading ? (
-          <div className="flex h-24 items-center justify-center text-xs text-text-secondary">
+          <div className="h-24 flex items-center justify-center text-xs text-text-secondary">
             Loading…
           </div>
         ) : (

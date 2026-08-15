@@ -126,7 +126,10 @@ function ReturnHistogramInner({ values, bins, markers, theme }: ReturnHistogramI
               },
             })),
             barMaxWidth: 8,
-            markLine: markLines.length > 0 ? { data: markLines, symbol: 'none', label: { show: false } } : undefined,
+            markLine:
+              markLines.length > 0
+                ? { data: markLines, symbol: 'none', label: { show: false } }
+                : undefined,
           },
         ],
         tooltip: {

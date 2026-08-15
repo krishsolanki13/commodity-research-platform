@@ -5,7 +5,7 @@ import { useRunDetail } from '@/api/hooks'
 import { ErrorState } from '@/components/layout/ErrorState'
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton'
 import { Panel } from '@/ui/Panel'
-import { fmt } from '@/lib/fmt'
+import { fmt, dec, ic } from '@/lib/fmt'
 
 interface RunArtifactsTabProps {
   runId: string
@@ -66,8 +66,10 @@ export function RunArtifactsTab({ runId }: RunArtifactsTabProps) {
           </p>
         ) : (
           <div className="flex flex-col gap-1 font-mono text-xs text-text-secondary">
-            <span>IC: {run.signal_evaluation.ic?.toFixed(4) ?? '—'}</span>
-            <span>ICIR: {run.signal_evaluation.icir?.toFixed(4) ?? '—'}</span>
+            <span>IC: {run.signal_evaluation.ic != null ? ic(run.signal_evaluation.ic) : '—'}</span>
+            <span>
+              ICIR: {run.signal_evaluation.icir != null ? dec(run.signal_evaluation.icir, 4) : '—'}
+            </span>
             <span>Band: {run.signal_evaluation.ic_band}</span>
             <span>Evaluated: {fmt.isoDate(run.signal_evaluation.computed_at)}</span>
           </div>

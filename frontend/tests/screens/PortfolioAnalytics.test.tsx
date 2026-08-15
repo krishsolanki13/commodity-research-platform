@@ -31,7 +31,7 @@ describe('PortfolioAnalytics screen', () => {
 
   it('renders launch panel and empty state when no run active', () => {
     render(<Wrapper />)
-    expect(screen.getByText(/launch a portfolio backtest to see analytics/i)).toBeInTheDocument()
+    expect(screen.getByText(/no previous portfolio runs this session/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /launch portfolio backtest/i })).toBeInTheDocument()
   })
 

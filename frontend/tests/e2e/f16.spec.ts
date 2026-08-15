@@ -51,4 +51,24 @@ test.describe('F16 Inc6 polish', () => {
     expect(request.url()).toContain('direction=long')
     expect(request.url()).not.toContain('page_size=500')
   })
+
+  test('Validation tab is visible and clickable on run detail', async ({ page }) => {
+    const res = await page.request.get('/api/runs')
+    const data = (await res.json()) as { runs?: Array<{ run_id: string }> }
+    const runId = data.runs?.[0]?.run_id
+    if (!runId) {
+      test.skip()
+      return
+    }
+
+    await page.goto(`/runs/${runId}`)
+    const tab = page.getByRole('tab', { name: /^validation$/i })
+    await expect(tab).toBeVisible({ timeout: 10_000 })
+    await tab.click()
+    await expect(tab).toHaveAttribute('aria-selected', 'true')
+    await expect(page).toHaveURL(/tab=validation/)
+    await expect(
+      page.getByRole('button', { name: /launch walk-forward validation/i }),
+    ).toBeVisible({ timeout: 5_000 })
+  })
 })

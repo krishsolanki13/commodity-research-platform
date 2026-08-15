@@ -41,64 +41,64 @@ export function RegimeComparisonTable({
 
   return (
     <div className="overflow-hidden rounded border border-border-default">
-    <table
-      role="grid"
-      aria-label="Regime comparison table"
-      className={cn('w-full table-fixed border-collapse text-sm', className)}
-    >
-      <thead className="bg-bg-raised">
-        <tr>
-          <th className="px-3 py-2 text-left text-xs uppercase tracking-wider text-text-secondary">
-            ASSET
-          </th>
-          <th className="px-3 py-2 text-left text-xs uppercase tracking-wider text-text-secondary">
-            REGIME
-          </th>
-          <th className="px-3 py-2 text-right text-xs uppercase tracking-wider text-text-secondary">
-            FRONT PRICE
-          </th>
-          <th className="px-3 py-2 text-right text-xs uppercase tracking-wider text-text-secondary">
-            SLOPE
-          </th>
-          <th className="px-3 py-2 text-right text-xs uppercase tracking-wider text-text-secondary">
-            ROLL YIELD
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {snapshots.map((snapshot) => (
-          <tr key={snapshot.asset} className="border-t border-border-default hover:bg-bg-hover">
-            <td className="px-3 py-2">
-              <div className="font-medium text-text-emphasis">{snapshot.label}</div>
-              <div className="font-mono text-xs text-text-secondary">{snapshot.asset}</div>
-            </td>
-            <td className="px-3 py-2">
-              <RegimeBadge
-                regime={snapshot.snapshot.regime as RegimeBadgeProps['regime']}
-                size="sm"
-              />
-            </td>
-            <td className="px-3 py-2 text-right font-mono">
-              {snapshot.snapshot.front_price != null
-                ? fmt.price(snapshot.snapshot.front_price, snapshot.asset)
-                : '?'}
-            </td>
-            <td
-              className="px-3 py-2 text-right font-mono"
-              style={{ color: slopeTone(snapshot.snapshot.annualized_slope_pct) }}
-            >
-              {formatSlope(snapshot.snapshot.annualized_slope_pct)}
-            </td>
-            <td
-              className="px-3 py-2 text-right font-mono"
-              style={{ color: rollYieldTone(snapshot.snapshot.roll_yield_annualized) }}
-            >
-              {formatRollYield(snapshot.snapshot.roll_yield_annualized)}
-            </td>
+      <table
+        role="grid"
+        aria-label="Regime comparison table"
+        className={cn('w-full table-fixed border-collapse text-sm', className)}
+      >
+        <thead className="bg-bg-raised">
+          <tr>
+            <th className="px-3 py-2 text-left text-xs uppercase tracking-wider text-text-secondary">
+              ASSET
+            </th>
+            <th className="px-3 py-2 text-left text-xs uppercase tracking-wider text-text-secondary">
+              REGIME
+            </th>
+            <th className="px-3 py-2 text-right text-xs uppercase tracking-wider text-text-secondary">
+              FRONT PRICE
+            </th>
+            <th className="px-3 py-2 text-right text-xs uppercase tracking-wider text-text-secondary">
+              SLOPE
+            </th>
+            <th className="px-3 py-2 text-right text-xs uppercase tracking-wider text-text-secondary">
+              ROLL YIELD
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {snapshots.map((snapshot) => (
+            <tr key={snapshot.asset} className="border-t border-border-default hover:bg-bg-hover">
+              <td className="px-3 py-2">
+                <div className="font-medium text-text-emphasis">{snapshot.label}</div>
+                <div className="font-mono text-xs text-text-secondary">{snapshot.asset}</div>
+              </td>
+              <td className="px-3 py-2">
+                <RegimeBadge
+                  regime={snapshot.snapshot.regime as RegimeBadgeProps['regime']}
+                  size="sm"
+                />
+              </td>
+              <td className="px-3 py-2 text-right font-mono">
+                {snapshot.snapshot.front_price != null
+                  ? fmt.price(snapshot.snapshot.front_price, snapshot.asset)
+                  : '?'}
+              </td>
+              <td
+                className="px-3 py-2 text-right font-mono"
+                style={{ color: slopeTone(snapshot.snapshot.annualized_slope_pct) }}
+              >
+                {formatSlope(snapshot.snapshot.annualized_slope_pct)}
+              </td>
+              <td
+                className="px-3 py-2 text-right font-mono"
+                style={{ color: rollYieldTone(snapshot.snapshot.roll_yield_annualized) }}
+              >
+                {formatRollYield(snapshot.snapshot.roll_yield_annualized)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fmt, fmtDate, MINUS } from '@/lib/fmt'
+import { fmt, fmtDate, MINUS, pct, dec } from '@/lib/fmt'
 
 describe('fmt.price', () => {
   it('formats gold with 2 decimal places', () => {
@@ -67,5 +67,23 @@ describe('fmt.tradeBars', () => {
   it('rounds and suffixes bars', () => {
     expect(fmt.tradeBars(8.85)).toBe('9 bars')
     expect(fmt.tradeBars(1.0)).toBe('1 bars')
+  })
+})
+
+describe('pct', () => {
+  it('pct(0.0802, 1) → "8.0%"', () => {
+    expect(pct(0.0802, 1)).toBe('8.0%')
+  })
+  it('pct(0.001, 2) → "0.10%"', () => {
+    expect(pct(0.001, 2)).toBe('0.10%')
+  })
+})
+
+describe('dec', () => {
+  it('dec(3.815, 2) → "3.82"', () => {
+    expect(dec(3.815, 2)).toBe('3.82')
+  })
+  it('dec(0.0394, 3) → "0.039"', () => {
+    expect(dec(0.0394, 3)).toBe('0.039')
   })
 })

@@ -1,6 +1,6 @@
 import type { components } from '@/api/schema'
 import { Skeleton } from '@/ui/skeleton'
-import { fmt } from '@/lib/fmt'
+import { fmt, pct } from '@/lib/fmt'
 
 type FuturesCurveResponse = components['schemas']['FuturesCurveResponse']
 
@@ -45,7 +45,7 @@ export function BasisPanel({ snapshot, loading }: BasisPanelProps) {
           />
           <BasisStat
             label="Basis %"
-            value={snapshot?.basis_pct != null ? `${(snapshot.basis_pct * 100).toFixed(2)}%` : '—'}
+            value={snapshot?.basis_pct != null ? pct(snapshot.basis_pct, 2) : '—'}
           />
         </div>
       )}

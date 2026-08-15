@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { safeJsonParse } from '@/lib/json'
 import { useEvaluateChainMutation } from '@/api/hooks/useEvaluateChainMutation'
@@ -26,6 +26,7 @@ export default function ResearchWorkbenchScreen() {
   const [lastEvaluatedConfigHash, setLastEvaluatedConfigHash] = useState<string | null>(null)
   const [canEvaluate, setCanEvaluate] = useState(false)
   const [evaluateReason, setEvaluateReason] = useState<string | null>(null)
+  const [hasEvaluated, setHasEvaluated] = useState(false)
 
   // Ref to trigger evaluate from the button in the right half, while all param
   // building logic stays inside WorkbenchConfigRail.
@@ -45,22 +46,12 @@ export default function ResearchWorkbenchScreen() {
   const parsedParams = safeJsonParse<Record<string, unknown>>(paramsJson, {})
   const parsedFeatures = safeJsonParse<FeatureSpecRequest[]>(featuresJson, [])
 
-  const currentConfigHash = JSON.stringify({
-    asset,
-    strategy,
-    params: paramsJson,
-    features: featuresJson,
-    fromDate,
-    toDate,
-  })
-
-  const hasFreshResults =
-    evaluationResult !== null &&
-    (lastEvaluatedConfigHash === currentConfigHash || evaluating)
-
-  const showEvaluateButton = !hasFreshResults
-  const blurResults =
-    evaluationResult !== null && !hasFreshResults
+  // Reset to config view when asset or strategy changes — not on param-only changes
+  useEffect(() => {
+    setHasEvaluated(false)
+    setEvaluationResult(null)
+    setLastEvaluatedConfigHash(null)
+  }, [asset, strategy])
 
   const progressLabel =
     evaluateProgress?.stepIndex === 1
@@ -93,6 +84,7 @@ export default function ResearchWorkbenchScreen() {
       })
       setEvaluationResult(result)
       setLastEvaluatedConfigHash(configHash)
+      setHasEvaluated(true)
     } catch (e) {
       console.error('Evaluate chain failed:', e)
     } finally {
@@ -104,74 +96,74 @@ export default function ResearchWorkbenchScreen() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Title — fixed, does not scroll */}
-      <div className="shrink-0 px-6 pt-6 pb-4">
+      <div className="shrink-0 px-6 pb-4 pt-6">
         <h1 className="text-xl font-semibold text-text-primary">Research Workbench</h1>
       </div>
 
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        {/* Left rail — scrolls independently */}
-        <WorkbenchConfigRail
-          onEvaluate={(p) => {
-            void handleEvaluate(p)
-          }}
-          onCanEvaluateChange={(can, reason) => {
-            setCanEvaluate(can)
-            setEvaluateReason(reason)
-          }}
-          onEvaluateReady={(trigger) => {
-            evaluateTriggerRef.current = trigger
-          }}
-        />
-
-        {/* Right half */}
-        <div className="relative flex flex-1 flex-col overflow-hidden px-6 pb-6">
-
-          {/* Evaluate button — hidden when results are fresh */}
-          {showEvaluateButton && (
-            <div className="shrink-0 mb-4">
-              <Panel title="Evaluate">
-                <div className="flex flex-col gap-3">
-                  <Button
-                    variant="primary"
-                    disabled={!canEvaluate || evaluating}
-                    onClick={() => evaluateTriggerRef.current?.()}
-                    className="w-full"
-                  >
-                    {evaluating ? progressLabel : 'Evaluate signal'}
-                  </Button>
-                  {evaluateReason && !evaluating && (
-                    <p className="text-xs text-text-secondary">
-                      {evaluateReason}
-                    </p>
-                  )}
-                </div>
-              </Panel>
-            </div>
-          )}
-
-          {/* Results area */}
-          <div className="relative min-h-0 flex-1 overflow-y-auto">
-            {blurResults && (
-              <div className="absolute inset-0 z-10 flex items-start justify-center pt-8 backdrop-blur-sm bg-bg-app/40 rounded">
-                <span className="rounded border border-border-default bg-bg-raised px-3 py-1.5 text-xs text-text-secondary">
-                  Config changed — click Evaluate to update
-                </span>
-              </div>
-            )}
-            <WorkbenchEvidenceCanvas
-              asset={asset}
-              strategy={strategy}
-              params={parsedParams}
-              featureSpecs={parsedFeatures}
-              fromDate={fromDate}
-              toDate={toDate}
-              lastEvaluatedConfigHash={lastEvaluatedConfigHash}
-              evaluationResult={evaluationResult}
-              evaluating={evaluating}
+      {!hasEvaluated ? (
+        <div className="grid min-h-0 flex-1 grid-cols-2 gap-6 overflow-hidden px-6 pb-6">
+          <div className="min-h-0 overflow-y-auto">
+            <WorkbenchConfigRail
+              onEvaluate={(p) => {
+                void handleEvaluate(p)
+              }}
+              onCanEvaluateChange={(can, reason) => {
+                setCanEvaluate(can)
+                setEvaluateReason(reason)
+              }}
+              onEvaluateReady={(trigger) => {
+                evaluateTriggerRef.current = trigger
+              }}
             />
           </div>
+
+          <div className="min-h-0 overflow-y-auto">
+            <Panel title="Evaluate">
+              <div className="flex flex-col gap-3">
+                <Button
+                  variant="primary"
+                  disabled={!canEvaluate || evaluating}
+                  onClick={() => evaluateTriggerRef.current?.()}
+                  className="w-full"
+                >
+                  {evaluating ? progressLabel : 'Evaluate signal'}
+                </Button>
+                {evaluateReason && !evaluating && (
+                  <p className="text-xs text-text-secondary">{evaluateReason}</p>
+                )}
+                {!evaluating && (
+                  <p className="text-xs text-text-secondary">
+                    Assemble features and a signal, then click Evaluate. Evaluation must precede
+                    backtesting.
+                  </p>
+                )}
+              </div>
+            </Panel>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pb-6">
+          <button
+            type="button"
+            onClick={() => setHasEvaluated(false)}
+            className="gap-1.5 flex w-fit items-center text-sm text-text-secondary transition-colors hover:text-text-primary"
+          >
+            ← Modify signal
+          </button>
+
+          <WorkbenchEvidenceCanvas
+            asset={asset}
+            strategy={strategy}
+            params={parsedParams}
+            featureSpecs={parsedFeatures}
+            fromDate={fromDate}
+            toDate={toDate}
+            lastEvaluatedConfigHash={lastEvaluatedConfigHash}
+            evaluationResult={evaluationResult}
+            evaluating={evaluating}
+          />
+        </div>
+      )}
 
       <div className="shrink-0 border-t border-border-default">
         <WorkbenchICGateStrip

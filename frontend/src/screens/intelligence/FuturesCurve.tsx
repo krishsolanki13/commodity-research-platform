@@ -20,9 +20,7 @@ import { Panel } from '@/ui/Panel'
 import { Button } from '@/ui/button'
 
 export function FuturesCurve() {
-  const [urlState, setUrlState] = useUrlState(
-    intelligenceSchema, intelligenceDefaults
-  )
+  const [urlState, setUrlState] = useUrlState(intelligenceSchema, intelligenceDefaults)
   const { asset, n_contracts, lookback, observation_date } = urlState
 
   const [launched, setLaunched] = useState(false)
@@ -46,9 +44,9 @@ export function FuturesCurve() {
 
   if (!launched) {
     return (
-      <div className="flex flex-col gap-0 h-full overflow-hidden">
+      <div className="flex h-full flex-col gap-0 overflow-hidden">
         {/* Title */}
-        <div className="shrink-0 px-6 pt-6 pb-4">
+        <div className="shrink-0 px-6 pb-4 pt-6">
           <h1 className="text-xl font-semibold text-text-primary">Futures Curve</h1>
         </div>
 
@@ -92,7 +90,7 @@ export function FuturesCurve() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 overflow-y-auto">
+    <div className="flex flex-col gap-6 overflow-y-auto p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-text-primary">Futures Curve</h1>
         {asset && (
@@ -123,7 +121,7 @@ export function FuturesCurve() {
         <BasisPanel snapshot={snapshot ?? null} loading={snapshotLoading} />
       </div>
       <div className="flex items-center gap-2">
-        <span className="font-mono text-xs text-text-secondary uppercase tracking-wider">
+        <span className="font-mono text-xs uppercase tracking-wider text-text-secondary">
           History
         </span>
         <div className="flex w-fit overflow-hidden rounded border border-border-strong">
@@ -135,7 +133,7 @@ export function FuturesCurve() {
                 type="button"
                 onClick={() => setUrlState({ lookback: opt })}
                 className={cn(
-                  'border-r border-border-strong px-3 py-1.5 font-mono text-xs transition-colors last:border-r-0',
+                  'py-1.5 border-r border-border-strong px-3 font-mono text-xs transition-colors last:border-r-0',
                   active
                     ? 'bg-bg-raised font-semibold text-text-emphasis'
                     : 'bg-bg-surface text-text-secondary hover:bg-bg-raised'

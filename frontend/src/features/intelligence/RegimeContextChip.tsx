@@ -1,4 +1,5 @@
 import { cn } from '@/lib/cn'
+import { percent } from '@/lib/fmt'
 import { RegimeBadge } from '@/components/data/RegimeBadge'
 import { useCurveSnapshot } from '@/api/hooks/useCurveSnapshot'
 import type { Regime } from '@/lib/tone'
@@ -29,8 +30,7 @@ export function RegimeContextChip({ asset, compact = false }: RegimeContextChipP
           <span
             className={cn('font-mono', data.regime === 'backwardation' ? 'text-gain' : 'text-warn')}
           >
-            {data.annualized_slope_pct >= 0 ? '+' : ''}
-            {(data.annualized_slope_pct * 100).toFixed(2)}%/yr
+            {percent(data.annualized_slope_pct)}/yr
           </span>
         )}
     </div>

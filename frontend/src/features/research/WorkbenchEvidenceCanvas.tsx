@@ -1,8 +1,10 @@
 import { useAssetOhlcv } from '@/api/hooks/useAssetOhlcv'
+import { useRollingIC } from '@/api/hooks'
 import { EmptyState } from '@/components/layout/EmptyState'
 import { SignalOverlayChart } from '@/components/charts/SignalOverlayChart'
 import { RegimeContextChip } from '@/features/intelligence/RegimeContextChip'
 import { ICDecayChart } from '@/components/charts/ICDecayChart'
+import { ICRollingChart } from '@/components/charts/ICRollingChart'
 import { MetricGrid } from '@/components/data/MetricGrid'
 import { FeatureSpecTable } from '@/components/data/FeatureSpecTable'
 import type { MetricStatProps } from '@/components/data/MetricStat'
@@ -37,14 +39,13 @@ const EMPTY_SERIES: ColumnarSeries = { index: [], columns: {} }
 /**
  * Evidence canvas for the Research Workbench.
  *
- * Architectural note (§9 constraint 10): ICRollingChart is NOT used here.
- * SignalEvaluateResponse only returns IC decay at fixed horizons, not a rolling
- * IC time series. ICRollingChart is reserved for F6 Run Detail Signal Quality tab.
+ * Rolling IC: useRollingIC → RollingICResponse.data (columns.rolling_ic)
+ * adapted to ICRollingChart's ColumnarSeries (columns.value).
  */
 export function WorkbenchEvidenceCanvas({
   asset,
   strategy,
-  params: _params,
+  params,
   featureSpecs: _featureSpecs,
   fromDate,
   toDate,
@@ -57,6 +58,14 @@ export function WorkbenchEvidenceCanvas({
     to_date: toDate,
     downsample: 'view',
   })
+
+  const enabled = !!evaluationResult && !!asset && !!strategy
+  const { data: rollingIcData, isLoading: rollingIcLoading } = useRollingIC(
+    enabled ? asset : null,
+    enabled ? strategy : null,
+    enabled ? params : null,
+    63
+  )
 
   if (!evaluationResult) {
     return (
@@ -84,10 +93,18 @@ export function WorkbenchEvidenceCanvas({
 
   const priceSeries = ohlcv?.data ?? evaluationResult.signal.raw_signal ?? EMPTY_SERIES
 
+  // RollingICResponse.data.columns.rolling_ic → ICRollingChart ic.columns.value
+  const icSeries: ColumnarSeries = rollingIcData?.data
+    ? {
+        index: rollingIcData.data.index,
+        columns: { value: rollingIcData.data.columns.rolling_ic ?? [] },
+      }
+    : EMPTY_SERIES
+
   return (
     <div className="relative min-h-full">
       <div>
-          <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
           <RegimeContextChip asset={asset} compact={false} />
           <SignalOverlayChart
             ohlcv={priceSeries}
@@ -102,6 +119,13 @@ export function WorkbenchEvidenceCanvas({
           <div className="flex flex-col gap-4">
             <MetricGrid metrics={metrics} columns={4} className="w-full" />
             <ICDecayChart decay={evalData.decay} height={220} title="IC Decay" />
+            <ICRollingChart
+              ic={icSeries}
+              window={rollingIcData?.window ?? 63}
+              title="Rolling IC"
+              height={220}
+              loading={rollingIcLoading}
+            />
           </div>
 
           <FeatureSpecTable specs={evaluationResult.features.specs} className="w-full" />

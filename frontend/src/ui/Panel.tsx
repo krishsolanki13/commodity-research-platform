@@ -10,7 +10,14 @@ interface PanelProps {
   className?: string
 }
 
-export function Panel({ title, titleExtra, actions, children, padding = true, className }: PanelProps) {
+export function Panel({
+  title,
+  titleExtra,
+  actions,
+  children,
+  padding = true,
+  className,
+}: PanelProps) {
   return (
     <div className={cn('rounded-md border border-border-default bg-bg-panel', className)}>
       {title !== undefined && (

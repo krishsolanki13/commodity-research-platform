@@ -27,7 +27,7 @@ export function PortfolioConfigPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
+      <div className="gap-1.5 flex flex-col">
         <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           Strategy
         </span>

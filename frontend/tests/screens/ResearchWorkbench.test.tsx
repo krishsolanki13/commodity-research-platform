@@ -112,9 +112,11 @@ describe('ResearchWorkbenchScreen', () => {
     )
   })
 
-  it('renders empty evidence canvas EmptyState before evaluation', () => {
+  it('renders evaluate panel prompt before evaluation', () => {
     render(<Wrapper />)
-    expect(screen.getByText('Evaluate to see results')).toBeInTheDocument()
+    expect(
+      screen.getByText(/Assemble features and a signal, then click Evaluate/i)
+    ).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: /chart/i })).not.toBeInTheDocument()
   })
 
@@ -159,12 +161,15 @@ describe('ResearchWorkbenchScreen', () => {
       timeout: 5000,
     })
 
+    // Return to config to edit params — full-width results hide the form
+    await user.click(screen.getByRole('button', { name: /Modify signal/i }))
     const fastInput = screen.getAllByRole('spinbutton')[0]
     await user.clear(fastInput)
     await user.type(fastInput, '40')
     await user.tab()
 
     expect(screen.queryByText(/Configuration changed — re-evaluate/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Config changed — click Evaluate/i)).not.toBeInTheDocument()
   })
 
   it('?asset=gold in URL pre-selects Gold in AssetSelector', async () => {

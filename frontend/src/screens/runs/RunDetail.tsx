@@ -1,5 +1,5 @@
 import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { Trash2, ClipboardCopy, Check } from 'lucide-react'
 import { TabsUrlSync } from '@/ui/TabsUrlSync'
 import { useRunDetail, useRunDelete } from '@/api/hooks'
@@ -23,6 +23,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/ui/alert-dialog'
+
+const RunValidationTab = lazy(() =>
+  import('@/features/runs/RunValidationTab').then((m) => ({
+    default: m.RunValidationTab,
+  }))
+)
 
 export default function RunDetail() {
   const { runId } = useParams<{ runId: string }>()
@@ -158,6 +164,22 @@ export default function RunDetail() {
                   value: 'signal',
                   label: 'Signal Quality',
                   content: <RunSignalQualityTab runId={runId} />,
+                },
+                {
+                  value: 'validation',
+                  label: 'Validation',
+                  content: (
+                    <Suspense fallback={<LoadingSkeleton variant="form" />}>
+                      <RunValidationTab
+                        asset={run?.asset ?? null}
+                        strategyName={run?.strategy ?? null}
+                        parameters={
+                          (run?.params as { parameters?: Record<string, unknown> } | undefined)
+                            ?.parameters ?? null
+                        }
+                      />
+                    </Suspense>
+                  ),
                 },
                 {
                   value: 'trades',

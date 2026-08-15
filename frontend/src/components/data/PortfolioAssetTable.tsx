@@ -37,105 +37,105 @@ export function PortfolioAssetTable({
 
   return (
     <div className="overflow-hidden rounded border border-border-default">
-    <table
-      role="grid"
-      aria-label="Per-asset performance"
-      className={cn('w-full table-fixed border-collapse text-sm', className)}
-    >
-      <thead className="bg-bg-raised">
-        <tr>
-          {['ASSET', 'SHARPE', 'MAX DD', 'RETURN', 'WIN RATE', 'TRADES'].map((heading) => (
-            <th
-              key={heading}
-              scope="col"
-              className="px-3 py-2 text-left text-xs font-medium text-text-secondary"
-            >
-              {heading}
-            </th>
-          ))}
-          {assetRunIds !== undefined ? (
-            <th className="px-3 py-2 text-right text-xs uppercase tracking-wider text-text-secondary">
-              VIEW
-            </th>
-          ) : null}
-        </tr>
-      </thead>
-      <tbody>
-        {assets.map((asset) => {
-          const metrics = assetMetrics[asset] ?? {}
-          const sharpe = metrics.sharpe
-          const maxDrawdown = metrics.max_drawdown
-          const totalReturn = metrics.total_return
-          const winRate = metrics.win_rate
-          const trades = metrics.avg_trade_duration_bars ?? metrics.turnover
-          const runId = assetRunIds?.[asset]
+      <table
+        role="grid"
+        aria-label="Per-asset performance"
+        className={cn('w-full table-fixed border-collapse text-sm', className)}
+      >
+        <thead className="bg-bg-raised">
+          <tr>
+            {['ASSET', 'SHARPE', 'MAX DD', 'RETURN', 'WIN RATE', 'TRADES'].map((heading) => (
+              <th
+                key={heading}
+                scope="col"
+                className="px-3 py-2 text-left text-xs font-medium text-text-secondary"
+              >
+                {heading}
+              </th>
+            ))}
+            {assetRunIds !== undefined ? (
+              <th className="px-3 py-2 text-right text-xs uppercase tracking-wider text-text-secondary">
+                VIEW
+              </th>
+            ) : null}
+          </tr>
+        </thead>
+        <tbody>
+          {assets.map((asset) => {
+            const metrics = assetMetrics[asset] ?? {}
+            const sharpe = metrics.sharpe
+            const maxDrawdown = metrics.max_drawdown
+            const totalReturn = metrics.total_return
+            const winRate = metrics.win_rate
+            const trades = metrics.avg_trade_duration_bars ?? metrics.turnover
+            const runId = assetRunIds?.[asset]
 
-          return (
-            <tr key={asset} className="border-border-default border-b">
-              <td className="px-3 py-2 text-left font-medium text-text-primary">
-                {displayName(asset)}
-              </td>
-              <td
-                className="px-3 py-2"
-                style={{
-                  color:
-                    sharpe == null
-                      ? 'var(--text-secondary)'
-                      : sharpe >= 0
-                        ? 'var(--text-gain)'
-                        : 'var(--text-loss)',
-                }}
-              >
-                {metric(metrics, 'sharpe', fmt.ratio)}
-              </td>
-              <td
-                className="px-3 py-2"
-                style={{
-                  color: maxDrawdown == null ? 'var(--text-secondary)' : 'var(--text-loss)',
-                }}
-              >
-                {metric(metrics, 'max_drawdown', fmt.drawdown)}
-              </td>
-              <td
-                className="px-3 py-2"
-                style={{
-                  color:
-                    totalReturn == null
-                      ? 'var(--text-secondary)'
-                      : totalReturn >= 0
-                        ? 'var(--text-gain)'
-                        : 'var(--text-loss)',
-                }}
-              >
-                {metric(metrics, 'total_return', fmt.percent)}
-              </td>
-              <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>
-                {winRate == null ? missingValue : fmt.percent(winRate, { showPlus: false })}
-              </td>
-              <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>
-                {trades == null ? missingValue : trades.toFixed(0)}
-              </td>
-              {assetRunIds !== undefined ? (
-                <td className="px-3 py-2 text-right">
-                  {runId ? (
-                    <Link
-                      to={`/runs/${runId}`}
-                      className="font-mono text-xs text-text-accent hover:underline"
-                      title={`View ${displayName(asset)} run detail`}
-                      aria-label={`View ${displayName(asset)} run detail`}
-                    >
-                      View →
-                    </Link>
-                  ) : (
-                    <span className="font-mono text-xs text-text-disabled">—</span>
-                  )}
+            return (
+              <tr key={asset} className="border-b border-border-default">
+                <td className="px-3 py-2 text-left font-medium text-text-primary">
+                  {displayName(asset)}
                 </td>
-              ) : null}
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
+                <td
+                  className="px-3 py-2"
+                  style={{
+                    color:
+                      sharpe == null
+                        ? 'var(--text-secondary)'
+                        : sharpe >= 0
+                          ? 'var(--text-gain)'
+                          : 'var(--text-loss)',
+                  }}
+                >
+                  {metric(metrics, 'sharpe', fmt.ratio)}
+                </td>
+                <td
+                  className="px-3 py-2"
+                  style={{
+                    color: maxDrawdown == null ? 'var(--text-secondary)' : 'var(--text-loss)',
+                  }}
+                >
+                  {metric(metrics, 'max_drawdown', fmt.drawdown)}
+                </td>
+                <td
+                  className="px-3 py-2"
+                  style={{
+                    color:
+                      totalReturn == null
+                        ? 'var(--text-secondary)'
+                        : totalReturn >= 0
+                          ? 'var(--text-gain)'
+                          : 'var(--text-loss)',
+                  }}
+                >
+                  {metric(metrics, 'total_return', fmt.percent)}
+                </td>
+                <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>
+                  {winRate == null ? missingValue : fmt.percent(winRate, { showPlus: false })}
+                </td>
+                <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>
+                  {trades == null ? missingValue : trades.toFixed(0)}
+                </td>
+                {assetRunIds !== undefined ? (
+                  <td className="px-3 py-2 text-right">
+                    {runId ? (
+                      <Link
+                        to={`/runs/${runId}`}
+                        className="font-mono text-xs text-text-accent hover:underline"
+                        title={`View ${displayName(asset)} run detail`}
+                        aria-label={`View ${displayName(asset)} run detail`}
+                      >
+                        View →
+                      </Link>
+                    ) : (
+                      <span className="font-mono text-xs text-text-disabled">—</span>
+                    )}
+                  </td>
+                ) : null}
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
   )
 }

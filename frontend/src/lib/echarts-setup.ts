@@ -10,7 +10,14 @@
  * Tree-shaking reduces the ECharts chunk from ~1MB to ~350KB.
  */
 import * as echarts from 'echarts/core'
-import { CandlestickChart, LineChart, BarChart, ScatterChart, HeatmapChart } from 'echarts/charts'
+import {
+  CandlestickChart,
+  LineChart,
+  BarChart,
+  ScatterChart,
+  HeatmapChart,
+  ParallelChart,
+} from 'echarts/charts'
 import {
   GridComponent,
   TooltipComponent,
@@ -21,6 +28,7 @@ import {
   AxisPointerComponent,
   VisualMapComponent,
   TitleComponent,
+  ParallelComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 
@@ -30,6 +38,7 @@ echarts.use([
   BarChart,
   ScatterChart,
   HeatmapChart,
+  ParallelChart,
   GridComponent,
   TooltipComponent,
   LegendComponent,
@@ -39,6 +48,7 @@ echarts.use([
   AxisPointerComponent,
   VisualMapComponent,
   TitleComponent,
+  ParallelComponent,
   CanvasRenderer,
 ])
 

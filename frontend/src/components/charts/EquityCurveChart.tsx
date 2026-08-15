@@ -230,7 +230,7 @@ function EquityCurveChartInner({
             ? {
                 silent: true,
                 symbol: 'none',
-              label: { show: false },
+                label: { show: false },
                 lineStyle: { type: 'dotted', color: theme.secondaryText, width: 1 },
                 data: [{ yAxis: baseline }],
               }

@@ -110,29 +110,30 @@ export function ChartFrame({
     document.body.removeChild(a)
   }
 
-  const toolbarEl = (toolbar || actions) ? (
-    <div className="flex items-center gap-2">
-      {actions}
-      {toolbar && (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={handleExport}
-            aria-label="Export chart as PNG"
-            className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
-          >
-            <Download size={14} strokeWidth={1.75} />
-          </button>
-          <button
-            onClick={() => setIsFullscreen(true)}
-            aria-label="View fullscreen"
-            className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
-          >
-            <Maximize size={14} strokeWidth={1.75} />
-          </button>
-        </div>
-      )}
-    </div>
-  ) : undefined
+  const toolbarEl =
+    toolbar || actions ? (
+      <div className="flex items-center gap-2">
+        {actions}
+        {toolbar && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleExport}
+              aria-label="Export chart as PNG"
+              className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
+            >
+              <Download size={14} strokeWidth={1.75} />
+            </button>
+            <button
+              onClick={() => setIsFullscreen(true)}
+              aria-label="View fullscreen"
+              className="rounded-sm p-1 text-text-secondary transition-colors duration-fast hover:bg-bg-hover hover:text-text-primary"
+            >
+              <Maximize size={14} strokeWidth={1.75} />
+            </button>
+          </div>
+        )}
+      </div>
+    ) : undefined
 
   // Resolve which body to render based on state priority
   const body = (() => {
@@ -146,7 +147,13 @@ export function ChartFrame({
 
   return (
     <ChartFrameCtx.Provider value={{ onChartReady }}>
-      <Panel title={title} titleExtra={titleExtra} actions={toolbarEl} padding={false} className={className}>
+      <Panel
+        title={title}
+        titleExtra={titleExtra}
+        actions={toolbarEl}
+        padding={false}
+        className={className}
+      >
         <div
           role="img"
           aria-label={title ? `${title} chart` : 'Chart'}

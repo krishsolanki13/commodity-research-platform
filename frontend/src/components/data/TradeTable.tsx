@@ -26,7 +26,20 @@ interface TradeTableProps {
 
 const DIRECTION_OPTIONS: Array<'all' | 'long' | 'short'> = ['all', 'long', 'short']
 
-const COLUMNS = ['#', 'DIRECTION', 'ENTRY', 'EXIT', 'DURATION', 'ENTRY PX', 'EXIT PX', 'GROSS P&L', 'COST', 'NET P&L', 'RETURN', '?']
+const COLUMNS = [
+  '#',
+  'DIRECTION',
+  'ENTRY',
+  'EXIT',
+  'DURATION',
+  'ENTRY PX',
+  'EXIT PX',
+  'GROSS P&L',
+  'COST',
+  'NET P&L',
+  'RETURN',
+  '?',
+]
 const COL_WIDTHS = [48, 90, 110, 110, 90, 100, 100, 110, 90, 100, 90, 40]
 
 export function TradeTable({
@@ -94,7 +107,7 @@ export function TradeTable({
       </div>
 
       {trades.length === 0 && !loading ? (
-        <div className="flex h-32 flex-col items-center justify-center gap-1 text-center text-sm text-text-secondary">
+        <div className="h-32 flex flex-col items-center justify-center gap-1 text-center text-sm text-text-secondary">
           <span className="font-medium">No trades</span>
           <span className="text-xs text-text-disabled">
             This strategy generated no trades in the evaluation period.
@@ -103,94 +116,109 @@ export function TradeTable({
       ) : (
         <div className="overflow-x-auto">
           <div className="overflow-hidden rounded border border-border-default">
-          <table className="w-full table-fixed border-collapse text-sm">
-            <colgroup>
-              {COL_WIDTHS.map((w, i) => (
-                <col key={i} style={{ width: w }} />
-              ))}
-            </colgroup>
-            <thead className="bg-bg-raised">
-              <tr>
-                {COLUMNS.map((col) => (
-                  <th
-                    key={col}
-                    scope="col"
-                    className="px-2 py-2 text-left text-xs font-medium text-text-secondary"
-                  >
-                    {col}
-                  </th>
+            <table className="w-full table-fixed border-collapse text-sm">
+              <colgroup>
+                {COL_WIDTHS.map((w, i) => (
+                  <col key={i} style={{ width: w }} />
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+              </colgroup>
+              <thead className="bg-bg-raised">
                 <tr>
-                  <td colSpan={COLUMNS.length} className="py-8 text-center text-xs text-text-disabled">
-                    Loading.
-                  </td>
-                </tr>
-              ) : (
-                trades.map((trade, idx) => {
-                  const rowNum = idx + 1 + (page - 1) * pageSize
-                  return (
-                    <tr
-                      key={[
-                        trade.entry_date,
-                        trade.exit_date,
-                        trade.direction,
-                        trade.entry_price,
-                        trade.exit_price,
-                        trade.net_pnl,
-                      ].join('|')}
-                      className="border-b border-border-default"
+                  {COLUMNS.map((col) => (
+                    <th
+                      key={col}
+                      scope="col"
+                      className="px-2 py-2 text-left text-xs font-medium text-text-secondary"
                     >
-                      <td className="px-2 py-1.5 font-mono text-xs text-text-secondary">{rowNum}</td>
-                      <td className="px-2 py-1.5">
-                        <span
-                          style={{ color: tone.pnl(trade.direction === 'long' ? 1 : -1) }}
-                          className="font-mono text-xs"
-                        >
-                          {trade.direction}
-                        </span>
-                      </td>
-                      <td className="px-2 py-1.5 font-mono">{fmt.isoDate(trade.entry_date)}</td>
-                      <td className="px-2 py-1.5 font-mono">{fmt.isoDate(trade.exit_date)}</td>
-                      <td className="px-2 py-1.5 font-mono">{fmt.tradeBars(trade.duration_bars)}</td>
-                      <td className="px-2 py-1.5 font-mono">{fmt.price(trade.entry_price, '')}</td>
-                      <td className="px-2 py-1.5 font-mono">{fmt.price(trade.exit_price, '')}</td>
-                      <td className="px-2 py-1.5">
-                        <span style={{ color: tone.pnl(trade.gross_pnl) }} className="font-mono">
-                          {fmt.compactUsd(trade.gross_pnl)}
-                        </span>
-                      </td>
-                      <td className="px-2 py-1.5">
-                        <span className="font-mono text-text-secondary">
-                          {fmt.compactUsd(trade.cost)}
-                        </span>
-                      </td>
-                      <td className="px-2 py-1.5">
-                        <span style={{ color: tone.pnl(trade.net_pnl) }} className="font-mono font-bold">
-                          {fmt.compactUsd(trade.net_pnl)}
-                        </span>
-                      </td>
-                      <td className="px-2 py-1.5">
-                        <span style={{ color: tone.pnl(trade.return_pct) }} className="font-mono">
-                          {fmt.percent(trade.return_pct)}
-                        </span>
-                      </td>
-                      <td className="px-2 py-1.5">
-                        {trade.force_closed ? (
-                          <span data-testid="force-closed-icon" title="Force-closed at period end">
-                            <AlertTriangle size={12} className="text-warn" />
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={COLUMNS.length}
+                      className="py-8 text-center text-xs text-text-disabled"
+                    >
+                      Loading.
+                    </td>
+                  </tr>
+                ) : (
+                  trades.map((trade, idx) => {
+                    const rowNum = idx + 1 + (page - 1) * pageSize
+                    return (
+                      <tr
+                        key={[
+                          trade.entry_date,
+                          trade.exit_date,
+                          trade.direction,
+                          trade.entry_price,
+                          trade.exit_price,
+                          trade.net_pnl,
+                        ].join('|')}
+                        className="border-b border-border-default"
+                      >
+                        <td className="py-1.5 px-2 font-mono text-xs text-text-secondary">
+                          {rowNum}
+                        </td>
+                        <td className="py-1.5 px-2">
+                          <span
+                            style={{ color: tone.pnl(trade.direction === 'long' ? 1 : -1) }}
+                            className="font-mono text-xs"
+                          >
+                            {trade.direction}
                           </span>
-                        ) : null}
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
+                        </td>
+                        <td className="py-1.5 px-2 font-mono">{fmt.isoDate(trade.entry_date)}</td>
+                        <td className="py-1.5 px-2 font-mono">{fmt.isoDate(trade.exit_date)}</td>
+                        <td className="py-1.5 px-2 font-mono">
+                          {fmt.tradeBars(trade.duration_bars)}
+                        </td>
+                        <td className="py-1.5 px-2 font-mono">
+                          {fmt.price(trade.entry_price, '')}
+                        </td>
+                        <td className="py-1.5 px-2 font-mono">{fmt.price(trade.exit_price, '')}</td>
+                        <td className="py-1.5 px-2">
+                          <span style={{ color: tone.pnl(trade.gross_pnl) }} className="font-mono">
+                            {fmt.compactUsd(trade.gross_pnl)}
+                          </span>
+                        </td>
+                        <td className="py-1.5 px-2">
+                          <span className="font-mono text-text-secondary">
+                            {fmt.compactUsd(trade.cost)}
+                          </span>
+                        </td>
+                        <td className="py-1.5 px-2">
+                          <span
+                            style={{ color: tone.pnl(trade.net_pnl) }}
+                            className="font-mono font-bold"
+                          >
+                            {fmt.compactUsd(trade.net_pnl)}
+                          </span>
+                        </td>
+                        <td className="py-1.5 px-2">
+                          <span style={{ color: tone.pnl(trade.return_pct) }} className="font-mono">
+                            {fmt.percent(trade.return_pct)}
+                          </span>
+                        </td>
+                        <td className="py-1.5 px-2">
+                          {trade.force_closed ? (
+                            <span
+                              data-testid="force-closed-icon"
+                              title="Force-closed at period end"
+                            >
+                              <AlertTriangle size={12} className="text-warn" />
+                            </span>
+                          ) : null}
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
