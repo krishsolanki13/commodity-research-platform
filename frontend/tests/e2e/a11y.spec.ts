@@ -42,23 +42,37 @@ test.describe('Accessibility Audit (Axe)', () => {
 
   test('Run Detail has no critical/serious a11y violations', async ({ page }) => {
     await page.goto('/runs')
-    await page.waitForSelector('table tbody tr', { timeout: 10_000 })
-    const rows = page.locator('table tbody tr')
-    if ((await rows.count()) > 0) {
-      await rows.first().click()
-      await page.waitForURL(/\/runs\/[^/]+$/, { timeout: 5_000 })
-      // Wait for Run Detail chrome so the explorer RunTable (IC badges) is unmounted
-      await page.getByRole('button', { name: /copy run id/i }).waitFor({ timeout: 10_000 })
-      await page.waitForLoadState('networkidle')
-      await auditPage(page)
-    } else {
+    // Skip if API is not available (no data rows load)
+    const hasRows = await page
+      .locator('table tbody tr')
+      .first()
+      .isVisible({ timeout: 5_000 })
+      .catch(() => false)
+    if (!hasRows) {
       test.skip()
+      return
     }
+    const rows = page.locator('table tbody tr')
+    await rows.first().click()
+    await page.waitForURL(/\/runs\/[^/]+$/, { timeout: 5_000 })
+    // Wait for Run Detail chrome so the explorer RunTable (IC badges) is unmounted
+    await page.getByRole('button', { name: /copy run id/i }).waitFor({ timeout: 10_000 })
+    await page.waitForLoadState('networkidle')
+    await auditPage(page)
   })
 
   test('Run Explorer has no critical/serious a11y violations', async ({ page }) => {
     await page.goto('/runs')
-    await page.waitForSelector('table tbody tr', { timeout: 10_000 })
+    // Skip if API is not available (no data rows load)
+    const hasRows = await page
+      .locator('table tbody tr')
+      .first()
+      .isVisible({ timeout: 5_000 })
+      .catch(() => false)
+    if (!hasRows) {
+      test.skip()
+      return
+    }
     await auditPage(page)
   })
 

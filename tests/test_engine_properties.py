@@ -3,20 +3,8 @@
 from __future__ import annotations
 
 import pandas as pd
-import pytest
-
-try:
-    import hypothesis.strategies as st
-    from hypothesis import assume, given, settings
-
-    HAS_HYPOTHESIS = True
-except ImportError:
-    HAS_HYPOTHESIS = False
-
-SKIP_NO_HYPOTHESIS = pytest.mark.skipif(
-    not HAS_HYPOTHESIS,
-    reason="hypothesis not installed — add to [dev] extras in pyproject.toml",
-)
+from hypothesis import assume, given, settings
+from hypothesis import strategies as st
 
 
 def _make_synthetic_ohlcv(
@@ -63,7 +51,6 @@ def _make_backtester(config=None):
     )
 
 
-@SKIP_NO_HYPOTHESIS
 @given(
     prices=st.lists(
         st.floats(
@@ -92,7 +79,6 @@ def test_flat_signal_produces_flat_equity(prices: list[float]) -> None:
     )
 
 
-@SKIP_NO_HYPOTHESIS
 @given(
     prices=st.lists(
         st.floats(
@@ -117,7 +103,6 @@ def test_equity_starts_at_initial_capital(
     assert len(equity) >= 1
 
 
-@SKIP_NO_HYPOTHESIS
 @given(
     prices=st.lists(
         st.floats(
@@ -153,13 +138,7 @@ def test_more_trades_produce_more_costs(prices: list[float]) -> None:
 
 
 def test_hypothesis_import_available() -> None:
-    """Verify hypothesis is importable. Skips with install instructions if not."""
-    if not HAS_HYPOTHESIS:
-        pytest.skip(
-            "hypothesis not installed. "
-            "Add 'hypothesis>=6.0' to [project.optional-dependencies].dev "
-            "in pyproject.toml to enable property-based engine tests."
-        )
+    """Verify hypothesis is importable and meets the minimum version."""
     from hypothesis import __version__
 
     assert __version__ >= "6.0", f"hypothesis >= 6.0 required, got {__version__}"

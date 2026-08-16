@@ -36,6 +36,7 @@ export function PortfolioConfigPanel({
           value={strategy}
           onChange={onStrategyChange}
           placeholder="Select a strategy..."
+          aria-label="Select portfolio strategy"
         />
       </div>
 

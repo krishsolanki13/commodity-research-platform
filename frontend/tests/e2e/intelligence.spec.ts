@@ -25,6 +25,11 @@ test.describe('Intelligence — Futures Curve (S9)', () => {
       timeout: 10_000,
     })
 
+    // F18: FuturesCurve requires clicking View Curve before results appear
+    const viewCurveBtn = page.getByRole('button', { name: /view curve/i })
+    await expect(viewCurveBtn).toBeVisible({ timeout: 10_000 })
+    await viewCurveBtn.click()
+
     // Regime badge — contango or backwardation depending on live market
     await expect(page.getByText(/contango|backwardation|flat/i).first()).toBeVisible({
       timeout: 15_000,
@@ -115,6 +120,10 @@ test.describe('Intelligence — Futures Curve (S9)', () => {
       await expect(page.getByRole('heading', { name: /futures curve/i })).toBeVisible({
         timeout: 10_000,
       })
+      const viewCurveBtn = page.getByRole('button', { name: /view curve/i })
+      if (await viewCurveBtn.isVisible().catch(() => false)) {
+        await viewCurveBtn.click()
+      }
       await expect(page.getByText(/contango|backwardation|flat/i).first()).toBeVisible({
         timeout: 15_000,
       })

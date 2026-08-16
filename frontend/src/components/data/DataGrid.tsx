@@ -288,7 +288,7 @@ export function DataGrid<T>({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className={cn('flex min-h-0 w-full flex-col', className)}>
+    <div className={cn('flex h-full min-h-0 w-full flex-col', className)}>
       {/* Toolbar */}
       {toolbar && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border-default px-3 py-2">

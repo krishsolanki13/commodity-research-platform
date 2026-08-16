@@ -193,7 +193,7 @@ export function UniverseGrid({
                         return (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span
+                              <span role="img"
                                 aria-label={label}
                                 className="inline-block h-2 w-2 rounded-full"
                                 style={{

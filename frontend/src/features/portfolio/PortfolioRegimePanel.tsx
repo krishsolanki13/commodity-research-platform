@@ -81,6 +81,7 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-xs uppercase tracking-wider text-text-secondary">Asset</span>
         <select
+          aria-label="Select asset for regime attribution"
           value={effectiveAsset}
           onChange={(e) => handleAssetChange(e.target.value)}
           className="rounded border border-border-strong bg-bg-raised px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
