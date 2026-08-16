@@ -192,6 +192,7 @@ def _run_portfolio_task(
         run_id = multi_result.run_id
         run_dir = Path(cfg.paths["runs"]) / run_id
         run_dir.mkdir(parents=True, exist_ok=True)
+        state.update(polling_run_id, "persisting")
         save_portfolio_summary(port_report, run_dir)
 
         corr_report = CorrelationEngine().compute(multi_result)
