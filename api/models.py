@@ -774,6 +774,22 @@ class RegimeAttributionResponse(BaseModel):
     total_days_in_run: int = 0
 
 
+class RegimeAttributionJobRequest(BaseModel):
+    """Request body for POST /api/regime-attribution/compute."""
+
+    run_id: str
+    asset: str
+    n_contracts: int = 4
+
+
+class RegimeAttributionJobStatusResponse(BaseModel):
+    """Response for GET /api/regime-attribution/{job_id}/status."""
+
+    job_id: str
+    status: str  # queued | running | complete | failed
+    error: str | None = None
+
+
 class SweepLaunchRequest(BaseModel):
     asset: str
     strategy_name: str

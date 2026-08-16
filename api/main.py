@@ -60,6 +60,7 @@ def create_app() -> FastAPI:
     from api.routers import sweeps as sweeps_router
     from api.routers import system as system_router
     from api.routers import validation as validation_router
+    from api.routers.regime_attribution import router as regime_attribution_router
 
     app.include_router(assets_router.router)
     app.include_router(backtests_router.router)
@@ -72,6 +73,7 @@ def create_app() -> FastAPI:
     app.include_router(validation_router.router)
     app.include_router(sweeps_router.router)
     app.include_router(intelligence_router.router)
+    app.include_router(regime_attribution_router)
 
     return app
 
