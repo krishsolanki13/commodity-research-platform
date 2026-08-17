@@ -96,11 +96,16 @@ def _run_sweep_task(
     try:
         config = Config.load("config/")
         runner = SweepRunner(config)
+
+        def on_progress(n_complete: int) -> None:
+            _sweep_tasks[sweep_id]["n_complete"] = n_complete
+
         result = runner.run_sweep(
             asset=request.asset,
             strategy_name=request.strategy_name,
             param_grid=request.param_grid,
             sweep_id=sweep_id,
+            progress_callback=on_progress,
         )
         _save_sweep_result(sweep_id, result)
         _sweep_tasks[sweep_id].update(

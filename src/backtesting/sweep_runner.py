@@ -32,6 +32,8 @@ from typing import TYPE_CHECKING
 import pandas as pd
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from src.core.config import Config
     from src.core.types import SweepResult, SweepRunSummary
 
@@ -59,6 +61,7 @@ class SweepRunner:
         strategy_name: str,
         param_grid: dict[str, list],
         sweep_id: str,
+        progress_callback: Callable[[int], None] | None = None,
     ) -> SweepResult:
         """Execute the full parameter sweep and return a SweepResult.
 
@@ -69,6 +72,8 @@ class SweepRunner:
                 E.g. {'fast_period': [10, 20, 50], 'slow_period': [100, 200]}
             sweep_id: Unique sweep identifier (assigned by the API layer).
                 Format: YYYYMMDD_HHMMSS_sweep_{strategy}_{asset}.
+            progress_callback: Optional callback invoked after each combination
+                with the cumulative count of runs whose status is 'complete'.
 
         Returns:
             SweepResult with one SweepRunSummary per parameter combination.
@@ -101,6 +106,12 @@ class SweepRunner:
                 ohlcv=ohlcv,
             )
             runs.append(summary)
+            if progress_callback is not None:
+                n_complete_so_far = sum(1 for r in runs if r.status == "complete")
+                try:
+                    progress_callback(n_complete_so_far)
+                except Exception as cb_exc:  # noqa: BLE001
+                    logger.debug("Progress callback failed (non-fatal): %s", cb_exc)
 
         n_complete = sum(1 for r in runs if r.status == "complete")
         n_failed = n - n_complete

@@ -50,6 +50,41 @@ def test_generate_combinations_two_params() -> None:
     assert {"fast_period": 20, "slow_period": 200} in result
 
 
+def test_progress_callback_receives_cumulative_n_complete() -> None:
+    """progress_callback is invoked after each combination with n_complete."""
+    from unittest.mock import MagicMock, patch
+
+    import pandas as pd
+
+    from src.backtesting.sweep_runner import SweepRunner
+    from src.core.types import SweepRunSummary
+
+    seen: list[int] = []
+
+    dummy = SweepRunSummary(
+        sweep_id="s",
+        run_id="r",
+        parameters={},
+        status="complete",
+    )
+    runner = SweepRunner(MagicMock())
+    with (
+        patch("src.data.loader.DataLoader") as loader_cls,
+        patch.object(runner, "_run_single", return_value=dummy),
+    ):
+        loader_cls.return_value.load.return_value = pd.DataFrame()
+        result = runner.run_sweep(
+            asset="gold",
+            strategy_name="ema_crossover",
+            param_grid={"fast_period": [10, 20], "slow_period": [100]},
+            sweep_id="test_progress",
+            progress_callback=seen.append,
+        )
+
+    assert result.n_combinations == 2
+    assert seen == [1, 2]
+
+
 @SKIP_NO_DATA
 def test_sweep_runner_produces_correct_n_combinations() -> None:
     """SweepRunner.run_sweep() produces exactly n_combinations results."""
