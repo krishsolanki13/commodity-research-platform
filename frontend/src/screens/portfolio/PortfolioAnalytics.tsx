@@ -9,7 +9,7 @@ import { usePortfolioDelete, usePortfolioRuns } from '@/api/hooks'
 import { ApiClientError } from '@/api/client'
 import { useUrlState } from '@/lib/useUrlState'
 import { cn } from '@/lib/cn'
-import { pct } from '@/lib/fmt'
+import { pct, dec } from '@/lib/fmt'
 import { usePortfolioHistory } from '@/stores/portfolioHistory'
 import { PortfolioConfigPanel } from '@/features/portfolio/PortfolioConfigPanel'
 import { PortfolioLaunchPanel } from '@/features/portfolio/PortfolioLaunchPanel'
@@ -175,13 +175,20 @@ export function PortfolioAnalytics() {
                         aria-label="Recent portfolio runs"
                         className="w-full table-fixed border-collapse text-sm"
                       >
+                        <colgroup>
+                          <col className="w-[22%]" />
+                          <col className="w-[24%]" />
+                          <col className="w-[16%]" />
+                          <col className="w-[18%]" />
+                          <col className="w-[20%]" />
+                        </colgroup>
                         <thead className="bg-bg-raised">
                           <tr>
-                            {['RUN', 'STRATEGY', 'RETURN', 'STATUS'].map((heading) => (
+                            {['RUN', 'STRATEGY', 'SHARPE', 'RETURN', 'STATUS'].map((heading) => (
                               <th
                                 key={heading}
                                 scope="col"
-                                className="px-3 py-2 text-left text-xs font-medium text-text-secondary"
+                                className="px-2 py-2 text-left text-xs font-medium text-text-secondary"
                               >
                                 {heading}
                               </th>
@@ -191,6 +198,7 @@ export function PortfolioAnalytics() {
                         <tbody>
                           {recentRuns.map((run) => {
                             const ret = run.total_return
+                            const sharpe = run.sharpe
                             return (
                               <tr
                                 key={run.run_id}
@@ -198,17 +206,20 @@ export function PortfolioAnalytics() {
                                 className="cursor-pointer border-b border-border-default last:border-b-0 hover:bg-bg-hover"
                               >
                                 <td
-                                  className="truncate px-3 py-2 font-mono text-xs text-text-primary"
+                                  className="truncate px-2 py-2 font-mono text-xs text-text-primary"
                                   title={run.run_id}
                                 >
                                   {shortRunId(run.run_id)}
                                 </td>
-                                <td className="truncate px-3 py-2 text-xs text-text-secondary">
+                                <td className="truncate px-2 py-2 text-xs text-text-secondary">
                                   {run.strategy_name}
+                                </td>
+                                <td className="px-2 py-2 font-mono text-xs text-text-primary">
+                                  {sharpe != null ? dec(sharpe, 2) : '—'}
                                 </td>
                                 <td
                                   className={cn(
-                                    'px-3 py-2 font-mono text-xs',
+                                    'px-2 py-2 font-mono text-xs',
                                     ret == null
                                       ? 'text-text-secondary'
                                       : ret >= 0
@@ -218,7 +229,7 @@ export function PortfolioAnalytics() {
                                 >
                                   {ret != null ? pct(ret, 1) : '—'}
                                 </td>
-                                <td className="px-3 py-2">
+                                <td className="px-2 py-2">
                                   <span className="flex items-center gap-1.5">
                                     <span className="h-1.5 w-1.5 rounded-full bg-gain" />
                                     <span className="font-mono text-xs text-gain">complete</span>

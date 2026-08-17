@@ -233,7 +233,9 @@ export function SweepExplorer() {
               )}
               {activeSweepId && status?.status === 'running' && (
                 <p className="mt-4 text-center text-sm text-text-secondary">
-                  Running sweep of {nCombinations ?? '?'} combinations…
+                  {status.n_complete > 0
+                    ? `Running sweep… ${status.n_complete} / ${nCombinations ?? '?'} complete`
+                    : `Running sweep… (${nCombinations ?? '?'} combinations)`}
                 </p>
               )}
               {activeSweepId && status?.status === 'failed' && (

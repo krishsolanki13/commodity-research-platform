@@ -2,8 +2,7 @@
  * PortfolioRegimePanel — per-asset regime attribution for a portfolio run.
  *
  * Opt-in compute via shouldFetch — does not auto-fetch on mount (avoids
- * blocking the single-worker API). Parallel prefetch preserved in
- * useRegimeAttributionParallel.ts — see TD-FEP-REGIME-ASYNC.
+ * blocking the single-worker API).
  */
 import { useMemo, useState } from 'react'
 import { Info } from 'lucide-react'
