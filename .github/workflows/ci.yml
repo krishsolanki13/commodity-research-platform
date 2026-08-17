@@ -37,7 +37,7 @@ jobs:
         run: python -m ruff format src/ api/ tests/ --check
 
       - name: mypy
-        run: echo "mypy skipped in CI — numpy stub incompatibility with CI mypy version. Runs locally."
+        run: mypy src/ --ignore-missing-imports
 
       - name: pytest
         run: |
