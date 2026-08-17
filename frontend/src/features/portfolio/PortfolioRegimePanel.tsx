@@ -6,7 +6,11 @@
  */
 import { useMemo, useState } from 'react'
 import { Info } from 'lucide-react'
-import { useRegimeAttribution } from '@/api/hooks/useRegimeAttribution'
+import {
+  useRegimeAttributionCompute,
+  useRegimeAttributionJobStatus,
+  useRegimeAttributionJobResult,
+} from '@/api/hooks'
 import { RegimeBreakdownChart } from '@/components/charts/RegimeBreakdownChart'
 import { displayName } from '@/lib/commodity'
 import { pct } from '@/lib/fmt'
@@ -45,17 +49,43 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
   const effectiveAsset = selectedAsset || defaultAsset
 
   const [shouldFetch, setShouldFetch] = useState(false)
+  const [jobId, setJobId] = useState<string | null>(null)
 
   const selectedRunId = effectiveAsset ? (assetRunIds?.[effectiveAsset] ?? null) : null
 
-  const { data: selectedData, isLoading: selectedLoading } = useRegimeAttribution(
-    shouldFetch ? selectedRunId : null,
-    4
+  const compute = useRegimeAttributionCompute()
+
+  const { data: jobStatus } = useRegimeAttributionJobStatus(shouldFetch ? jobId : null)
+
+  const { data: selectedData } = useRegimeAttributionJobResult(
+    jobId,
+    jobStatus?.status === 'complete'
   )
+
+  const isComputing =
+    shouldFetch && jobStatus?.status !== 'complete' && jobStatus?.status !== 'failed'
 
   function handleAssetChange(asset: string) {
     setSelectedAsset(asset)
     setShouldFetch(false)
+    setJobId(null)
+  }
+
+  function handleCompute() {
+    if (!selectedRunId) return
+    compute.mutate(
+      {
+        run_id: selectedRunId,
+        asset: effectiveAsset,
+        n_contracts: 4,
+      },
+      {
+        onSuccess: (data) => {
+          setJobId(data.job_id)
+          setShouldFetch(true)
+        },
+      }
+    )
   }
 
   // Guard: portfolio run predates asset_run_ids (pre-3abb078)
@@ -90,15 +120,19 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
               {displayName(a)}
               {shouldFetch && selectedData && effectiveAsset === a && selectedData.dominant_regime
                 ? ` — ${capitalize(selectedData.dominant_regime)}`
-                : shouldFetch && selectedLoading && effectiveAsset === a
+                : shouldFetch && isComputing && effectiveAsset === a
                   ? ' — loading…'
                   : ''}
             </option>
           ))}
         </select>
-        {shouldFetch && selectedLoading && (
-          <div className="gap-1.5 flex items-center text-xs text-text-secondary">
-            <span>Computing regime attribution…</span>
+        {isComputing && (
+          <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+            <span>
+              {jobStatus?.status === 'queued'
+                ? 'Queued — waiting for compute slot…'
+                : 'Computing regime attribution…'}
+            </span>
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -129,14 +163,19 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
             This computation takes 30–90 seconds per asset.
           </p>
           <div className="flex justify-center">
-            <Button variant="primary" onClick={() => setShouldFetch(true)} className="px-6 text-sm">
+            <Button
+              variant="primary"
+              onClick={handleCompute}
+              disabled={!selectedRunId || compute.isPending}
+              className="px-6 text-sm"
+            >
               Compute Regime Attribution
             </Button>
           </div>
         </div>
       ) : (
         <>
-          <RegimeBreakdownChart data={selectedData!} loading={selectedLoading || !selectedData} />
+          <RegimeBreakdownChart data={selectedData!} loading={isComputing || !selectedData} />
 
           {selectedData && (
             <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">

@@ -73,6 +73,10 @@ export const qk = {
     ['rolling-ic', asset, strategy, params, window] as const,
   regimeAttribution: (runId: string, nContracts: number) =>
     ['regime-attribution', runId, nContracts] as const,
+  regimeAttributionJob: {
+    status: (jobId: string) => ['regime-attribution-job', jobId, 'status'] as const,
+    result: (jobId: string) => ['regime-attribution-job', jobId, 'result'] as const,
+  },
   sweep: {
     list: () => ['sweeps'] as const,
     status: (id: string) => ['sweeps', id, 'status'] as const,
