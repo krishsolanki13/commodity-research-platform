@@ -126,12 +126,35 @@ def _run_regime_task(job_id: str, request: RegimeAttributionJobRequest) -> None:
                 self.asset = asset
                 self.pnl_series = d.get("pnl_series")
                 self.equity_curve = d.get("equity_curve")
-                self.trades = d.get("trades", [])
                 params = d.get("params", {})
                 # DEV-EM8-6: strategy_name key with fallback
                 self.strategy_name = params.get(
                     "strategy_name", params.get("strategy", "unknown")
                 )
+
+                # Convert trades DataFrame → list of proxy objects with
+                # .entry_date and .net_pnl attributes (DEV-EM8-5)
+                import pandas as _pd  # noqa: PLC0415
+
+                trades_raw = d.get("trades")
+                if trades_raw is None or (
+                    isinstance(trades_raw, _pd.DataFrame) and trades_raw.empty
+                ):
+                    self.trades = []
+                elif isinstance(trades_raw, _pd.DataFrame):
+
+                    class _TradeProxy:
+                        def __init__(self, row: dict) -> None:
+                            # DEV-EM8-5: .entry_date and .net_pnl confirmed
+                            self.entry_date = row.get("entry_date")
+                            self.net_pnl = row.get("net_pnl", 0.0)
+
+                    self.trades = [
+                        _TradeProxy(row) for row in trades_raw.to_dict("records")
+                    ]
+                else:
+                    # Already a list (e.g. list of TradeRecord objects)
+                    self.trades = trades_raw
 
         proxy = _RunProxy(run_data, request.run_id, request.asset)
 
