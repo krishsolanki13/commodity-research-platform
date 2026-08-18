@@ -5,12 +5,14 @@
  * blocking the single-worker API).
  */
 import { useMemo, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Info } from 'lucide-react'
 import {
   useRegimeAttributionCompute,
   useRegimeAttributionJobStatus,
   useRegimeAttributionJobResult,
 } from '@/api/hooks'
+import { qk } from '@/api/queryKeys'
 import { RegimeBreakdownChart } from '@/components/charts/RegimeBreakdownChart'
 import { displayName } from '@/lib/commodity'
 import { pct } from '@/lib/fmt'
@@ -62,16 +64,28 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
   const selectedRunId = effectiveAsset ? (assetRunIds?.[effectiveAsset] ?? null) : null
 
   const compute = useRegimeAttributionCompute()
+  const queryClient = useQueryClient()
 
-  const { data: jobStatus } = useRegimeAttributionJobStatus(shouldFetch ? jobId : null)
+  // Peek result cache so we can disable status polling on asset switch-back.
+  // selectedData comes from the result hook below — cannot be referenced first.
+  const cachedResult = jobId
+    ? queryClient.getQueryData(qk.regimeAttributionJob.result(jobId))
+    : undefined
+
+  const { data: jobStatus } = useRegimeAttributionJobStatus(
+    shouldFetch && !cachedResult ? jobId : null
+  )
 
   const { data: selectedData } = useRegimeAttributionJobResult(
     jobId,
-    jobStatus?.status === 'complete'
+    jobStatus?.status === 'complete' || !!cachedResult
   )
 
   const isComputing =
-    shouldFetch && jobStatus?.status !== 'complete' && jobStatus?.status !== 'failed'
+    shouldFetch &&
+    !selectedData &&
+    jobStatus?.status !== 'complete' &&
+    jobStatus?.status !== 'failed'
 
   function handleAssetChange(asset: string) {
     setSelectedAsset(asset)
