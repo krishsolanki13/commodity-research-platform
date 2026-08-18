@@ -4,7 +4,7 @@
  * Opt-in compute via shouldFetch — does not auto-fetch on mount (avoids
  * blocking the single-worker API).
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Info } from 'lucide-react'
 import {
   useRegimeAttributionCompute,
@@ -48,8 +48,16 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
   const [selectedAsset, setSelectedAsset] = useState<string>('')
   const effectiveAsset = selectedAsset || defaultAsset
 
-  const [shouldFetch, setShouldFetch] = useState(false)
-  const [jobId, setJobId] = useState<string | null>(null)
+  // Map of asset → jobId, persists across asset switches
+  const jobIdByAsset = useRef<Record<string, string>>({})
+
+  // Derived from the map for the current asset
+  const jobId = effectiveAsset ? (jobIdByAsset.current[effectiveAsset] ?? null) : null
+
+  // shouldFetch: true if a jobId exists for the current asset
+  // (means compute was already triggered for this asset)
+  const [fetchedAssets, setFetchedAssets] = useState<Set<string>>(new Set())
+  const shouldFetch = fetchedAssets.has(effectiveAsset ?? '')
 
   const selectedRunId = effectiveAsset ? (assetRunIds?.[effectiveAsset] ?? null) : null
 
@@ -67,22 +75,18 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
 
   function handleAssetChange(asset: string) {
     setSelectedAsset(asset)
-    setShouldFetch(false)
-    setJobId(null)
+    // jobIdByAsset and fetchedAssets persist — switching back
+    // to a previously computed asset restores the cached result
   }
 
   function handleCompute() {
-    if (!selectedRunId) return
+    if (!selectedRunId || !effectiveAsset) return
     compute.mutate(
-      {
-        run_id: selectedRunId,
-        asset: effectiveAsset,
-        n_contracts: 4,
-      },
+      { run_id: selectedRunId, asset: effectiveAsset, n_contracts: 4 },
       {
         onSuccess: (data) => {
-          setJobId(data.job_id)
-          setShouldFetch(true)
+          jobIdByAsset.current[effectiveAsset] = data.job_id
+          setFetchedAssets((prev) => new Set([...prev, effectiveAsset]))
         },
       }
     )
@@ -156,7 +160,7 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
         )}
       </div>
 
-      {!shouldFetch ? (
+      {!shouldFetch && (
         <div className="flex flex-col items-center gap-3 py-8 text-center">
           <p className="text-sm text-text-secondary">
             Regime attribution classifies term structure conditions across the full price history.
@@ -173,30 +177,30 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
             </Button>
           </div>
         </div>
-      ) : (
-        <>
-          <RegimeBreakdownChart data={selectedData!} loading={isComputing || !selectedData} />
+      )}
 
-          {selectedData && (
-            <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
-              <span>
-                {daysWithData.toLocaleString()} of {totalDays.toLocaleString()} days had regime data
-              </span>
-              {Object.keys(coverage).length > 0 && (
-                <>
-                  <span>·</span>
-                  {Object.entries(coverage).map(([regime, fraction]) => (
-                    <span
-                      key={regime}
-                      className={`font-medium ${REGIME_TEXT_CLASS[regime] ?? 'text-text-secondary'}`}
-                    >
-                      {capitalize(regime)} {pct(fraction, 0)}
-                    </span>
-                  ))}
-                </>
-              )}
-            </div>
-          )}
+      {selectedData && (
+        <>
+          <RegimeBreakdownChart data={selectedData} loading={false} />
+
+          <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
+            <span>
+              {daysWithData.toLocaleString()} of {totalDays.toLocaleString()} days had regime data
+            </span>
+            {Object.keys(coverage).length > 0 && (
+              <>
+                <span>·</span>
+                {Object.entries(coverage).map(([regime, fraction]) => (
+                  <span
+                    key={regime}
+                    className={`font-medium ${REGIME_TEXT_CLASS[regime] ?? 'text-text-secondary'}`}
+                  >
+                    {capitalize(regime)} {pct(fraction, 0)}
+                  </span>
+                ))}
+              </>
+            )}
+          </div>
         </>
       )}
     </div>
