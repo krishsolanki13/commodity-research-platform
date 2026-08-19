@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
@@ -81,6 +81,8 @@ class MultiAssetRunner:
         parameters: dict[str, Any],
         sizer: PositionSizer | None = None,
         signal_threshold: float = 0.0,
+        from_date: date | None = None,
+        to_date: date | None = None,
     ) -> MultiAssetBacktestResult:
         """Run the strategy across all specified assets and aggregate results.
 
@@ -107,6 +109,8 @@ class MultiAssetRunner:
                 for equal-vol contributions across assets.
             signal_threshold: Raw signal values within [-threshold, +threshold]
                 produce a flat (0) position. Default 0.0 (no flat zone).
+            from_date: Inclusive start date for per-asset OHLCV. None = full history.
+            to_date: Inclusive end date for per-asset OHLCV. None = full history.
 
         Returns:
             MultiAssetBacktestResult with per-asset results and aggregated
@@ -140,6 +144,8 @@ class MultiAssetRunner:
                     parameters=parameters,
                     sizer=sizer,
                     signal_threshold=signal_threshold,
+                    from_date=from_date,
+                    to_date=to_date,
                 )
                 asset_results[asset] = result
                 n_trades = len(result.trades)
@@ -199,6 +205,8 @@ class MultiAssetRunner:
         parameters: dict[str, Any],
         sizer: PositionSizer | None,
         signal_threshold: float,
+        from_date: date | None = None,
+        to_date: date | None = None,
     ) -> BacktestResult:
         """Execute the complete research pipeline for one asset.
 
@@ -207,6 +215,23 @@ class MultiAssetRunner:
         """
         # Step 1: Load OHLCV
         ohlcv = self._loader.load(asset)
+
+        # Apply date range filter if specified
+        if from_date is not None:
+            ohlcv = ohlcv[ohlcv.index.date >= from_date]
+        if to_date is not None:
+            ohlcv = ohlcv[ohlcv.index.date <= to_date]
+        if ohlcv.empty:
+            self._logger.warning(
+                "Date range [%s, %s] produced no data for '%s' — skipping",
+                from_date,
+                to_date,
+                asset,
+            )
+            skipped_msg = (
+                f"Date range [{from_date}, {to_date}] produced no data for '{asset}'"
+            )
+            raise ValueError(skipped_msg)
 
         # Step 2: Build feature frame
         indicators, signal_gen = self._build_pipeline_components(

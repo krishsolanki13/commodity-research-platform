@@ -149,6 +149,30 @@ def _run_portfolio_task(
         cfg = Config.load()
         assets = request.assets or _DEFAULT_ASSETS
 
+        import datetime as _dt  # noqa: PLC0415
+
+        parsed_from: _dt.date | None = None
+        parsed_to: _dt.date | None = None
+
+        if request.from_date:
+            try:
+                parsed_from = _dt.date.fromisoformat(request.from_date)
+            except ValueError:
+                # Invalid date format — ignore and run full history
+                logger.warning(
+                    "Invalid from_date '%s' — running full history",
+                    request.from_date,
+                )
+
+        if request.to_date:
+            try:
+                parsed_to = _dt.date.fromisoformat(request.to_date)
+            except ValueError:
+                logger.warning(
+                    "Invalid to_date '%s' — running full history",
+                    request.to_date,
+                )
+
         if request.sizing_method == "volatility_scaled":
             sizer: PositionSizer = VolatilityScaledSizer(target_annual_vol=0.15)
         else:
@@ -161,6 +185,8 @@ def _run_portfolio_task(
             parameters=request.params,
             sizer=sizer,
             signal_threshold=request.signal_threshold,
+            from_date=parsed_from,
+            to_date=parsed_to,
         )
 
         # Save individual per-asset run artifacts so /api/runs/{assetRunId}

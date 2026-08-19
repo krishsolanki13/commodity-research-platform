@@ -372,8 +372,8 @@ class PortfolioLaunchRequest(BaseModel):
     strategy: str
     params: dict[str, Any]
     assets: list[str] | None = None  # None = all 6 assets
-    from_date: str | None = None
-    to_date: str | None = None
+    from_date: str | None = None  # ISO 8601: "2020-01-01"
+    to_date: str | None = None  # ISO 8601: "2024-12-31"
     initial_capital_per_asset: float = 1_000_000.0
     commission_per_trade: float = 5.0
     slippage_ticks: int = 1
