@@ -3,7 +3,7 @@ import { fmt, fmtDate, MINUS, pct, dec } from '@/lib/fmt'
 
 describe('fmt.price', () => {
   it('formats gold with 2 decimal places', () => {
-    expect(fmt.price(2450.5, 'gold')).toBe('2450.50')
+    expect(fmt.price(2450.5, 'gold')).toBe('2,450.50')
   })
   it('formats copper with 4 decimal places', () => {
     expect(fmt.price(4.1234, 'copper')).toBe('4.1234')

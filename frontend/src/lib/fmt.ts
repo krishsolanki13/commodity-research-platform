@@ -13,9 +13,15 @@ const ASSET_DECIMALS: Record<string, number> = {
 export function price(value: number, asset: string): string {
   const decimals = ASSET_DECIMALS[asset] ?? 2
   if (value < 0) {
-    return `${MINUS}${Math.abs(value).toFixed(decimals)}`
+    return `${MINUS}${new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(Math.abs(value))}`
   }
-  return value.toFixed(decimals)
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(value)
 }
 
 export function percent(value: number, { showPlus = true }: { showPlus?: boolean } = {}): string {
@@ -33,6 +39,14 @@ export function pct(value: number, precision: number = 1): string {
 export function dec(value: number, precision: number = 2): string {
   // Exponential round avoids IEEE half-even quirks in Number#toFixed (e.g. 3.815 → "3.81")
   return Number(Math.round(Number(`${value}e${precision}`)) + `e-${precision}`).toFixed(precision)
+}
+
+export function num(value: number, decimals: number = 2): string {
+  if (!isFinite(value)) return '—'
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(value)
 }
 
 export function compactUsd(value: number): string {
