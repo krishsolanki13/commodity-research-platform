@@ -55,6 +55,8 @@ def test_adf_test_random_walk_not_stationary() -> None:
 
 
 @SKIP_NO_DATA
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_spread_signal_returns_series_on_wti() -> None:
     """WTIBrentSpreadSignal.generate() returns named pd.Series on WTI."""
     from src.core.config import Config
@@ -77,6 +79,8 @@ def test_spread_signal_returns_series_on_wti() -> None:
 
 
 @SKIP_NO_DATA
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_spread_signal_raises_on_non_wti_asset() -> None:
     """WTIBrentSpreadSignal raises ValueError when called on non-WTI asset."""
     from src.core.config import Config

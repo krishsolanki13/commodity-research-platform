@@ -87,6 +87,8 @@ def test_regime_attribution_returns_empty_when_no_contract_data() -> None:
 
 
 @SKIP_NO_CONTRACT
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_regime_attribution_regime_coverage_sums_to_one() -> None:
     """regime_coverage values sum to approximately 1.0."""
     from src.analytics.regime_attribution import RegimeAttributionEngine
@@ -130,6 +132,8 @@ def test_regime_attribution_regime_coverage_sums_to_one() -> None:
 
 
 @SKIP_NO_CONTRACT
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_regime_attribution_metrics_have_three_regimes() -> None:
     """RegimeAttributionReport has entries for all three regimes."""
     from pathlib import Path as _Path

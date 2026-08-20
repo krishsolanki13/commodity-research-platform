@@ -48,6 +48,8 @@ def test_curves_available_contains_at_least_one_platform_asset() -> None:
     ), f"Expected at least one platform asset in /api/curves/available, got: {assets}"
 
 
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_curves_snapshot_returns_200_and_required_fields() -> None:
     """GET /api/curves/{asset}/snapshot → 200 with required response fields."""
     assets = _available_assets()
@@ -64,6 +66,8 @@ def test_curves_snapshot_returns_200_and_required_fields() -> None:
     assert isinstance(data["n_contracts"], int)
 
 
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_curves_snapshot_nan_fields_serialize_as_null() -> None:
     """NaN float fields must appear as JSON null, never 'NaN' (JSON spec)."""
     assets = _available_assets()
@@ -87,6 +91,8 @@ def test_curves_snapshot_unknown_asset_returns_404() -> None:
     assert "detail" in response.json()
 
 
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_curves_history_returns_snapshots_with_correct_structure() -> None:
     """GET /api/curves/{asset}/history → 200, n_snapshots == len(snapshots)."""
     assets = _available_assets()
@@ -118,6 +124,8 @@ def test_curves_history_returns_snapshots_with_correct_structure() -> None:
         ), f"NaN in snapshot {snap['observation_date']} — must be null"
 
 
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_curves_snapshot_historical_observation_date() -> None:
     """GET /api/curves/{asset}/snapshot?observation_date= returns
     a snapshot for a specific historical date, not today.

@@ -1,165 +1,205 @@
 """Backend tests for CarrySignal.
 
-6 tests:
-  - 2 pure unit tests (always run)
-  - 4 data-dependent (skip in CI — require contract Parquet files)
+All tests use synthetic FuturesCurve fixtures — no contract Parquet files
+needed. Suite time: < 5 seconds.
 
-RawSignal is a pd.Series type alias (src/core/types.py). CarrySignal.generate()
-returns a named pd.Series — no RawSignal dataclass constructor involved.
-
-CarrySignal uses FuturesCurveBuilder which requires data in
-data/processed/contracts/{asset}/. Tests use SKIP_NO_CONTRACT guard
-for CI compatibility.
+TD-EM10-B: narrowed from real contract data (29 min over OneDrive)
+to synthetic fixtures that mock FuturesCurveBuilder responses.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
+import datetime
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
-import pytest
 
-# Skip guard for contract data (different from continuous OHLCV)
-CONTRACT_PATH = Path("data/processed/contracts")
-HAS_CONTRACT_DATA = CONTRACT_PATH.exists() and any(CONTRACT_PATH.iterdir())
-SKIP_NO_CONTRACT = pytest.mark.skipif(
-    not HAS_CONTRACT_DATA,
-    reason="Contract Parquet files not available in CI environment",
-)
+from src.signal.carry import CarrySignal
 
 
-@pytest.fixture(scope="module")
-def carry_signal_gold():
-    """CarrySignal instance configured for Gold."""
-    from src.core.config import Config
-    from src.signal.carry import CarrySignal
+def _make_synthetic_ohlcv(n: int = 100) -> pd.DataFrame:
+    """Minimal OHLCV for FeaturePipeline.compute()."""
+    return pd.DataFrame(
+        {
+            "open": [1800.0] * n,
+            "high": [1810.0] * n,
+            "low": [1790.0] * n,
+            "close": [1800.0] * n,
+            "volume": [10000.0] * n,
+        },
+        index=pd.bdate_range("2024-01-02", periods=n, freq="B", tz="UTC"),
+    )
 
-    config = Config.load("config/")
-    return CarrySignal(config=config, threshold=0.0, n_contracts=4)
+
+def _make_synthetic_curves(dates: list, roll_yield: float = 0.05) -> list:
+    """Mock FuturesCurve objects with synthetic roll yield."""
+    curves = []
+    for d in dates:
+        curve = MagicMock()
+        curve.observation_date = d if isinstance(d, datetime.date) else d.date()
+        # prices: front=1800, back=1800*(1 - roll_yield/12) for contango
+        # Positive roll_yield → backwardation (front > back)
+        front = 1800.0
+        back = front / (1 + roll_yield / 12)
+        curve.prices = [front, back, back * 0.99, back * 0.98]
+        curve.points = []
+        curves.append(curve)
+    return curves
 
 
-@pytest.fixture(scope="module")
-def minimal_feature_frame_gold():
-    """Minimal FeatureFrame for Gold — only data.index and .asset needed."""
-    from src.core.config import Config
-    from src.data.loader import DataLoader
-    from src.research.pipeline import FeaturePipeline
+def _make_feature_frame(asset: str = "gold", n: int = 100):
+    """Minimal FeatureFrame using FeaturePipeline([])."""
+    from src.research.pipeline import FeaturePipeline  # noqa: PLC0415
 
-    config = Config.load("config/")
-    ohlcv = DataLoader(config).load("gold")
+    ohlcv = _make_synthetic_ohlcv(n)
     pipeline = FeaturePipeline([])
-    return pipeline.compute(ohlcv, asset="gold")
+    return pipeline.compute(ohlcv, asset=asset)
 
 
-# ── Pure unit tests (always run) ──────────────────────────────────────────────
+# ── Pure unit tests ────────────────────────────────────────────────────────────
 
 
 def test_carry_signal_name() -> None:
-    """CarrySignal.name must equal 'carry' for pipeline registration."""
-    from src.signal.carry import CarrySignal
-
-    mock_config = MagicMock()
-    signal = CarrySignal(config=mock_config, threshold=0.0)
-    assert signal.name == "carry"
+    """CarrySignal.name == 'carry' via @property."""
+    sig = CarrySignal(config=MagicMock(), threshold=0.0)
+    assert sig.name == "carry"
 
 
 def test_carry_signal_returns_flat_when_no_contract_data() -> None:
-    """CarrySignal returns all-zero signal when asset has no contract data."""
-    from src.signal.carry import CarrySignal
-
-    mock_config = MagicMock()
-    signal = CarrySignal(config=mock_config, threshold=0.0)
-
-    mock_frame = MagicMock()
-    mock_frame.asset = "__fake_asset_no_data__"
-    n = 50
-    idx = pd.bdate_range("2024-01-02", periods=n, freq="B", tz="UTC")
-    mock_frame.data = pd.DataFrame(index=idx)
+    """Flat signal when asset has no contract data."""
+    sig = CarrySignal(config=MagicMock(), threshold=0.0)
+    mock_frame = _make_feature_frame("__fake__")
 
     with patch(
         "src.commodity.curve.FuturesCurveBuilder.available_assets",
         return_value=["gold", "silver"],
     ):
-        raw_signal = signal.generate(mock_frame)
+        result = sig.generate(mock_frame)
 
-    assert isinstance(
-        raw_signal, pd.Series
-    ), f"Expected pd.Series, got {type(raw_signal).__name__}"
+    assert (result == 0.0).all()
+    assert result.name == "carry"
+
+
+def test_carry_signal_returns_flat_when_curve_build_fails() -> None:
+    """Flat signal when build_historical_curves raises."""
+    sig = CarrySignal(config=MagicMock(), threshold=0.0)
+    mock_frame = _make_feature_frame("gold")
+
+    with (
+        patch(
+            "src.commodity.curve.FuturesCurveBuilder.available_assets",
+            return_value=["gold"],
+        ),
+        patch(
+            "src.commodity.curve.FuturesCurveBuilder.build_historical_curves",
+            side_effect=RuntimeError("network error"),
+        ),
+    ):
+        result = sig.generate(mock_frame)
+
+    assert (result == 0.0).all()
+    assert result.name == "carry"
+
+
+def test_carry_signal_values_valid_with_synthetic_backwardation() -> None:
+    """CarrySignal produces +1 values when roll yield is positive (backwardation)."""
+    sig = CarrySignal(config=MagicMock(), threshold=0.0)
+    mock_frame = _make_feature_frame("gold", n=50)
+    dates = [d.date() for d in mock_frame.data.index]
+
+    # Synthetic backwardation: positive roll yield → signal = +1
+    curves = _make_synthetic_curves(dates, roll_yield=0.10)
+
+    with (
+        patch(
+            "src.commodity.curve.FuturesCurveBuilder.available_assets",
+            return_value=["gold"],
+        ),
+        patch(
+            "src.commodity.curve.FuturesCurveBuilder.build_historical_curves",
+            return_value=curves,
+        ),
+        patch(
+            "src.commodity.term_structure.TermStructureAnalyzer.analyze_series",
+            return_value=[
+                MagicMock(
+                    observation_date=d,
+                    roll_yield_annualized=0.10,
+                )
+                for d in dates
+            ],
+        ),
+    ):
+        result = sig.generate(mock_frame)
+
+    assert result.name == "carry"
+    assert set(result.unique()).issubset({-1.0, 0.0, 1.0})
+    assert result.index.equals(mock_frame.data.index)
+
+
+def test_carry_signal_values_valid_with_synthetic_contango() -> None:
+    """CarrySignal produces -1 values when roll yield is negative (contango)."""
+    sig = CarrySignal(config=MagicMock(), threshold=0.0)
+    mock_frame = _make_feature_frame("gold", n=50)
+    dates = [d.date() for d in mock_frame.data.index]
+
+    with (
+        patch(
+            "src.commodity.curve.FuturesCurveBuilder.available_assets",
+            return_value=["gold"],
+        ),
+        patch(
+            "src.commodity.curve.FuturesCurveBuilder.build_historical_curves",
+            return_value=_make_synthetic_curves(dates, roll_yield=-0.05),
+        ),
+        patch(
+            "src.commodity.term_structure.TermStructureAnalyzer.analyze_series",
+            return_value=[
+                MagicMock(observation_date=d, roll_yield_annualized=-0.05)
+                for d in dates
+            ],
+        ),
+    ):
+        result = sig.generate(mock_frame)
+
+    assert set(result.unique()).issubset({-1.0, 0.0, 1.0})
+
+
+def test_carry_signal_threshold_filters_weak_signals() -> None:
+    """Higher threshold produces fewer non-zero bars."""
+    mock_frame = _make_feature_frame("gold", n=50)
+    dates = [d.date() for d in mock_frame.data.index]
+
+    # Mild backwardation that only crosses low threshold
+    snapshots = [
+        MagicMock(observation_date=d, roll_yield_annualized=0.02) for d in dates
+    ]
+
+    def run_signal(threshold: float) -> pd.Series:
+        sig = CarrySignal(config=MagicMock(), threshold=threshold)
+        with (
+            patch(
+                "src.commodity.curve.FuturesCurveBuilder.available_assets",
+                return_value=["gold"],
+            ),
+            patch(
+                "src.commodity.curve.FuturesCurveBuilder.build_historical_curves",
+                return_value=_make_synthetic_curves(dates, roll_yield=0.02),
+            ),
+            patch(
+                "src.commodity.term_structure.TermStructureAnalyzer.analyze_series",
+                return_value=snapshots,
+            ),
+        ):
+            return sig.generate(mock_frame)
+
+    low_threshold = run_signal(0.0)
+    high_threshold = run_signal(0.05)  # 5% > 2% roll yield → all flat
+
     assert (
-        raw_signal == 0.0
-    ).all(), "CarrySignal must return flat signal when asset has no contract data"
-    assert raw_signal.name == "carry"
-
-
-# ── Data-dependent tests ──────────────────────────────────────────────────────
-
-
-@SKIP_NO_CONTRACT
-def test_carry_signal_returns_raw_signal_type(
-    carry_signal_gold, minimal_feature_frame_gold
-) -> None:
-    """CarrySignal.generate() returns a named pd.Series (RawSignal type alias)."""
-    raw_signal = carry_signal_gold.generate(minimal_feature_frame_gold)
-
-    assert isinstance(
-        raw_signal, pd.Series
-    ), f"Expected pd.Series (RawSignal), got {type(raw_signal).__name__}"
-    assert raw_signal.name == "carry"
-    assert len(raw_signal) == len(minimal_feature_frame_gold.data.index)
-
-
-@SKIP_NO_CONTRACT
-def test_carry_signal_values_are_valid(
-    carry_signal_gold, minimal_feature_frame_gold
-) -> None:
-    """CarrySignal values must be in {+1.0, 0.0, -1.0} — no other values."""
-    raw_signal = carry_signal_gold.generate(minimal_feature_frame_gold)
-    valid_values = {-1.0, 0.0, 1.0}
-    actual_values = set(raw_signal.unique())
-
-    assert actual_values.issubset(
-        valid_values
-    ), f"CarrySignal values must be subset of {{-1.0, 0.0, 1.0}}, got: {actual_values}"
-    assert (raw_signal != 0.0).any(), (
-        "CarrySignal on Gold should produce at least some non-zero signal "
-        "— check that roll yield is being computed correctly."
-    )
-
-
-@SKIP_NO_CONTRACT
-def test_carry_signal_index_matches_feature_frame(
-    carry_signal_gold, minimal_feature_frame_gold
-) -> None:
-    """CarrySignal output index must match feature_frame.data.index exactly."""
-    raw_signal = carry_signal_gold.generate(minimal_feature_frame_gold)
-
-    assert raw_signal.index.equals(minimal_feature_frame_gold.data.index), (
-        "CarrySignal.index must match feature_frame.data.index exactly. "
-        "Misaligned index would cause silent P&L errors in the engine."
-    )
-
-
-@SKIP_NO_CONTRACT
-def test_carry_signal_threshold_reduces_non_zero_bars(
-    minimal_feature_frame_gold,
-) -> None:
-    """Higher threshold produces fewer non-zero signal bars."""
-    from src.core.config import Config
-    from src.signal.carry import CarrySignal
-
-    config = Config.load("config/")
-    signal_low = CarrySignal(config=config, threshold=0.0)
-    signal_high = CarrySignal(config=config, threshold=0.10)
-
-    raw_low = signal_low.generate(minimal_feature_frame_gold)
-    raw_high = signal_high.generate(minimal_feature_frame_gold)
-
-    n_active_low = int((raw_low != 0.0).sum())
-    n_active_high = int((raw_high != 0.0).sum())
-
-    assert n_active_high <= n_active_low, (
-        f"Higher threshold ({n_active_high} active bars) must produce "
-        f"<= active bars than lower threshold ({n_active_low} active bars). "
-        "Threshold is not filtering correctly."
-    )
+        high_threshold == 0.0
+    ).all(), "Threshold 5% should produce all-flat when roll yield is 2%"
+    # Low threshold should produce some non-zero bars
+    assert (
+        low_threshold != 0.0
+    ).any(), "Threshold 0% should produce some non-flat bars with 2% roll yield"

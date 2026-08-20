@@ -33,6 +33,7 @@ dev = [
     "httpx2>=0.28",
     "pytest-asyncio>=0.24",
     "hypothesis>=6.0",
+    "pytest-timeout",
 ]
 
 [tool.setuptools.packages.find]
@@ -45,6 +46,8 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "--tb=short"
+timeout = 300
+markers = ["slow: marks tests as slow (deselect with -m 'not slow')"]
 filterwarnings = [
     "ignore::ResourceWarning:pyarrow",
     "ignore::ResourceWarning:.*parquet.*",

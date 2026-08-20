@@ -32,6 +32,8 @@ def rolling_ic_series():
 
 
 @SKIP_NO_DATA
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_rolling_ic_series_name_and_type(rolling_ic_series) -> None:
     """Rolling IC returns a pd.Series named 'rolling_ic'."""
     assert isinstance(rolling_ic_series, pd.Series)
@@ -40,6 +42,8 @@ def test_rolling_ic_series_name_and_type(rolling_ic_series) -> None:
 
 
 @SKIP_NO_DATA
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_rolling_ic_first_window_minus_one_are_nan(rolling_ic_series) -> None:
     """First window-1 (62) bars must be NaN — rolling window not yet full."""
     window = 63
@@ -54,6 +58,8 @@ def test_rolling_ic_first_window_minus_one_are_nan(rolling_ic_series) -> None:
 
 
 @SKIP_NO_DATA
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_rolling_ic_values_in_valid_range(rolling_ic_series) -> None:
     """All non-NaN rolling IC values must be in [-1.0, 1.0]."""
     non_nan = rolling_ic_series.dropna()

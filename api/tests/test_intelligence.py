@@ -22,6 +22,8 @@ def test_pca_unknown_asset_returns_error() -> None:
     ), f"Expected error status, got {response.status_code}"
 
 
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_pca_returns_200_with_correct_structure() -> None:
     """GET /api/intelligence/pca?asset=gold → 200 with CurvePCAResponse."""
     if not (

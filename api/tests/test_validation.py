@@ -53,6 +53,8 @@ _MINIMAL_REPORT = {
 # ── Test 1: POST /run returns 202 ─────────────────────────────────────────────
 
 
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_validation_launch_returns_202_with_run_id() -> None:
     """POST /api/validation/run returns 202 Accepted with a validation_run_id."""
     response = client.post("/api/validation/run", json=_LAUNCH_PAYLOAD)

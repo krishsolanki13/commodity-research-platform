@@ -46,6 +46,8 @@ def test_curve_pca_engine_run_pca_explained_variance_sums_correctly() -> None:
 
 
 @SKIP_NO_CONTRACT
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_curve_pca_gold_produces_valid_result() -> None:
     """CurvePCAEngine.compute() on Gold produces a valid CurvePCAResult."""
     from src.commodity.pca import CurvePCAEngine
@@ -66,6 +68,8 @@ def test_curve_pca_gold_produces_valid_result() -> None:
 
 
 @SKIP_NO_CONTRACT
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_curve_pca_explained_variance_invariants() -> None:
     """Explained variance invariants: monotone, sums correctly, PC1 is largest."""
     from src.commodity.pca import CurvePCAEngine

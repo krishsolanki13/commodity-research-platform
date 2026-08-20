@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
 from api.main import app
@@ -15,6 +16,8 @@ from api.main import app
 client = TestClient(app)
 
 
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_sweep_launch_returns_202_with_sweep_id() -> None:
     """POST /api/sweeps → 202 with sweep_id and correct n_combinations."""
     response = client.post(

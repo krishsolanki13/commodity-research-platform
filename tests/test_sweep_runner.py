@@ -86,6 +86,8 @@ def test_progress_callback_receives_cumulative_n_complete() -> None:
 
 
 @SKIP_NO_DATA
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_sweep_runner_produces_correct_n_combinations() -> None:
     """SweepRunner.run_sweep() produces exactly n_combinations results."""
     from src.backtesting.sweep_runner import SweepRunner
@@ -109,6 +111,8 @@ def test_sweep_runner_produces_correct_n_combinations() -> None:
 
 
 @SKIP_NO_DATA
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_sweep_runner_results_contain_valid_metrics() -> None:
     """Completed sweep runs have non-NaN sharpe and valid status."""
     from src.backtesting.sweep_runner import SweepRunner

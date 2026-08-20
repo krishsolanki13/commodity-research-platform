@@ -25,6 +25,8 @@ def test_rolling_ic_invalid_params_returns_422(client) -> None:
     assert "detail" in response.json()
 
 
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_rolling_ic_returns_200_with_columnar_structure(client) -> None:
     """GET /api/signals/rolling-ic → 200 with index and columns.rolling_ic."""
     if not DATA_PATH.exists():
@@ -54,6 +56,8 @@ def test_rolling_ic_returns_200_with_columnar_structure(client) -> None:
     ), "All index values must be epoch-ms (> 1e12)"
 
 
+@pytest.mark.slow
+@pytest.mark.timeout(0)
 def test_rolling_ic_no_nan_literal_in_response(client) -> None:
     """NaN values must serialize as JSON null, not literal 'NaN'."""
     if not DATA_PATH.exists():
