@@ -26,3 +26,19 @@ def test_regime_attribution_status_unknown_job_returns_404() -> None:
     """GET /api/regime-attribution/{unknown}/status → 404."""
     response = client.get("/api/regime-attribution/nonexistent_job_id_xyz/status")
     assert response.status_code == 404
+
+
+def test_portfolio_regime_compute_returns_202() -> None:
+    response = client.post(
+        "/api/regime-attribution/compute-portfolio",
+        json={"portfolio_run_id": "nonexistent_portfolio", "n_contracts": 4},
+    )
+    assert response.status_code == 202
+    assert "job_id" in response.json()
+
+
+def test_portfolio_regime_result_unknown_returns_404() -> None:
+    response = client.get(
+        "/api/regime-attribution/nonexistent_job_xyz/portfolio-result"
+    )
+    assert response.status_code == 404

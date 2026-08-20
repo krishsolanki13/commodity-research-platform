@@ -998,6 +998,18 @@ class RegimeAttributionReport:
 
 
 @dataclass
+class PortfolioRegimeAttributionReport:
+    portfolio_run_id: str
+    n_assets_computed: int
+    assets_computed: list[str] = field(default_factory=list)
+    computation_date: datetime.date = field(default_factory=datetime.date.today)
+    portfolio_regime_metrics: dict[str, RegimeMetrics] = field(default_factory=dict)
+    per_asset_metrics: dict[str, RegimeAttributionReport] = field(default_factory=dict)
+    dominant_regime: str = ""
+    asset_weights: dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
 class SweepRunSummary:
     """Result of a single backtest within a parameter sweep.
 

@@ -16,17 +16,69 @@ from __future__ import annotations
 import datetime
 import logging
 import math
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import pandas as pd
 
 if TYPE_CHECKING:
-    from src.core.types import RegimeAttributionReport
+    from src.core.types import (
+        PortfolioRegimeAttributionReport,
+        RegimeAttributionReport,
+    )
 
 logger = logging.getLogger(__name__)
 
 # Minimum trading days per regime for meaningful statistics
 _MIN_REGIME_DAYS = 20
+
+
+@dataclass
+class _TradeProxy:
+    entry_date: object
+    net_pnl: float
+
+
+@dataclass
+class _RunProxy:
+    run_id: str
+    asset: str
+    strategy_name: str
+    pnl_series: pd.Series | None
+    equity_curve: pd.Series | None
+    trades: list  # list of _TradeProxy objects
+
+
+def _convert_trades(trades_raw: pd.DataFrame | list | None) -> list:
+    """Convert a trades DataFrame or list into _TradeProxy objects."""
+    import pandas as _pd  # noqa: PLC0415
+
+    if trades_raw is None:
+        return []
+    if isinstance(trades_raw, _pd.DataFrame):
+        if trades_raw.empty:
+            return []
+        return [
+            _TradeProxy(
+                entry_date=row.get("entry_date"),
+                net_pnl=float(row.get("net_pnl", 0.0)),
+            )
+            for row in trades_raw.to_dict("records")
+        ]
+    return list(trades_raw)
+
+
+def _make_run_proxy(run_data: dict, run_id: str, asset: str) -> _RunProxy:
+    """Construct a _RunProxy from load_run() dict output."""
+    params = run_data.get("params", {})
+    return _RunProxy(
+        run_id=run_id,
+        asset=asset,
+        strategy_name=params.get("strategy_name", params.get("strategy", "unknown")),
+        pnl_series=run_data.get("pnl_series"),
+        equity_curve=run_data.get("equity_curve"),
+        trades=_convert_trades(run_data.get("trades")),
+    )
 
 
 class RegimeAttributionEngine:
@@ -314,3 +366,126 @@ class RegimeAttributionEngine:
         wins = sum(1 for t in regime_trades if getattr(t, "net_pnl", 0) > 0)
         win_rate = wins / len(regime_trades)
         return len(regime_trades), win_rate
+
+    def compute_portfolio(
+        self,
+        portfolio_run_id: str,
+        n_contracts: int = 4,
+    ) -> PortfolioRegimeAttributionReport:
+        """Portfolio-level regime attribution aggregated across all assets."""
+        import json as _json  # noqa: PLC0415
+        import math as _math  # noqa: PLC0415
+        from pathlib import Path as _Path  # noqa: PLC0415
+
+        from src.backtesting.run_manager import RunManager  # noqa: PLC0415
+        from src.core.types import (  # noqa: PLC0415
+            PortfolioRegimeAttributionReport,
+            RegimeMetrics,
+        )
+
+        summary_path = _Path("data/runs") / portfolio_run_id / "portfolio_summary.json"
+        if not summary_path.exists():
+            raise ValueError(
+                f"Portfolio summary not found for '{portfolio_run_id}'. "
+                "Run portfolio analysis first."
+            )
+
+        summary = _json.loads(summary_path.read_text(encoding="utf-8"))
+        asset_run_ids: dict[str, str] = summary.get("asset_run_ids", {})
+
+        if not asset_run_ids:
+            raise ValueError(
+                f"No asset_run_ids in portfolio summary for '{portfolio_run_id}'. "
+                "Re-run portfolio analysis to generate per-asset run IDs."
+            )
+
+        manager = RunManager(self._config)  # type: ignore[arg-type]
+        per_asset: dict[str, RegimeAttributionReport] = {}
+        per_asset_pnl: dict[str, float] = {}
+
+        for asset, asset_run_id in asset_run_ids.items():
+            try:
+                run_data = manager.load_run(asset_run_id)
+                proxy = _make_run_proxy(run_data, asset_run_id, asset)
+                report = self.compute(proxy, asset=asset, n_contracts=n_contracts)
+                per_asset[asset] = report
+                pnl = run_data.get("pnl_series")
+                per_asset_pnl[asset] = float(pnl.sum()) if pnl is not None else 0.0
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Portfolio regime: skipping '%s' — %s", asset, exc)
+
+        if not per_asset:
+            return PortfolioRegimeAttributionReport(
+                portfolio_run_id=portfolio_run_id,
+                n_assets_computed=0,
+            )
+
+        total_pnl = sum(abs(v) for v in per_asset_pnl.values()) or 1.0
+        weights = {a: abs(v) / total_pnl for a, v in per_asset_pnl.items()}
+
+        all_regimes: set[str] = set()
+        for report in per_asset.values():
+            all_regimes.update(report.regime_metrics.keys())
+
+        portfolio_metrics: dict[str, RegimeMetrics] = {}
+        for regime in all_regimes:
+            regime_reports = [
+                per_asset[a].regime_metrics[regime]
+                for a in per_asset
+                if regime in per_asset[a].regime_metrics
+            ]
+
+            # CORRECTION 3: float() cast — RegimeMetrics.sharpe is float | None
+            valid_sharpes: list[float] = []
+            for a in per_asset:
+                if regime not in per_asset[a].regime_metrics:
+                    continue
+                m = per_asset[a].regime_metrics[regime]
+                if m.sharpe is None or _math.isnan(m.sharpe):
+                    continue
+                valid_sharpes.append(weights.get(a, 0.0) * float(m.sharpe))
+            weighted_sharpe = sum(valid_sharpes) if valid_sharpes else float("nan")
+            mean_coverage = sum(r.coverage for r in regime_reports) / max(
+                len(regime_reports), 1
+            )
+
+            weighted_returns = 0.0
+            for a in per_asset:
+                m = per_asset[a].regime_metrics.get(
+                    regime, RegimeMetrics(regime=regime)
+                )
+                tr = m.total_return
+                weighted_returns += weights.get(a, 0.0) * float(
+                    0.0 if tr is None else tr
+                )
+
+            dd_values = [
+                float(r.max_drawdown)
+                for r in regime_reports
+                if r.max_drawdown is not None and not _math.isnan(r.max_drawdown)
+            ]
+            max_dd = min(dd_values) if dd_values else float("nan")
+
+            portfolio_metrics[regime] = RegimeMetrics(
+                regime=regime,
+                n_days=max((r.n_days for r in regime_reports), default=0),
+                coverage=mean_coverage,
+                sharpe=weighted_sharpe,
+                total_return=weighted_returns,
+                max_drawdown=max_dd,
+                n_trades=sum(r.n_trades for r in regime_reports),
+                win_rate=float("nan"),  # not meaningful at portfolio level
+            )
+
+        dominant = max(portfolio_metrics, key=lambda r: portfolio_metrics[r].coverage)
+
+        return PortfolioRegimeAttributionReport(
+            portfolio_run_id=portfolio_run_id,
+            n_assets_computed=len(per_asset),
+            assets_computed=list(per_asset.keys()),
+            computation_date=datetime.date.today(),
+            portfolio_regime_metrics=portfolio_metrics,
+            per_asset_metrics=dict(per_asset),
+            dominant_regime=dominant,
+            asset_weights=weights,
+        )

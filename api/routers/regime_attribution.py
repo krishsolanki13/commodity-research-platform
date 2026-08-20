@@ -12,20 +12,20 @@ from __future__ import annotations
 import json
 import logging
 import math
-from dataclasses import dataclass as _dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    import pandas as pd
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from api.models import (
+    PortfolioRegimeAttributionResponse,
+    PortfolioRegimeJobRequest,
     RegimeAttributionJobRequest,
     RegimeAttributionJobStatusResponse,
     RegimeAttributionResponse,
     RegimeMetricsResponse,
+)
+from src.analytics.regime_attribution import (
+    _make_run_proxy,
 )
 
 logger = logging.getLogger(__name__)
@@ -35,46 +35,39 @@ _regime_tasks: dict[str, dict] = {}
 _REGIME_DIR = Path("data/regime_attribution")
 
 
-@_dataclass
-class _TradeProxy:
-    entry_date: object
-    net_pnl: float
-
-
-@_dataclass
-class _RunProxy:
-    run_id: str
-    asset: str
-    strategy_name: str
-    pnl_series: pd.Series | None
-    equity_curve: pd.Series | None
-    trades: list  # list of _TradeProxy objects
-
-
-def _convert_trades(trades_raw: pd.DataFrame | list | None) -> list:
-    """Convert a trades DataFrame or list into _TradeProxy objects."""
-    import pandas as _pd  # noqa: PLC0415
-
-    if trades_raw is None:
-        return []
-    if isinstance(trades_raw, _pd.DataFrame):
-        if trades_raw.empty:
-            return []
-        return [
-            _TradeProxy(
-                entry_date=row.get("entry_date"),
-                net_pnl=float(row.get("net_pnl", 0.0)),
-            )
-            for row in trades_raw.to_dict("records")
-        ]
-    return list(trades_raw)
-
-
 def _safe(v: object) -> object:
     """NaN → None for JSON serialization."""
     if isinstance(v, float) and math.isnan(v):
         return None
     return v
+
+
+def _regime_report_to_dict(report: object) -> dict:
+    """Serialize RegimeAttributionReport to JSON-safe dict (Q5 fix)."""
+    from src.core.types import RegimeAttributionReport  # noqa: PLC0415
+
+    assert isinstance(report, RegimeAttributionReport)
+    return {
+        "run_id": report.run_id,
+        "asset": report.asset,
+        "dominant_regime": report.dominant_regime,
+        "regime_coverage": report.regime_coverage,
+        "total_days_with_regime": report.total_days_with_regime,
+        "total_days_in_run": report.total_days_in_run,
+        "regime_metrics": {
+            k: {
+                "regime": m.regime,
+                "n_days": m.n_days,
+                "coverage": m.coverage,
+                "sharpe": _safe(m.sharpe),
+                "total_return": _safe(m.total_return),
+                "max_drawdown": _safe(m.max_drawdown),
+                "n_trades": m.n_trades,
+                "win_rate": _safe(m.win_rate),
+            }
+            for k, m in report.regime_metrics.items()
+        },
+    }
 
 
 def _save_regime_result(job_id: str, report: object) -> None:
@@ -111,6 +104,46 @@ def _save_regime_result(job_id: str, report: object) -> None:
         "dominant_regime": report.dominant_regime,
         "total_days_with_regime": report.total_days_with_regime,
         "total_days_in_run": report.total_days_in_run,
+    }
+    (job_dir / "result.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def _save_portfolio_regime_result(job_id: str, report: object) -> None:
+    """Persist PortfolioRegimeAttributionReport to disk."""
+    from src.core.types import PortfolioRegimeAttributionReport  # noqa: PLC0415
+
+    assert isinstance(report, PortfolioRegimeAttributionReport)
+
+    job_dir = _REGIME_DIR / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+
+    portfolio_metrics_data = {
+        regime: {
+            "regime": m.regime,
+            "n_days": m.n_days,
+            "coverage": m.coverage,
+            "sharpe": _safe(m.sharpe),
+            "total_return": _safe(m.total_return),
+            "max_drawdown": _safe(m.max_drawdown),
+            "n_trades": m.n_trades,
+            "win_rate": _safe(m.win_rate),
+        }
+        for regime, m in report.portfolio_regime_metrics.items()
+    }
+
+    data = {
+        "result_type": "portfolio",
+        "portfolio_run_id": report.portfolio_run_id,
+        "n_assets_computed": report.n_assets_computed,
+        "assets_computed": report.assets_computed,
+        "computation_date": str(report.computation_date),
+        "portfolio_regime_metrics": portfolio_metrics_data,
+        "per_asset_metrics": {
+            asset: _regime_report_to_dict(r)
+            for asset, r in report.per_asset_metrics.items()
+        },
+        "dominant_regime": report.dominant_regime,
+        "asset_weights": report.asset_weights,
     }
     (job_dir / "result.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
 
@@ -159,18 +192,7 @@ def _run_regime_task(job_id: str, request: RegimeAttributionJobRequest) -> None:
 
         # DEV-EM8-1: load_run() → dict, no .load()
         run_data = manager.load_run(request.run_id)
-        params = run_data.get("params", {})
-        # DEV-EM8-6: strategy_name key with fallback
-        proxy = _RunProxy(
-            run_id=request.run_id,
-            asset=request.asset,
-            strategy_name=params.get(
-                "strategy_name", params.get("strategy", "unknown")
-            ),
-            pnl_series=run_data.get("pnl_series"),
-            equity_curve=run_data.get("equity_curve"),
-            trades=_convert_trades(run_data.get("trades")),
-        )
+        proxy = _make_run_proxy(run_data, request.run_id, request.asset)
 
         engine = RegimeAttributionEngine(config)
         report = engine.compute(
@@ -201,6 +223,32 @@ def _run_regime_task(job_id: str, request: RegimeAttributionJobRequest) -> None:
         )
 
 
+def _run_portfolio_regime_task(job_id: str, request: PortfolioRegimeJobRequest) -> None:
+    from src.analytics.regime_attribution import (
+        RegimeAttributionEngine,  # noqa: PLC0415
+    )
+    from src.core.config import Config  # noqa: PLC0415
+
+    _regime_tasks[job_id]["status"] = "running"
+    try:
+        config = Config.load()
+        engine = RegimeAttributionEngine(config)
+        report = engine.compute_portfolio(
+            portfolio_run_id=request.portfolio_run_id,
+            n_contracts=request.n_contracts,
+        )
+        _save_portfolio_regime_result(job_id, report)
+        _regime_tasks[job_id].update({"status": "complete", "report": report})
+        logger.info(
+            "Portfolio regime complete: %s | dominant=%s",
+            job_id,
+            report.dominant_regime,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Portfolio regime failed: %s — %s", job_id, exc)
+        _regime_tasks[job_id].update({"status": "failed", "error": str(exc)})
+
+
 @router.post(
     "/compute", response_model=RegimeAttributionJobStatusResponse, status_code=202
 )
@@ -223,6 +271,31 @@ async def compute_regime_attribution(
         request=request,
     )
     logger.info("Regime attribution queued: %s", job_id)
+    return RegimeAttributionJobStatusResponse(job_id=job_id, status="queued")
+
+
+@router.post(
+    "/compute-portfolio",
+    response_model=RegimeAttributionJobStatusResponse,
+    status_code=202,
+)
+async def compute_portfolio_regime_attribution(
+    request: PortfolioRegimeJobRequest,
+    background_tasks: BackgroundTasks,
+) -> RegimeAttributionJobStatusResponse:
+    import datetime as _dt  # noqa: PLC0415
+
+    now = _dt.datetime.now(_dt.UTC)
+    job_id = (
+        f"{now.strftime('%Y%m%d_%H%M%S')}_regime_portfolio_"
+        f"{request.portfolio_run_id[:12]}"
+    )
+    _regime_tasks[job_id] = {"status": "queued", "report": None, "error": None}
+    background_tasks.add_task(
+        _run_portfolio_regime_task,
+        job_id=job_id,
+        request=request,
+    )
     return RegimeAttributionJobStatusResponse(job_id=job_id, status="queued")
 
 
@@ -280,5 +353,48 @@ async def get_regime_attribution_result(job_id: str) -> RegimeAttributionRespons
         detail={
             "code": "JOB_NOT_FOUND",
             "message": f"Regime attribution job '{job_id}' not found.",
+        },
+    )
+
+
+@router.get(
+    "/{job_id}/portfolio-result",
+    response_model=PortfolioRegimeAttributionResponse,
+)
+async def get_portfolio_regime_result(
+    job_id: str,
+) -> PortfolioRegimeAttributionResponse:
+    task = _regime_tasks.get(job_id)
+    if task is not None and task["status"] != "complete":
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "JOB_NOT_COMPLETE",
+                "message": f"Job status is '{task['status']}', not complete.",
+            },
+        )
+
+    result_path = _REGIME_DIR / job_id / "result.json"
+    if result_path.exists():
+        data = json.loads(result_path.read_text(encoding="utf-8"))
+        regime_metrics = {
+            k: RegimeMetricsResponse(**v)
+            for k, v in data.get("portfolio_regime_metrics", {}).items()
+        }
+        return PortfolioRegimeAttributionResponse(
+            portfolio_run_id=data["portfolio_run_id"],
+            n_assets_computed=data.get("n_assets_computed", 0),
+            assets_computed=data.get("assets_computed", []),
+            computation_date=data.get("computation_date", ""),
+            portfolio_regime_metrics=regime_metrics,
+            dominant_regime=data.get("dominant_regime", ""),
+            asset_weights=data.get("asset_weights", {}),
+        )
+
+    raise HTTPException(
+        status_code=404,
+        detail={
+            "code": "JOB_NOT_FOUND",
+            "message": f"Portfolio regime job '{job_id}' not found.",
         },
     )

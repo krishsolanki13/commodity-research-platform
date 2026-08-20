@@ -76,6 +76,8 @@ export const qk = {
   regimeAttributionJob: {
     status: (jobId: string) => ['regime-attribution-job', jobId, 'status'] as const,
     result: (jobId: string) => ['regime-attribution-job', jobId, 'result'] as const,
+    portfolioResult: (jobId: string) =>
+      ['regime-attribution-job', jobId, 'portfolio-result'] as const,
   },
   sweep: {
     list: () => ['sweeps'] as const,

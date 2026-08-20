@@ -56,3 +56,23 @@ export function useRegimeAttributionJobResult(
     staleTime: Infinity,
   })
 }
+
+export function usePortfolioRegimeCompute() {
+  return useMutation({
+    mutationFn: (body: {
+      portfolio_run_id: string
+      n_contracts?: number
+    }): Promise<{ job_id: string; status: string }> =>
+      client.post('/api/regime-attribution/compute-portfolio', body),
+  })
+}
+
+export function usePortfolioRegimeResult(jobId: string | null) {
+  return useQuery({
+    queryKey: qk.regimeAttributionJob.portfolioResult(jobId!),
+    queryFn: () =>
+      client.get(`/api/regime-attribution/${jobId}/portfolio-result`),
+    enabled: !!jobId,
+    staleTime: Infinity,
+  })
+}

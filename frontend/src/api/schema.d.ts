@@ -978,6 +978,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/regime-attribution/compute-portfolio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Compute Portfolio Regime Attribution */
+        post: operations["compute_portfolio_regime_attribution_api_regime_attribution_compute_portfolio_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/regime-attribution/{job_id}/status": {
         parameters: {
             query?: never;
@@ -1010,6 +1027,23 @@ export interface paths {
          * @description Return regime attribution result when status is complete.
          */
         get: operations["get_regime_attribution_result_api_regime_attribution__job_id__result_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/regime-attribution/{job_id}/portfolio-result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Portfolio Regime Result */
+        get: operations["get_portfolio_regime_result_api_regime_attribution__job_id__portfolio_result_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1693,6 +1727,52 @@ export interface components {
              * @default 0
              */
             signal_threshold: number;
+        };
+        /** PortfolioRegimeAttributionResponse */
+        PortfolioRegimeAttributionResponse: {
+            /** Portfolio Run Id */
+            portfolio_run_id: string;
+            /** N Assets Computed */
+            n_assets_computed: number;
+            /**
+             * Assets Computed
+             * @default []
+             */
+            assets_computed: string[];
+            /**
+             * Computation Date
+             * @default
+             */
+            computation_date: string;
+            /**
+             * Portfolio Regime Metrics
+             * @default {}
+             */
+            portfolio_regime_metrics: {
+                [key: string]: components["schemas"]["RegimeMetricsResponse"];
+            };
+            /**
+             * Dominant Regime
+             * @default
+             */
+            dominant_regime: string;
+            /**
+             * Asset Weights
+             * @default {}
+             */
+            asset_weights: {
+                [key: string]: number;
+            };
+        };
+        /** PortfolioRegimeJobRequest */
+        PortfolioRegimeJobRequest: {
+            /** Portfolio Run Id */
+            portfolio_run_id: string;
+            /**
+             * N Contracts
+             * @default 4
+             */
+            n_contracts: number;
         };
         /**
          * PortfolioRunListItem
@@ -4024,6 +4104,39 @@ export interface operations {
             };
         };
     };
+    compute_portfolio_regime_attribution_api_regime_attribution_compute_portfolio_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PortfolioRegimeJobRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegimeAttributionJobStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_regime_attribution_status_api_regime_attribution__job_id__status_get: {
         parameters: {
             query?: never;
@@ -4073,6 +4186,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RegimeAttributionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_portfolio_regime_result_api_regime_attribution__job_id__portfolio_result_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortfolioRegimeAttributionResponse"];
                 };
             };
             /** @description Validation Error */

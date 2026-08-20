@@ -1,5 +1,5 @@
 /**
- * PortfolioRegimePanel — per-asset regime attribution for a portfolio run.
+ * PortfolioRegimePanel — per-asset + portfolio-combined regime attribution.
  *
  * Opt-in compute via shouldFetch — does not auto-fetch on mount (avoids
  * blocking the single-worker API).
@@ -11,6 +11,8 @@ import {
   useRegimeAttributionCompute,
   useRegimeAttributionJobStatus,
   useRegimeAttributionJobResult,
+  usePortfolioRegimeCompute,
+  usePortfolioRegimeResult,
 } from '@/api/hooks'
 import { qk } from '@/api/queryKeys'
 import { RegimeBreakdownChart } from '@/components/charts/RegimeBreakdownChart'
@@ -18,6 +20,11 @@ import { displayName } from '@/lib/commodity'
 import { pct } from '@/lib/fmt'
 import { Button } from '@/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
+import type { components } from '@/api/schema'
+
+type RegimeAttributionResponse = components['schemas']['RegimeAttributionResponse']
+
+const PORTFOLIO_KEY = '__portfolio__'
 
 interface PortfolioRegimePanelProps {
   runId: string
@@ -35,7 +42,7 @@ function capitalize(s: string): string {
   return s.length === 0 ? s : s[0].toUpperCase() + s.slice(1)
 }
 
-export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRegimePanelProps) {
+export function PortfolioRegimePanel({ runId, assetRunIds }: PortfolioRegimePanelProps) {
   const availableAssets = useMemo(
     () =>
       Object.entries(assetRunIds ?? {})
@@ -45,41 +52,73 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
     [assetRunIds]
   )
 
-  // Selected asset state — default to first alphabetically
-  const defaultAsset = availableAssets[0] ?? ''
-  const [selectedAsset, setSelectedAsset] = useState<string>('')
-  const effectiveAsset = selectedAsset || defaultAsset
+  const [selectedAsset, setSelectedAsset] = useState<string>(PORTFOLIO_KEY)
+  const effectiveAsset = selectedAsset || PORTFOLIO_KEY
+  const isPortfolio = effectiveAsset === PORTFOLIO_KEY
 
   // Map of asset → jobId, persists across asset switches
+  // '__portfolio__' key stores the portfolio-combined job ID
   const jobIdByAsset = useRef<Record<string, string>>({})
 
-  // Derived from the map for the current asset
-  const jobId = effectiveAsset ? (jobIdByAsset.current[effectiveAsset] ?? null) : null
+  const jobId = jobIdByAsset.current[effectiveAsset] ?? null
 
-  // shouldFetch: true if a jobId exists for the current asset
-  // (means compute was already triggered for this asset)
   const [fetchedAssets, setFetchedAssets] = useState<Set<string>>(new Set())
-  const shouldFetch = fetchedAssets.has(effectiveAsset ?? '')
+  const shouldFetch = fetchedAssets.has(effectiveAsset)
 
-  const selectedRunId = effectiveAsset ? (assetRunIds?.[effectiveAsset] ?? null) : null
+  const selectedRunId = isPortfolio
+    ? runId
+    : (assetRunIds?.[effectiveAsset] ?? null)
 
-  const compute = useRegimeAttributionCompute()
+  const computeAsset = useRegimeAttributionCompute()
+  const computePortfolio = usePortfolioRegimeCompute()
   const queryClient = useQueryClient()
 
-  // Peek result cache so we can disable status polling on asset switch-back.
-  // selectedData comes from the result hook below — cannot be referenced first.
   const cachedResult = jobId
-    ? queryClient.getQueryData(qk.regimeAttributionJob.result(jobId))
+    ? isPortfolio
+      ? queryClient.getQueryData(qk.regimeAttributionJob.portfolioResult(jobId))
+      : queryClient.getQueryData(qk.regimeAttributionJob.result(jobId))
     : undefined
 
   const { data: jobStatus } = useRegimeAttributionJobStatus(
     shouldFetch && !cachedResult ? jobId : null
   )
 
-  const { data: selectedData } = useRegimeAttributionJobResult(
-    jobId,
-    jobStatus?.status === 'complete' || !!cachedResult
+  const { data: perAssetData } = useRegimeAttributionJobResult(
+    isPortfolio ? null : jobId,
+    !isPortfolio && (jobStatus?.status === 'complete' || !!cachedResult)
   )
+
+  const { data: portfolioData } = usePortfolioRegimeResult(
+    isPortfolio && (jobStatus?.status === 'complete' || !!cachedResult) ? jobId : null
+  )
+
+  const chartData: RegimeAttributionResponse | null = useMemo(() => {
+    if (isPortfolio && portfolioData?.portfolio_regime_metrics) {
+      return {
+        run_id: portfolioData.portfolio_run_id,
+        asset: 'portfolio',
+        strategy_name: '',
+        n_contracts: 4,
+        computation_date: portfolioData.computation_date ?? '',
+        regime_metrics: portfolioData.portfolio_regime_metrics,
+        regime_coverage: Object.fromEntries(
+          Object.entries(portfolioData.portfolio_regime_metrics).map(([k, v]) => [
+            k,
+            v.coverage ?? 0,
+          ])
+        ),
+        dominant_regime: portfolioData.dominant_regime ?? '',
+        total_days_with_regime: 0,
+        total_days_in_run: 0,
+      }
+    }
+    return perAssetData ?? null
+  }, [isPortfolio, portfolioData, perAssetData])
+
+  const selectedData = chartData
+  const dominantRegime = isPortfolio
+    ? portfolioData?.dominant_regime
+    : perAssetData?.dominant_regime
 
   const isComputing =
     shouldFetch &&
@@ -89,13 +128,24 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
 
   function handleAssetChange(asset: string) {
     setSelectedAsset(asset)
-    // jobIdByAsset and fetchedAssets persist — switching back
-    // to a previously computed asset restores the cached result
   }
 
   function handleCompute() {
+    if (isPortfolio) {
+      if (!runId) return
+      computePortfolio.mutate(
+        { portfolio_run_id: runId, n_contracts: 4 },
+        {
+          onSuccess: (data) => {
+            jobIdByAsset.current[PORTFOLIO_KEY] = data.job_id
+            setFetchedAssets((prev) => new Set([...prev, PORTFOLIO_KEY]))
+          },
+        }
+      )
+      return
+    }
     if (!selectedRunId || !effectiveAsset) return
-    compute.mutate(
+    computeAsset.mutate(
       { run_id: selectedRunId, asset: effectiveAsset, n_contracts: 4 },
       {
         onSuccess: (data) => {
@@ -133,11 +183,19 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
           onChange={(e) => handleAssetChange(e.target.value)}
           className="rounded border border-border-strong bg-bg-raised px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
         >
+          <option value={PORTFOLIO_KEY}>
+            Portfolio Combined
+            {shouldFetch && selectedData && isPortfolio && dominantRegime
+              ? ` — ${capitalize(dominantRegime)}`
+              : shouldFetch && isComputing && isPortfolio
+                ? ' — loading…'
+                : ''}
+          </option>
           {availableAssets.map((a) => (
             <option key={a} value={a}>
               {displayName(a)}
-              {shouldFetch && selectedData && effectiveAsset === a && selectedData.dominant_regime
-                ? ` — ${capitalize(selectedData.dominant_regime)}`
+              {shouldFetch && selectedData && effectiveAsset === a && dominantRegime
+                ? ` — ${capitalize(dominantRegime)}`
                 : shouldFetch && isComputing && effectiveAsset === a
                   ? ' — loading…'
                   : ''}
@@ -177,14 +235,19 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
       {!shouldFetch && (
         <div className="flex flex-col items-center gap-3 py-8 text-center">
           <p className="text-sm text-text-secondary">
-            Regime attribution classifies term structure conditions across the full price history.
-            This computation takes 30–90 seconds per asset.
+            {isPortfolio
+              ? 'Portfolio Combined aggregates regime attribution across all assets with P&L-weighted Sharpe. This may take several minutes.'
+              : 'Regime attribution classifies term structure conditions across the full price history. This computation takes 30–90 seconds per asset.'}
           </p>
           <div className="flex justify-center">
             <Button
               variant="primary"
               onClick={handleCompute}
-              disabled={!selectedRunId || compute.isPending}
+              disabled={
+                isPortfolio
+                  ? !runId || computePortfolio.isPending
+                  : !selectedRunId || computeAsset.isPending
+              }
               className="px-6 text-sm"
             >
               Compute Regime Attribution
@@ -197,24 +260,48 @@ export function PortfolioRegimePanel({ runId: _runId, assetRunIds }: PortfolioRe
         <>
           <RegimeBreakdownChart data={selectedData} loading={false} />
 
-          <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
-            <span>
-              {daysWithData.toLocaleString()} of {totalDays.toLocaleString()} days had regime data
-            </span>
-            {Object.keys(coverage).length > 0 && (
-              <>
-                <span>·</span>
-                {Object.entries(coverage).map(([regime, fraction]) => (
-                  <span
-                    key={regime}
-                    className={`font-medium ${REGIME_TEXT_CLASS[regime] ?? 'text-text-secondary'}`}
-                  >
-                    {capitalize(regime)} {pct(fraction, 0)}
-                  </span>
-                ))}
-              </>
-            )}
-          </div>
+          {!isPortfolio && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
+              <span>
+                {daysWithData.toLocaleString()} of {totalDays.toLocaleString()} days had regime
+                data
+              </span>
+              {Object.keys(coverage).length > 0 && (
+                <>
+                  <span>·</span>
+                  {Object.entries(coverage).map(([regime, fraction]) => (
+                    <span
+                      key={regime}
+                      className={`font-medium ${REGIME_TEXT_CLASS[regime] ?? 'text-text-secondary'}`}
+                    >
+                      {capitalize(regime)} {pct(fraction, 0)}
+                    </span>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+          {isPortfolio && portfolioData && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
+              <span>
+                {portfolioData.n_assets_computed} asset
+                {portfolioData.n_assets_computed === 1 ? '' : 's'} aggregated
+              </span>
+              {Object.keys(coverage).length > 0 && (
+                <>
+                  <span>·</span>
+                  {Object.entries(coverage).map(([regime, fraction]) => (
+                    <span
+                      key={regime}
+                      className={`font-medium ${REGIME_TEXT_CLASS[regime] ?? 'text-text-secondary'}`}
+                    >
+                      {capitalize(regime)} {pct(fraction, 0)}
+                    </span>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

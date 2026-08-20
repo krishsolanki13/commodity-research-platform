@@ -790,6 +790,21 @@ class RegimeAttributionJobStatusResponse(BaseModel):
     error: str | None = None
 
 
+class PortfolioRegimeJobRequest(BaseModel):
+    portfolio_run_id: str
+    n_contracts: int = 4
+
+
+class PortfolioRegimeAttributionResponse(BaseModel):
+    portfolio_run_id: str
+    n_assets_computed: int
+    assets_computed: list[str] = []
+    computation_date: str = ""
+    portfolio_regime_metrics: dict[str, RegimeMetricsResponse] = {}
+    dominant_regime: str = ""
+    asset_weights: dict[str, float] = {}
+
+
 class SweepLaunchRequest(BaseModel):
     asset: str
     strategy_name: str
