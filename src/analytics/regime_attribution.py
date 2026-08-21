@@ -399,20 +399,45 @@ class RegimeAttributionEngine:
                 "Re-run portfolio analysis to generate per-asset run IDs."
             )
 
-        manager = RunManager(self._config)  # type: ignore[arg-type]
+        from concurrent.futures import ThreadPoolExecutor, as_completed  # noqa: PLC0415
+
         per_asset: dict[str, RegimeAttributionReport] = {}
         per_asset_pnl: dict[str, float] = {}
 
-        for asset, asset_run_id in asset_run_ids.items():
-            try:
-                run_data = manager.load_run(asset_run_id)
-                proxy = _make_run_proxy(run_data, asset_run_id, asset)
-                report = self.compute(proxy, asset=asset, n_contracts=n_contracts)
-                per_asset[asset] = report
-                pnl = run_data.get("pnl_series")
-                per_asset_pnl[asset] = float(pnl.sum()) if pnl is not None else 0.0
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("Portfolio regime: skipping '%s' — %s", asset, exc)
+        def _compute_one(
+            asset: str, asset_run_id: str
+        ) -> tuple[str, RegimeAttributionReport, float]:
+            # Each thread gets its own RunManager — avoids any shared state
+            _manager = RunManager(self._config)  # type: ignore[arg-type]
+            run_data = _manager.load_run(asset_run_id)
+            proxy = _make_run_proxy(run_data, asset_run_id, asset)
+            report = self.compute(proxy, asset=asset, n_contracts=n_contracts)
+            pnl = run_data.get("pnl_series")
+            pnl_total = float(pnl.sum()) if pnl is not None else 0.0
+            return asset, report, pnl_total
+
+        n_workers = min(6, len(asset_run_ids))
+        with ThreadPoolExecutor(max_workers=n_workers) as executor:
+            futures = {
+                executor.submit(_compute_one, asset, run_id): asset
+                for asset, run_id in asset_run_ids.items()
+            }
+            for future in as_completed(futures):
+                asset_name = futures[future]
+                try:
+                    asset, report, pnl_total = future.result()
+                    per_asset[asset] = report
+                    per_asset_pnl[asset] = pnl_total
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning(
+                        "Portfolio regime: skipping '%s' — %s", asset_name, exc
+                    )
+
+        logger.info(
+            "Portfolio regime: %d/%d assets computed in parallel",
+            len(per_asset),
+            len(asset_run_ids),
+        )
 
         if not per_asset:
             return PortfolioRegimeAttributionReport(

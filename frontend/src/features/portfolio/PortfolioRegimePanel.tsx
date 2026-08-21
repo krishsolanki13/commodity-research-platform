@@ -4,7 +4,7 @@
  * Opt-in compute via shouldFetch — does not auto-fetch on mount (avoids
  * blocking the single-worker API).
  */
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Info } from 'lucide-react'
 import {
@@ -116,6 +116,17 @@ export function PortfolioRegimePanel({ runId, assetRunIds }: PortfolioRegimePane
   }, [isPortfolio, portfolioData, perAssetData])
 
   const selectedData = chartData
+
+  // Hold last valid chart payload so RegimeBreakdownChart does not collapse
+  // to zero height while switching assets / awaiting a new job result.
+  const lastValidMetrics = useRef<RegimeAttributionResponse | null>(null)
+  useEffect(() => {
+    if (selectedData) {
+      lastValidMetrics.current = selectedData
+    }
+  }, [selectedData])
+  const chartMetrics = selectedData ?? lastValidMetrics.current
+
   const dominantRegime = isPortfolio
     ? portfolioData?.dominant_regime
     : perAssetData?.dominant_regime
@@ -256,9 +267,9 @@ export function PortfolioRegimePanel({ runId, assetRunIds }: PortfolioRegimePane
         </div>
       )}
 
-      {selectedData && (
+      {chartMetrics && (
         <>
-          <RegimeBreakdownChart data={selectedData} loading={false} />
+          <RegimeBreakdownChart data={chartMetrics} loading={false} />
 
           {!isPortfolio && (
             <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
