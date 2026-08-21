@@ -267,11 +267,17 @@ export function PortfolioRegimePanel({ runId, assetRunIds }: PortfolioRegimePane
         </div>
       )}
 
-      {chartMetrics && (
+      {shouldFetch && (
         <>
-          <RegimeBreakdownChart data={chartMetrics} loading={false} />
+          <div className="flex min-h-[320px] items-center justify-center">
+            {chartMetrics ? (
+              <RegimeBreakdownChart data={chartMetrics} loading={false} />
+            ) : (
+              <span className="text-sm text-text-secondary">Computing…</span>
+            )}
+          </div>
 
-          {!isPortfolio && (
+          {chartMetrics && !isPortfolio && (
             <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
               <span>
                 {daysWithData.toLocaleString()} of {totalDays.toLocaleString()} days had regime
@@ -292,7 +298,7 @@ export function PortfolioRegimePanel({ runId, assetRunIds }: PortfolioRegimePane
               )}
             </div>
           )}
-          {isPortfolio && portfolioData && (
+          {chartMetrics && isPortfolio && portfolioData && (
             <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
               <span>
                 {portfolioData.n_assets_computed} asset
