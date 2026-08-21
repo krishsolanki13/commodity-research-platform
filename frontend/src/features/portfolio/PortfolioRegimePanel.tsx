@@ -213,34 +213,6 @@ export function PortfolioRegimePanel({ runId, assetRunIds }: PortfolioRegimePane
             </option>
           ))}
         </select>
-        {isComputing && (
-          <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-            <span>
-              {jobStatus?.status === 'queued'
-                ? 'Queued — waiting for compute slot…'
-                : 'Computing regime attribution…'}
-            </span>
-            <TooltipProvider delayDuration={300}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label="About regime attribution"
-                    className="inline-flex text-text-secondary transition-colors hover:text-text-primary"
-                  >
-                    <Info className="h-3 w-3 cursor-default" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs">
-                    Classifies each trading day as contango, backwardation, or flat using the
-                    futures term structure. Takes 30–90 seconds per asset.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        )}
       </div>
 
       {!shouldFetch && (
@@ -273,7 +245,32 @@ export function PortfolioRegimePanel({ runId, assetRunIds }: PortfolioRegimePane
             {chartMetrics ? (
               <RegimeBreakdownChart data={chartMetrics} loading={false} />
             ) : (
-              <span className="text-sm text-text-secondary">Computing…</span>
+              <div className="flex items-center gap-1.5 text-sm text-text-secondary">
+                <span>
+                  {jobStatus?.status === 'queued'
+                    ? 'Queued — waiting for compute slot…'
+                    : 'Computing regime attribution…'}
+                </span>
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="About regime attribution"
+                        className="inline-flex text-text-secondary transition-colors hover:text-text-primary"
+                      >
+                        <Info className="h-3 w-3 cursor-default" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">
+                        Classifies each trading day as contango, backwardation, or flat using the
+                        futures term structure. Takes 30–90 seconds per asset.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             )}
           </div>
 
