@@ -87,4 +87,34 @@ describe('useEvaluateChainMutation', () => {
     const cached = qc.getQueryData(qk.signalEvaluate('gold', 'ema_crossover', validParams.params))
     expect(cached).toBeUndefined()
   })
+
+  it('skips features/compute when featureSpecs is empty (featureless strategies)', async () => {
+    let featuresCalled = false
+    server.use(
+      http.post('http://localhost:8000/api/features/compute', () => {
+        featuresCalled = true
+        return HttpResponse.json(
+          { error: { code: 'NO_INDICATORS', message: 'At least one indicator spec is required.' } },
+          { status: 400 }
+        )
+      })
+    )
+    const steps: string[] = []
+    const { result } = renderHook(() => useEvaluateChainMutation((s) => steps.push(s.step)), {
+      wrapper,
+    })
+    const chain = await result.current.mutateAsync({
+      asset: 'gold',
+      strategy: 'donchian_breakout',
+      params: { channel_period: 20 },
+      featureSpecs: [],
+      fromDate: '2015-01-01',
+      toDate: '2026-07-15',
+    })
+    expect(featuresCalled).toBe(false)
+    expect(steps).toEqual(['signal', 'evaluation'])
+    expect(chain.features.specs).toEqual([])
+    expect(chain.signal).toBeDefined()
+    expect(chain.evaluation).toBeDefined()
+  })
 })

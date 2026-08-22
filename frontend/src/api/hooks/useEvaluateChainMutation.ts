@@ -41,15 +41,28 @@ export function useEvaluateChainMutation(onProgress?: (step: ProgressStep) => vo
 
   return useMutation({
     mutationFn: async (p: EvaluateChainParams): Promise<EvaluateChainResult> => {
-      // Step 1: Compute features
-      onProgressRef.current?.({ step: 'features', stepIndex: 1 })
-      const features = await client.post<FeatureComputeResponse>('/api/features/compute', {
-        asset: p.asset,
-        from_date: p.fromDate,
-        to_date: p.toDate,
-        specs: p.featureSpecs,
-      })
-      queryClient.setQueryData(qk.features(p.asset, p.fromDate, p.toDate, p.featureSpecs), features)
+      // Step 1: Compute features (skip when strategy needs no indicator columns —
+      // empty specs → API 400 NO_INDICATORS, which previously aborted the chain silently)
+      let features: FeatureComputeResponse
+      if (p.featureSpecs.length === 0) {
+        features = {
+          asset: p.asset,
+          from_date: p.fromDate,
+          to_date: p.toDate,
+          bars: 0,
+          specs: [],
+          columns: { index: [], columns: {} },
+        }
+      } else {
+        onProgressRef.current?.({ step: 'features', stepIndex: 1 })
+        features = await client.post<FeatureComputeResponse>('/api/features/compute', {
+          asset: p.asset,
+          from_date: p.fromDate,
+          to_date: p.toDate,
+          specs: p.featureSpecs,
+        })
+        queryClient.setQueryData(qk.features(p.asset, p.fromDate, p.toDate, p.featureSpecs), features)
+      }
 
       // Step 2: Generate signal
       onProgressRef.current?.({ step: 'signal', stepIndex: 2 })

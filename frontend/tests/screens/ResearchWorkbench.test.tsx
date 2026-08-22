@@ -148,6 +148,32 @@ describe('ResearchWorkbenchScreen', () => {
     )
   })
 
+  it('evaluation error renders inline error message', async () => {
+    const user = userEvent.setup()
+    mutateAsync.mockRejectedValueOnce(new Error('At least one indicator spec is required.'))
+    render(<Wrapper initialEntry={emaUrl} />)
+
+    await waitFor(
+      () => expect(screen.getByRole('button', { name: /Evaluate signal/i })).toBeEnabled(),
+      { timeout: 5000 }
+    )
+
+    await user.click(screen.getByRole('button', { name: /Evaluate signal/i }))
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalled(), { timeout: 5000 })
+    await waitFor(
+      () => {
+        const alert = screen.getByRole('alert')
+        expect(alert).toHaveTextContent(/Signal evaluation failed/i)
+        expect(alert).toHaveTextContent(/At least one indicator spec is required/i)
+      },
+      { timeout: 5000 }
+    )
+    // Stay on config view — no silent success / empty IC gate flip
+    expect(screen.getByRole('button', { name: /Evaluate signal/i })).toBeInTheDocument()
+    expect(screen.queryByText('IC Decay')).not.toBeInTheDocument()
+  })
+
   it('changing a param after evaluation does not show a staleness chip', async () => {
     const user = userEvent.setup()
     render(<Wrapper initialEntry={emaUrl} />)

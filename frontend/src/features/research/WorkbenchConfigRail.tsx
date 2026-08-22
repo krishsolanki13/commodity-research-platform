@@ -51,6 +51,8 @@ interface WorkbenchConfigRailProps {
   onEvaluate: (params: EvaluateParams) => void
   onCanEvaluateChange: (canEvaluate: boolean, reason: string | null) => void
   onEvaluateReady?: (trigger: () => void) => void
+  /** Inline evaluation-chain failure message (S3: failing stage in config rail). */
+  evalError?: string | null
 }
 
 /** Maps strategy + params → feature specs required by the signal. Uses live API indicator names. */
@@ -84,6 +86,7 @@ export function WorkbenchConfigRail({
   onEvaluate,
   onCanEvaluateChange,
   onEvaluateReady,
+  evalError = null,
 }: WorkbenchConfigRailProps) {
   const [urlState, setUrlState] = useUrlState(workbenchSchema, defaults)
 
@@ -188,6 +191,14 @@ export function WorkbenchConfigRail({
 
   return (
     <div className="flex flex-col gap-4">
+      {evalError && (
+        <div
+          role="alert"
+          className="rounded border border-loss bg-loss-fill px-3 py-2 text-sm text-loss"
+        >
+          {evalError}
+        </div>
+      )}
       <Panel title="Asset & Strategy">
         <div className="flex flex-col gap-4">
           <AssetSelector

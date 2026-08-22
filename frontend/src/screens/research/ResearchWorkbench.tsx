@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { safeJsonParse } from '@/lib/json'
+import { ApiClientError } from '@/api/client'
 import { useEvaluateChainMutation } from '@/api/hooks/useEvaluateChainMutation'
 import {
   WorkbenchConfigRail,
@@ -18,11 +19,34 @@ import type { components } from '@/api/schema'
 
 type FeatureSpecRequest = components['schemas']['FeatureSpecRequest']
 
+function formatEvalError(e: unknown, failedStep: EvaluateProgress['step'] | null): string {
+  const detail =
+    e instanceof ApiClientError
+      ? e.apiError.detail
+        ? `${e.message} — ${e.apiError.detail}`
+        : e.message
+      : e instanceof Error
+        ? e.message
+        : 'Unknown error — check API logs'
+
+  const stageLabel =
+    failedStep === 'features'
+      ? 'Feature computation failed'
+      : failedStep === 'signal'
+        ? 'Signal generation failed'
+        : failedStep === 'evaluation'
+          ? 'Signal evaluation failed'
+          : 'Signal evaluation failed'
+
+  return `${stageLabel}: ${detail}`
+}
+
 export default function ResearchWorkbenchScreen() {
   const [searchParams] = useSearchParams()
   const [evaluationResult, setEvaluationResult] = useState<WorkbenchEvaluationResult | null>(null)
   const [evaluating, setEvaluating] = useState(false)
   const [evaluateProgress, setEvaluateProgress] = useState<EvaluateProgress | null>(null)
+  const [evalError, setEvalError] = useState<string | null>(null)
   const [lastEvaluatedConfigHash, setLastEvaluatedConfigHash] = useState<string | null>(null)
   const [canEvaluate, setCanEvaluate] = useState(false)
   const [evaluateReason, setEvaluateReason] = useState<string | null>(null)
@@ -31,9 +55,13 @@ export default function ResearchWorkbenchScreen() {
   // Ref to trigger evaluate from the button in the right half, while all param
   // building logic stays inside WorkbenchConfigRail.
   const evaluateTriggerRef = useRef<(() => void) | null>(null)
+  const progressRef = useRef<EvaluateProgress | null>(null)
 
   // R-Q7: onProgress is a hook parameter — mutateAsync receives only serializable params
-  const evaluateChain = useEvaluateChainMutation((progress) => setEvaluateProgress(progress))
+  const evaluateChain = useEvaluateChainMutation((progress) => {
+    progressRef.current = progress
+    setEvaluateProgress(progress)
+  })
 
   const asset = searchParams.get('asset') ?? ''
   const strategy = searchParams.get('strategy') ?? ''
@@ -51,6 +79,7 @@ export default function ResearchWorkbenchScreen() {
     setHasEvaluated(false)
     setEvaluationResult(null)
     setLastEvaluatedConfigHash(null)
+    setEvalError(null)
   }, [asset, strategy])
 
   const progressLabel =
@@ -73,6 +102,8 @@ export default function ResearchWorkbenchScreen() {
     })
     setEvaluating(true)
     setEvaluateProgress(null)
+    progressRef.current = null
+    setEvalError(null)
     try {
       const result = await evaluateChain.mutateAsync({
         asset: p.asset,
@@ -87,6 +118,9 @@ export default function ResearchWorkbenchScreen() {
       setHasEvaluated(true)
     } catch (e) {
       console.error('Evaluate chain failed:', e)
+      setEvalError(formatEvalError(e, progressRef.current?.step ?? null))
+      setEvaluationResult(null)
+      setHasEvaluated(false)
     } finally {
       setEvaluating(false)
       setEvaluateProgress(null)
@@ -114,6 +148,7 @@ export default function ResearchWorkbenchScreen() {
               onEvaluateReady={(trigger) => {
                 evaluateTriggerRef.current = trigger
               }}
+              evalError={evalError}
             />
           </div>
 
