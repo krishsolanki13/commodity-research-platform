@@ -15,6 +15,8 @@ type RegimeAttributionJobStatusResponse =
   components['schemas']['RegimeAttributionJobStatusResponse']
 type RegimeAttributionResponse =
   components['schemas']['RegimeAttributionResponse']
+type PortfolioRegimeAttributionResponse =
+  components['schemas']['PortfolioRegimeAttributionResponse']
 
 // Step 1: Launch the async job
 export function useRegimeAttributionCompute() {
@@ -70,7 +72,7 @@ export function usePortfolioRegimeCompute() {
 export function usePortfolioRegimeResult(jobId: string | null) {
   return useQuery({
     queryKey: qk.regimeAttributionJob.portfolioResult(jobId!),
-    queryFn: () =>
+    queryFn: (): Promise<PortfolioRegimeAttributionResponse> =>
       client.get(`/api/regime-attribution/${jobId}/portfolio-result`),
     enabled: !!jobId,
     staleTime: Infinity,
