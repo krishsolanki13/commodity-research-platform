@@ -35,6 +35,22 @@ describe('PortfolioAnalytics screen', () => {
     expect(screen.getByRole('button', { name: /launch portfolio backtest/i })).toBeInTheDocument()
   })
 
+  it('renders optional from/to date inputs in config panel', () => {
+    render(<Wrapper />)
+    expect(screen.getByLabelText(/from date/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/to date/i)).toBeInTheDocument()
+    expect(screen.getByText(/leave blank to use full history/i)).toBeInTheDocument()
+  })
+
+  it('shows inline error when to_date is before from_date', async () => {
+    render(
+      <Wrapper initialPath="/portfolio?from_date=2022-12-31&to_date=2020-01-01" />
+    )
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /end date must be after start date/i
+    )
+  })
+
   it('renders PortfolioKPIRow when run_id is set via state', () => {
     // This test verifies the results layout renders when a run is active.
     // We test the no-run state here since URL state is component-internal.

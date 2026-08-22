@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { usePortfolioLaunch, usePortfolioStatus } from '@/api/hooks'
 import { ErrorState } from '@/components/layout/ErrorState'
+import { isValidIsoDate } from '@/features/portfolio/portfolioUrlState'
 import { Button } from '@/ui/button'
 import type { components } from '@/api/schema'
 
@@ -11,6 +12,8 @@ interface PortfolioLaunchPanelProps {
   params: Record<string, unknown>
   sizingMethod: 'fixed_notional' | 'volatility_scaled'
   initialCapital: number
+  fromDate?: string
+  toDate?: string
   onLaunched: (runId: string) => void
 }
 
@@ -19,6 +22,8 @@ export function PortfolioLaunchPanel({
   params,
   sizingMethod,
   initialCapital,
+  fromDate = '',
+  toDate = '',
   onLaunched,
 }: PortfolioLaunchPanelProps) {
   const [pollingRunId, setPollingRunId] = useState<string | null>(null)
@@ -48,6 +53,14 @@ export function PortfolioLaunchPanel({
   }, [status.data?.status, status.data?.run_id, pollingRunId, onLaunched])
 
   async function handleLaunch() {
+    const validFrom = fromDate && isValidIsoDate(fromDate) ? fromDate : ''
+    const validTo = toDate && isValidIsoDate(toDate) ? toDate : ''
+    // Drop both if order is inverted — matches inline validation message
+    const ordered =
+      !validFrom || !validTo || validTo >= validFrom
+        ? { from: validFrom, to: validTo }
+        : { from: '', to: '' }
+
     const request: PortfolioLaunchRequest = {
       strategy,
       params,
@@ -57,6 +70,8 @@ export function PortfolioLaunchPanel({
       sizing_method: sizingMethod,
       notional_usd: 100_000,
       signal_threshold: 0,
+      ...(ordered.from ? { from_date: ordered.from } : {}),
+      ...(ordered.to ? { to_date: ordered.to } : {}),
     }
     const result = await launch.mutateAsync(request)
     setPollingRunId(result.run_id)

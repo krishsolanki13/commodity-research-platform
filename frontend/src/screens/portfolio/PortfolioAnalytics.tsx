@@ -53,8 +53,14 @@ function shortRunId(runId: string): string {
 
 export function PortfolioAnalytics() {
   const [urlState, setUrlState] = useUrlState(portfolioUrlSchema, portfolioUrlDefaults)
-  const { run_id, strategy, sizing_method: sizingMethod, initial_capital: initialCapital } =
-    urlState
+  const {
+    run_id,
+    strategy,
+    sizing_method: sizingMethod,
+    initial_capital: initialCapital,
+    from_date: fromDate = '',
+    to_date: toDate = '',
+  } = urlState
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -146,6 +152,10 @@ export function PortfolioAnalytics() {
                 onSizingChange={(v) => setUrlState({ sizing_method: v })}
                 initialCapital={initialCapital}
                 onCapitalChange={(v) => setUrlState({ initial_capital: v })}
+                fromDate={fromDate}
+                onFromDateChange={(v) => setUrlState({ from_date: v || null })}
+                toDate={toDate}
+                onToDateChange={(v) => setUrlState({ to_date: v || null })}
               />
             </Panel>
           </div>
@@ -157,6 +167,8 @@ export function PortfolioAnalytics() {
                   params={params}
                   sizingMethod={sizingMethod}
                   initialCapital={initialCapital}
+                  fromDate={fromDate}
+                  toDate={toDate}
                   onLaunched={handleLaunched}
                 />
 

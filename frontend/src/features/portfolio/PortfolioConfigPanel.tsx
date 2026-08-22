@@ -1,6 +1,7 @@
 import { fmt } from '@/lib/fmt'
 import { useStrategies } from '@/api/hooks/useStrategies'
 import { Combobox } from '@/ui/Combobox'
+import { validatePortfolioDateRange } from '@/features/portfolio/portfolioUrlState'
 
 interface PortfolioConfigPanelProps {
   strategy: string
@@ -9,6 +10,10 @@ interface PortfolioConfigPanelProps {
   onSizingChange: (s: 'fixed_notional' | 'volatility_scaled') => void
   initialCapital: number
   onCapitalChange: (n: number) => void
+  fromDate: string
+  onFromDateChange: (v: string) => void
+  toDate: string
+  onToDateChange: (v: string) => void
 }
 
 export function PortfolioConfigPanel({
@@ -18,12 +23,18 @@ export function PortfolioConfigPanel({
   onSizingChange,
   initialCapital,
   onCapitalChange,
+  fromDate,
+  onFromDateChange,
+  toDate,
+  onToDateChange,
 }: PortfolioConfigPanelProps) {
   const { data: strategiesData } = useStrategies()
   const strategyOptions = (strategiesData?.strategies ?? []).map((s) => ({
     value: s.name,
     label: s.display_name,
   }))
+
+  const dateErrors = validatePortfolioDateRange(fromDate, toDate)
 
   return (
     <div className="flex flex-col gap-4">
@@ -78,6 +89,39 @@ export function PortfolioConfigPanel({
         <p className="mt-1 font-mono text-xs text-text-secondary">
           Running on all 6 commodity assets · Total: {fmt.compactUsd(initialCapital * 6)}
         </p>
+      </div>
+
+      <div className="gap-1.5 flex flex-col">
+        <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">
+          Date Range
+        </span>
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => onFromDateChange(e.target.value)}
+            placeholder="2020-01-01"
+            className="py-1.5 rounded border border-border-strong bg-bg-raised px-2 font-mono text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
+            aria-label="From date"
+          />
+          <span className="text-xs text-text-secondary">→</span>
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => onToDateChange(e.target.value)}
+            placeholder="2022-12-31"
+            className="py-1.5 rounded border border-border-strong bg-bg-raised px-2 font-mono text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
+            aria-label="To date"
+          />
+        </div>
+        <p className="text-xs text-text-disabled">
+          Leave blank to use full history (2010–2026)
+        </p>
+        {(dateErrors.fromDate || dateErrors.toDate) && (
+          <p className="text-xs text-loss" role="alert">
+            {dateErrors.fromDate ?? dateErrors.toDate}
+          </p>
+        )}
       </div>
     </div>
   )
