@@ -9,9 +9,11 @@ kept for backward compatibility. This router adds the async variant.
 
 from __future__ import annotations
 
+import dataclasses as _dc
+import datetime as _dt_dc
 import json
 import logging
-import math
+import math as _math_dc
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
@@ -35,39 +37,58 @@ _regime_tasks: dict[str, dict] = {}
 _REGIME_DIR = Path("data/regime_attribution")
 
 
-def _safe(v: object) -> object:
-    """NaN → None for JSON serialization."""
-    if isinstance(v, float) and math.isnan(v):
+def _make_json_safe(obj: object) -> object:
+    """Recursively make an object JSON-safe.
+
+    - float NaN → None
+    - datetime.date → ISO string
+    - dict, list → recurse
+    - all other types → unchanged
+    """
+    if isinstance(obj, float) and _math_dc.isnan(obj):
         return None
-    return v
+    if isinstance(obj, _dt_dc.date):
+        return obj.isoformat()
+    if isinstance(obj, dict):
+        return {k: _make_json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_make_json_safe(v) for v in obj]
+    return obj
 
 
 def _regime_report_to_dict(report: object) -> dict:
-    """Serialize RegimeAttributionReport to JSON-safe dict (Q5 fix)."""
+    """Serialize RegimeAttributionReport to JSON-safe dict.
+
+    Uses dataclasses.asdict() so any future field additions to
+    RegimeAttributionReport are automatically included (TD-EM8-C-4).
+    NaN values → None, datetime.date → ISO string for JSON safety.
+    """
     from src.core.types import RegimeAttributionReport  # noqa: PLC0415
 
     assert isinstance(report, RegimeAttributionReport)
-    return {
-        "run_id": report.run_id,
-        "asset": report.asset,
-        "dominant_regime": report.dominant_regime,
-        "regime_coverage": report.regime_coverage,
-        "total_days_with_regime": report.total_days_with_regime,
-        "total_days_in_run": report.total_days_in_run,
-        "regime_metrics": {
-            k: {
-                "regime": m.regime,
-                "n_days": m.n_days,
-                "coverage": m.coverage,
-                "sharpe": _safe(m.sharpe),
-                "total_return": _safe(m.total_return),
-                "max_drawdown": _safe(m.max_drawdown),
-                "n_trades": m.n_trades,
-                "win_rate": _safe(m.win_rate),
-            }
-            for k, m in report.regime_metrics.items()
-        },
-    }
+    raw = _dc.asdict(report)
+    return _make_json_safe(raw)  # type: ignore[return-value]
+
+
+def _mark_regime_attribution_complete(portfolio_run_id: str) -> None:
+    """Set has_regime_attribution=True in portfolio_summary.json."""
+    summary_path = Path("data/runs") / portfolio_run_id / "portfolio_summary.json"
+    if not summary_path.exists():
+        logger.warning(
+            "Cannot update has_regime_attribution — summary not found: %s",
+            summary_path,
+        )
+        return
+    try:
+        data = json.loads(summary_path.read_text(encoding="utf-8"))
+        data["has_regime_attribution"] = True
+        summary_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        logger.info(
+            "has_regime_attribution=True written for portfolio run %s",
+            portfolio_run_id,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Could not update has_regime_attribution flag: %s", exc)
 
 
 def _save_regime_result(job_id: str, report: object) -> None:
@@ -86,11 +107,11 @@ def _save_regime_result(job_id: str, report: object) -> None:
             "regime": m.regime,
             "n_days": m.n_days,
             "coverage": m.coverage,
-            "sharpe": _safe(m.sharpe),
-            "total_return": _safe(m.total_return),
-            "max_drawdown": _safe(m.max_drawdown),
+            "sharpe": _make_json_safe(m.sharpe),
+            "total_return": _make_json_safe(m.total_return),
+            "max_drawdown": _make_json_safe(m.max_drawdown),
             "n_trades": m.n_trades,
-            "win_rate": _safe(m.win_rate),
+            "win_rate": _make_json_safe(m.win_rate),
         }
 
     data = {
@@ -122,11 +143,11 @@ def _save_portfolio_regime_result(job_id: str, report: object) -> None:
             "regime": m.regime,
             "n_days": m.n_days,
             "coverage": m.coverage,
-            "sharpe": _safe(m.sharpe),
-            "total_return": _safe(m.total_return),
-            "max_drawdown": _safe(m.max_drawdown),
+            "sharpe": _make_json_safe(m.sharpe),
+            "total_return": _make_json_safe(m.total_return),
+            "max_drawdown": _make_json_safe(m.max_drawdown),
             "n_trades": m.n_trades,
-            "win_rate": _safe(m.win_rate),
+            "win_rate": _make_json_safe(m.win_rate),
         }
         for regime, m in report.portfolio_regime_metrics.items()
     }
@@ -146,6 +167,7 @@ def _save_portfolio_regime_result(job_id: str, report: object) -> None:
         "asset_weights": report.asset_weights,
     }
     (job_dir / "result.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _mark_regime_attribution_complete(report.portfolio_run_id)
 
 
 def _report_to_response(data: dict) -> RegimeAttributionResponse:

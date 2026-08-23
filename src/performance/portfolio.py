@@ -365,6 +365,7 @@ def save_portfolio_summary(
             for asset, per_rpt in report.per_asset_reports.items()
         },
         "asset_run_ids": report.asset_run_ids,
+        "has_regime_attribution": False,
     }
 
     run_dir.mkdir(parents=True, exist_ok=True)
