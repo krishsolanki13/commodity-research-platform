@@ -39,13 +39,17 @@ describe('PortfolioConfigPanel date presets', () => {
     })
   })
 
-  it('clicking MAX clears both dates', async () => {
+  it('clicking MAX sets full history range (2010-01-01 → today)', async () => {
     const user = userEvent.setup()
     const { onDateRangeChange } = renderPanel({
       fromDate: '2020-01-01',
       toDate: '2022-12-31',
     })
+    const expected = rangeToDateParams('MAX')
     await user.click(screen.getByRole('button', { name: 'MAX' }))
-    expect(onDateRangeChange).toHaveBeenCalledWith({ from: '', to: '' })
+    expect(onDateRangeChange).toHaveBeenCalledWith({
+      from: expected.from_date,
+      to: expected.to_date,
+    })
   })
 })

@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+/** Same defaults as Research Workbench (`WorkbenchConfigRail`). */
+export const PORTFOLIO_DEFAULT_FROM_DATE = '2015-01-01'
+export const PORTFOLIO_DEFAULT_TO_DATE = new Date().toISOString().slice(0, 10)
+
 export const portfolioUrlSchema = z.object({
   run_id: z.string().optional(),
   strategy: z.string().default('ema_crossover'),
@@ -16,8 +20,8 @@ export const portfolioUrlDefaults: z.infer<typeof portfolioUrlSchema> = {
   strategy: 'ema_crossover',
   sizing_method: 'fixed_notional',
   initial_capital: 1_000_000,
-  from_date: undefined,
-  to_date: undefined,
+  from_date: PORTFOLIO_DEFAULT_FROM_DATE,
+  to_date: PORTFOLIO_DEFAULT_TO_DATE,
 }
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/

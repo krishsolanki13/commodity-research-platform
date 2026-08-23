@@ -58,8 +58,8 @@ export function PortfolioAnalytics() {
     strategy,
     sizing_method: sizingMethod,
     initial_capital: initialCapital,
-    from_date: fromDate = '',
-    to_date: toDate = '',
+    from_date: fromDate = portfolioUrlDefaults.from_date ?? '',
+    to_date: toDate = portfolioUrlDefaults.to_date ?? '',
   } = urlState
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)

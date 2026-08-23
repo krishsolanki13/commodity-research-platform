@@ -9,14 +9,12 @@ const PORTFOLIO_PRESETS = ['1Y', '3Y', '5Y', 'MAX'] as const
 type PortfolioPreset = (typeof PORTFOLIO_PRESETS)[number]
 
 function portfolioPresetToDates(preset: PortfolioPreset): { from: string; to: string } {
-  if (preset === 'MAX') return { from: '', to: '' }
   const { from_date, to_date } = rangeToDateParams(preset)
   return { from: from_date, to: to_date }
 }
 
 function detectActivePreset(from: string, to: string): PortfolioPreset | null {
-  if (!from && !to) return 'MAX'
-  for (const preset of ['1Y', '3Y', '5Y'] as const) {
+  for (const preset of PORTFOLIO_PRESETS) {
     const expected = portfolioPresetToDates(preset)
     if (from === expected.from && to === expected.to) return preset
   }
@@ -75,7 +73,7 @@ export function PortfolioConfigPanel({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         <p className="text-sm text-text-secondary">
-          {fromDate || '—'} → {toDate || '—'}
+          {fromDate} → {toDate}
         </p>
 
         <div className="flex flex-wrap gap-1">

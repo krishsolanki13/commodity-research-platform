@@ -4,6 +4,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { PortfolioAnalytics } from '@/screens/portfolio/PortfolioAnalytics'
+import { PORTFOLIO_DEFAULT_FROM_DATE } from '@/features/portfolio/portfolioUrlState'
 import { MOCK_PORTFOLIO_RUN_ID } from '../mocks/fixtures/portfolio'
 
 function createTestQueryClient() {
@@ -39,6 +40,8 @@ describe('PortfolioAnalytics screen', () => {
     render(<Wrapper />)
     expect(screen.getByLabelText(/from date/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/to date/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/from date/i)).toHaveValue(PORTFOLIO_DEFAULT_FROM_DATE)
+    expect(screen.getByText(new RegExp(`${PORTFOLIO_DEFAULT_FROM_DATE} →`))).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '1Y' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '3Y' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '5Y' })).toBeInTheDocument()
