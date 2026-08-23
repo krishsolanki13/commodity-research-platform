@@ -82,10 +82,7 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
 
   useEffect(() => {
     if (!divRef.current) return
-
-    const chart = echarts.init(divRef.current, null, { renderer: 'canvas' })
-    chartRef.current = chart
-    ctx?.onChartReady(chart)
+    if (!ohlcv?.index || ohlcv.index.length === 0) return
 
     const cols = ohlcv.columns as Record<string, (number | null)[]>
     const open = cols['open'] ?? []
@@ -97,12 +94,26 @@ function PriceChartInner({ ohlcv, overlays, markers, volume, style, theme }: Pri
 
     // Candlestick: filter bars where any OHLC value is null
     // ECharts candlestick data order: [open, close, low, high]
-    const candleData = index.map((_t, i) => {
-      if (open[i] == null || close[i] == null || low[i] == null || high[i] == null) {
-        return null
-      }
-      return [open[i], close[i], low[i], high[i]]
-    })
+    const candleData =
+      style === 'candle'
+        ? (index
+            .map((_t, i) => {
+              const o = open[i]
+              const c = close[i]
+              const l = low[i]
+              const h = high[i]
+              if (o == null || c == null || l == null || h == null) return null
+              return [o, c, l, h]
+            })
+            .filter(Boolean) as number[][])
+        : []
+
+    if (style === 'candle' && candleData.length === 0) return
+    if (style === 'line' && !close.some((v) => v != null)) return
+
+    const chart = echarts.init(divRef.current, null, { renderer: 'canvas' })
+    chartRef.current = chart
+    ctx?.onChartReady(chart)
 
     const showVolume = volume && vol.length > 0
 

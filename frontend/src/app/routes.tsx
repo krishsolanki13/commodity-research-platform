@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppShell } from '@/app/shell/AppShell'
+import { RouteErrorBoundary } from '@/components/layout/RouteErrorBoundary'
 
 function PageLoader() {
   return (
@@ -12,6 +13,10 @@ function PageLoader() {
 
 function wrap(el: React.ReactElement) {
   return <Suspense fallback={<PageLoader />}>{el}</Suspense>
+}
+
+function route(el: React.ReactElement) {
+  return { element: wrap(el), errorElement: <RouteErrorBoundary /> }
 }
 
 const MarketOverview = React.lazy(() => import('@/screens/market/MarketOverview'))
@@ -42,25 +47,26 @@ const Gallery = React.lazy(() => import('@/screens/dev/Gallery'))
 export const router = createBrowserRouter([
   {
     element: <AppShell />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       { path: '/', element: <Navigate to="/market" replace /> },
-      { path: '/market', element: wrap(<MarketOverview />) },
-      { path: '/market/:asset', element: wrap(<AssetDetail />) },
-      { path: '/research', element: wrap(<ResearchWorkbench />) },
-      { path: '/backtest/new', element: wrap(<StrategyBuilder />) },
-      { path: '/runs', element: wrap(<RunExplorer />) },
-      { path: '/runs/compare', element: wrap(<RunComparison />) },
-      { path: '/sweeps', element: wrap(<SweepExplorer />) },
-      { path: '/runs/:runId', element: wrap(<RunDetail />) },
-      { path: '/portfolio', element: wrap(<PortfolioAnalytics />) },
-      { path: '/intelligence', element: wrap(<FuturesCurve />) },
-      { path: '/intelligence/pca', element: wrap(<CurvePCA />) },
-      { path: '/intelligence/compare', element: wrap(<CurveComparison />) },
-      { path: '/system/data', element: wrap(<DataManager />) },
-      { path: '/system/config', element: wrap(<Configuration />) },
-      { path: '*', element: wrap(<NotFound />) },
+      { path: '/market', ...route(<MarketOverview />) },
+      { path: '/market/:asset', ...route(<AssetDetail />) },
+      { path: '/research', ...route(<ResearchWorkbench />) },
+      { path: '/backtest/new', ...route(<StrategyBuilder />) },
+      { path: '/runs', ...route(<RunExplorer />) },
+      { path: '/runs/compare', ...route(<RunComparison />) },
+      { path: '/sweeps', ...route(<SweepExplorer />) },
+      { path: '/runs/:runId', ...route(<RunDetail />) },
+      { path: '/portfolio', ...route(<PortfolioAnalytics />) },
+      { path: '/intelligence', ...route(<FuturesCurve />) },
+      { path: '/intelligence/pca', ...route(<CurvePCA />) },
+      { path: '/intelligence/compare', ...route(<CurveComparison />) },
+      { path: '/system/data', ...route(<DataManager />) },
+      { path: '/system/config', ...route(<Configuration />) },
+      { path: '*', ...route(<NotFound />) },
     ],
   },
   // Gallery is outside AppShell — no TopBar/sidebar on this route
-  { path: '/dev/gallery', element: wrap(<Gallery />) },
+  { path: '/dev/gallery', ...route(<Gallery />) },
 ])

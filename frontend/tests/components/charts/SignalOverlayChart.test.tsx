@@ -132,4 +132,22 @@ describe('SignalOverlayChart', () => {
     const option = lastChartOption()
     expect(option.yAxis?.length).toBe(2)
   })
+
+  it('does not call setOption when ohlcv lacks OHLC columns (raw_signal fallback)', () => {
+    const signalOnlyOhlcv: ColumnarSeries = {
+      index: [1609459200000, 1609545600000],
+      columns: { raw: [0.5, -0.3] },
+    }
+    expect(() =>
+      render(
+        <SignalOverlayChart
+          ohlcv={signalOnlyOhlcv}
+          raw={rawFixture}
+          position={positionFixture}
+        />,
+        { wrapper: Wrapper }
+      )
+    ).not.toThrow()
+    expect(mockChartInstance.setOption).not.toHaveBeenCalled()
+  })
 })
