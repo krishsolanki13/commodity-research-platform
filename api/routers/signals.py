@@ -340,6 +340,27 @@ def _build_signal_pipeline(
             n_contracts=int(params.get("n_contracts", 4)),
         )
 
+    elif strategy == "cot_positioning":
+        from src.core.config import Config  # noqa: PLC0415
+        from src.signal.cot import COTPositioningSignal  # noqa: PLC0415
+
+        indicators = []
+        gen = COTPositioningSignal(
+            config=Config.load(),
+            upper_pct=float(params.get("upper_pct", 80.0)),
+            lower_pct=float(params.get("lower_pct", 20.0)),
+        )
+
+    elif strategy == "eia_inventory":
+        from src.core.config import Config  # noqa: PLC0415
+        from src.signal.eia import EIAInventorySignal  # noqa: PLC0415
+
+        indicators = []
+        gen = EIAInventorySignal(
+            config=Config.load(),
+            threshold=float(params.get("threshold", 1.0)),
+        )
+
     else:
         raise ApiError(
             code="UNKNOWN_STRATEGY",
