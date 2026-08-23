@@ -35,11 +35,16 @@ describe('PortfolioAnalytics screen', () => {
     expect(screen.getByRole('button', { name: /launch portfolio backtest/i })).toBeInTheDocument()
   })
 
-  it('renders optional from/to date inputs in config panel', () => {
+  it('renders Workbench-style date range controls in config panel', () => {
     render(<Wrapper />)
     expect(screen.getByLabelText(/from date/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/to date/i)).toBeInTheDocument()
-    expect(screen.getByText(/leave blank to use full history/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '1Y' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '3Y' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '5Y' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'MAX' })).toBeInTheDocument()
+    expect(screen.queryByText(/leave blank to use full history/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/date range/i)).not.toBeInTheDocument()
   })
 
   it('shows inline error when to_date is before from_date', async () => {

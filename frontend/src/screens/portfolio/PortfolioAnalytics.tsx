@@ -153,9 +153,10 @@ export function PortfolioAnalytics() {
                 initialCapital={initialCapital}
                 onCapitalChange={(v) => setUrlState({ initial_capital: v })}
                 fromDate={fromDate}
-                onFromDateChange={(v) => setUrlState({ from_date: v || null })}
                 toDate={toDate}
-                onToDateChange={(v) => setUrlState({ to_date: v || null })}
+                onDateRangeChange={({ from, to }) =>
+                  setUrlState({ from_date: from || null, to_date: to || null })
+                }
               />
             </Panel>
           </div>
