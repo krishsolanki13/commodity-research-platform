@@ -1,9 +1,12 @@
 import { test, expect } from '@playwright/test'
+import { assertNoErrorBoundary, getRecentPortfolioRunId } from './helpers'
 
 test.describe('Portfolio Analytics', () => {
   test('Portfolio screen loads and shows launch panel', async ({ page }) => {
     await page.goto('/portfolio')
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('button', { name: /Launch Portfolio Backtest/i })).toBeVisible({
+      timeout: 15_000,
+    })
     await expect(page.getByRole('button', { name: /launch portfolio backtest/i })).toBeVisible({
       timeout: 10_000,
     })
@@ -21,7 +24,9 @@ test.describe('Portfolio Analytics', () => {
     if (!check || !check.ok()) {
       // No list endpoint or no runs — verify config state only
       await page.goto('/portfolio')
-      await page.waitForLoadState('networkidle')
+      await expect(page.getByRole('button', { name: /Launch Portfolio Backtest/i })).toBeVisible({
+        timeout: 15_000,
+      })
       await expect(page.getByRole('button', { name: /launch/i })).toBeVisible({
         timeout: 10_000,
       })
@@ -38,7 +43,7 @@ test.describe('Portfolio Analytics', () => {
     }
 
     await page.goto(`/portfolio?run_id=${firstRun.run_id}`)
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByText('Portfolio Analytics')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByText(/sharpe|portfolio analytics/i).first()).toBeVisible({
       timeout: 15_000,
     })
@@ -46,7 +51,9 @@ test.describe('Portfolio Analytics', () => {
 
   test('Per-asset panel expands and shows asset performance table', async ({ page }) => {
     await page.goto('/portfolio')
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('button', { name: /Launch Portfolio Backtest/i })).toBeVisible({
+      timeout: 15_000,
+    })
 
     // Check if a recent run selector exists (populated from prior history)
     const runSelector = page.getByRole('combobox', {
@@ -58,7 +65,7 @@ test.describe('Portfolio Analytics', () => {
       const options = page.getByRole('option')
       if ((await options.count()) > 0) {
         await options.first().click()
-        await page.waitForLoadState('networkidle')
+        await expect(page.getByText('Portfolio Analytics')).toBeVisible({ timeout: 15_000 })
 
         // Per-asset panel toggle should be visible
         const perAssetToggle = page.getByText(/per-asset performance/i)
@@ -92,7 +99,9 @@ test.describe('Portfolio Analytics', () => {
     page,
   }) => {
     await page.goto('/portfolio')
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('button', { name: /Launch Portfolio Backtest/i })).toBeVisible({
+      timeout: 15_000,
+    })
 
     // Locate run selector with specific accessible name (not .first() or index).
     // Accessible name confirmed from PortfolioRunSelector.tsx: aria-label="Select a recent portfolio run".
@@ -105,7 +114,7 @@ test.describe('Portfolio Analytics', () => {
       const firstOption = page.getByRole('option').first()
       if (await firstOption.isVisible({ timeout: 2000 }).catch(() => false)) {
         await firstOption.click()
-        await page.waitForLoadState('networkidle')
+        await expect(page.getByText('Portfolio Analytics')).toBeVisible({ timeout: 15_000 })
 
         // Multi-pair rolling correlation section visible
         await expect(page.getByText(/rolling correlations/i).first()).toBeVisible({
@@ -138,7 +147,7 @@ test.describe('Portfolio Analytics', () => {
     }
 
     await page.goto(`/portfolio?run_id=${encodeURIComponent(runId)}`)
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByText('Portfolio Analytics')).toBeVisible({ timeout: 15_000 })
 
     // Expand per-asset panel
     const perAssetToggle = page.getByText(/per-asset performance/i)
@@ -168,4 +177,125 @@ test.describe('Portfolio Analytics', () => {
     // Run detail page should show tabs
     await expect(page.getByRole('tab', { name: /overview/i })).toBeVisible({ timeout: 5_000 })
   })
+})
+
+test.describe('Portfolio lifecycle', () => {
+  test.describe.configure({ timeout: 360_000 })
+
+  let portfolioRunId: string | null = null
+  test.beforeAll(async () => {
+    portfolioRunId = await getRecentPortfolioRunId()
+  })
+
+  test('full lifecycle: EMA Crossover → all KPI sections render', async ({ page }) => {
+    // Default URL strategy is already ema_crossover (portfolioUrlDefaults).
+    // Combobox aria-label: "Select portfolio strategy". Launch: "Launch Portfolio Backtest".
+    test.setTimeout(360_000)
+    await page.goto('/portfolio')
+    const launchBtn = page.getByRole('button', { name: /Launch Portfolio Backtest/i })
+    await expect(launchBtn).toBeVisible({ timeout: 15_000 })
+    const strategyPicker = page.getByLabel('Select portfolio strategy')
+    if (await strategyPicker.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await strategyPicker.click()
+      await page.getByRole('option', { name: /EMA Crossover/i }).click()
+    }
+    await page.getByRole('button', { name: /Launch Portfolio Backtest/i }).click()
+    // Config view also has a "SHARPE" column on recent-runs — wait for results URL instead.
+    await expect(page).toHaveURL(/run_id=/, { timeout: 300_000 })
+    await expect(page.getByText('SHARPE').first()).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText('Portfolio Equity Curve')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/Asset P&L Attribution/i)).toBeVisible()
+    await expect(page.getByText(/PORTFOLIO VOL/i)).toBeVisible()
+    await expect(page.getByText(/Per-Asset Performance/i)).toBeVisible()
+    await expect(page.getByText('Regime Attribution', { exact: true })).toBeVisible()
+    await expect(page.getByText(/VAR 95%|Per-Asset VaR/i).first()).toBeVisible()
+    await expect(page.getByText(/Correlation/i).first()).toBeVisible()
+    await assertNoErrorBoundary(page)
+  })
+
+  test('KPI metrics visible on existing run', async ({ page }) => {
+    if (!portfolioRunId) {
+      test.skip()
+      return
+    }
+    await page.goto(`/portfolio?run_id=${portfolioRunId}`)
+    await expect(page.locator('text=/Sharpe/i').first()).toBeVisible({ timeout: 15_000 })
+    await expect(page.locator('text=/Max.*DD|Drawdown/i').first()).toBeVisible()
+    await assertNoErrorBoundary(page)
+  })
+
+  test('Kupiec row visible in risk section', async ({ page }) => {
+    if (!portfolioRunId) {
+      test.skip()
+      return
+    }
+    await page.goto(`/portfolio?run_id=${portfolioRunId}`)
+    await page.locator('text=/VaR|Risk/i').first().scrollIntoViewIfNeeded()
+    await expect(page.locator('text=/[Kk]upiec/i').first()).toBeVisible({ timeout: 10_000 })
+  })
+
+  test('per-asset performance section shows 6 assets', async ({ page }) => {
+    if (!portfolioRunId) {
+      test.skip()
+      return
+    }
+    await page.goto(`/portfolio?run_id=${portfolioRunId}`)
+    const perfSection = page.getByText(/Per-Asset Performance/i).first()
+    await expect(perfSection).toBeVisible({ timeout: 15_000 })
+    await perfSection.scrollIntoViewIfNeeded()
+    await perfSection.click()
+    await expect(page.locator('text=/Gold/i').first()).toBeVisible({ timeout: 10_000 })
+    await assertNoErrorBoundary(page)
+  })
+
+  test(
+    'regime attribution: per-asset Gold renders chart',
+    {
+      tag: '@slow',
+    },
+    async ({ page }) => {
+      test.slow()
+      test.setTimeout(240_000)
+      if (!portfolioRunId) {
+        test.skip()
+        return
+      }
+      await page.goto(`/portfolio?run_id=${portfolioRunId}`)
+      await expect(page.getByText('Regime Attribution')).toBeVisible({ timeout: 15_000 })
+      await page.locator('text=/Regime/i').first().scrollIntoViewIfNeeded()
+      // Native <select aria-label="Select asset for regime attribution"> — not Radix.
+      // Option values are asset slugs; Gold display_name is "Gold".
+      await page.getByLabel('Select asset for regime attribution').selectOption('gold')
+      await page.getByRole('button', { name: 'Compute Regime Attribution' }).click()
+      await expect(page.locator('text=/contango|backwardation|flat/i').first()).toBeVisible({
+        timeout: 180_000,
+      })
+      await assertNoErrorBoundary(page)
+    }
+  )
+
+  test(
+    'regime attribution: Portfolio Combined renders chart',
+    {
+      tag: '@slow',
+    },
+    async ({ page }) => {
+      test.slow()
+      test.setTimeout(420_000)
+      if (!portfolioRunId) {
+        test.skip()
+        return
+      }
+      await page.goto(`/portfolio?run_id=${portfolioRunId}`)
+      await expect(page.getByText('Regime Attribution')).toBeVisible({ timeout: 15_000 })
+      await page.locator('text=/Regime/i').first().scrollIntoViewIfNeeded()
+      // Default selectedAsset is already PORTFOLIO_KEY ('__portfolio__') = "Portfolio Combined"
+      await page.getByLabel('Select asset for regime attribution').selectOption('__portfolio__')
+      await page.getByRole('button', { name: 'Compute Regime Attribution' }).click()
+      await expect(page.locator('text=/contango|flat|backwardation/i').first()).toBeVisible({
+        timeout: 360_000,
+      })
+      await assertNoErrorBoundary(page)
+    }
+  )
 })

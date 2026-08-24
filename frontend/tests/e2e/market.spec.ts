@@ -4,7 +4,7 @@ test.describe('Market Overview (S1)', () => {
   test('loads and shows all 6 commodity assets', async ({ page }) => {
     test.setTimeout(60_000)
     await page.goto('/market')
-    await page.waitForLoadState('networkidle')
+    await expect(page.locator('table tbody tr').first()).toBeVisible({ timeout: 15_000 })
     await page.waitForSelector('table tbody tr', { timeout: 20_000 })
     const rows = page.locator('table tbody tr')
     await expect(rows).toHaveCount(6, { timeout: 20_000 })
@@ -15,7 +15,7 @@ test.describe('Market Overview (S1)', () => {
   test('clicking Gold row navigates to Asset Detail', async ({ page }) => {
     test.setTimeout(60_000)
     await page.goto('/market')
-    await page.waitForLoadState('networkidle')
+    await expect(page.locator('table tbody tr').first()).toBeVisible({ timeout: 15_000 })
     await page.waitForSelector('table tbody tr', { timeout: 20_000 })
     await page.locator('table tbody tr').filter({ hasText: /gold/i }).first().click()
     await expect(page).toHaveURL(/\/market\/gold/, { timeout: 5_000 })
@@ -27,7 +27,9 @@ test.describe('Market Overview (S1)', () => {
   }) => {
     test.setTimeout(60_000)
     await page.goto('/market/gold')
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('link', { name: /open in workbench/i })).toBeVisible({
+      timeout: 15_000,
+    })
     const workbenchLink = page.getByRole('link', { name: /open in workbench/i })
     await expect(workbenchLink).toBeVisible({ timeout: 10_000 })
     const href = await workbenchLink.getAttribute('href')

@@ -1,8 +1,9 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { useCurveHistory } from '@/api/hooks/useCurveHistory'
+import { server } from '../../setup'
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -15,13 +16,17 @@ function createWrapper() {
 }
 
 describe('useCurveHistory', () => {
+  afterEach(() => {
+    server.resetHandlers()
+  })
+
   it('returns CurveHistoryResponse with 10 snapshots for Gold', async () => {
     const { wrapper } = createWrapper()
     const { result } = renderHook(() => useCurveHistory('gold', '2025-07-15', '2026-07-15', 6), {
       wrapper,
     })
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    await waitFor(() => expect(result.current.isSuccess).toBe(true), { timeout: 3000 })
 
     expect(result.current.data?.asset).toBe('gold')
     expect(result.current.data?.snapshots).toHaveLength(10)
