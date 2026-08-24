@@ -37,50 +37,74 @@ def _build_full_pipeline(
     from src.signal.reversion import RSIReversionSignal  # noqa: PLC0415
     from src.signal.trend import EMACrossoverSignal, MomentumSignal  # noqa: PLC0415
 
-    indicators: list[Any]
-    gen: Any
-
     if strategy == "ema_crossover":
         fast = params.get("fast_period", 50)
         slow = params.get("slow_period", 200)
-        indicators = [EMA(period=fast), EMA(period=slow)]
-        gen = EMACrossoverSignal(fast_period=fast, slow_period=slow)
+        return [EMA(period=fast), EMA(period=slow)], EMACrossoverSignal(
+            fast_period=fast, slow_period=slow
+        )
 
-    elif strategy == "momentum":
+    if strategy == "momentum":
         lookback = params.get("lookback_period", 20)
         z_window = params.get("z_score_window", 63)
-        indicators = [Momentum(lookback=lookback)]
-        gen = MomentumSignal(lookback=lookback, z_score_window=z_window)
+        return [Momentum(lookback=lookback)], MomentumSignal(
+            lookback=lookback, z_score_window=z_window
+        )
 
-    elif strategy == "rsi_reversion":
+    if strategy == "rsi_reversion":
         period = params.get("period", 14)
-        indicators = [RSI(period=period)]
-        gen = RSIReversionSignal(period=period)
+        return [RSI(period=period)], RSIReversionSignal(period=period)
 
-    elif strategy == "donchian_breakout":
+    if strategy == "donchian_breakout":
         ch_period = params.get("channel_period", 20)
-        indicators = []
-        gen = DonchianBreakoutSignal(channel_period=ch_period)
+        return [], DonchianBreakoutSignal(channel_period=ch_period)
 
-    elif strategy == "carry":
+    if strategy == "carry":
         from src.core.config import Config  # noqa: PLC0415
         from src.signal.carry import CarrySignal  # noqa: PLC0415
 
-        indicators = []
-        gen = CarrySignal(
+        return [], CarrySignal(
             config=Config.load(),
             threshold=params.get("threshold", 0.0),
             n_contracts=int(params.get("n_contracts", 4)),
         )
 
-    else:
-        raise ApiError(
-            code="UNKNOWN_STRATEGY",
-            message=f"Strategy '{strategy}' is not registered.",
-            status=400,
+    if strategy == "wti_brent_spread":
+        from src.core.config import Config  # noqa: PLC0415
+        from src.signal.spread import WTIBrentSpreadSignal  # noqa: PLC0415
+
+        if asset != "wti":
+            raise ValueError(f"wti_brent_spread requires asset='wti', got '{asset}'")
+        return [], WTIBrentSpreadSignal(
+            config=Config.load(),
+            lookback=int(params.get("lookback", 63)),
+            threshold=float(params.get("threshold", 1.0)),
         )
 
-    return indicators, gen
+    if strategy == "cot_positioning":
+        from src.core.config import Config  # noqa: PLC0415
+        from src.signal.cot import COTPositioningSignal  # noqa: PLC0415
+
+        return [], COTPositioningSignal(
+            config=Config.load(),
+            upper_pct=float(params.get("upper_pct", 80.0)),
+            lower_pct=float(params.get("lower_pct", 20.0)),
+        )
+
+    if strategy == "eia_inventory":
+        from src.core.config import Config  # noqa: PLC0415
+        from src.signal.eia import EIAInventorySignal  # noqa: PLC0415
+
+        return [], EIAInventorySignal(
+            config=Config.load(),
+            threshold=float(params.get("threshold", 1.0)),
+        )
+
+    raise ApiError(
+        code="UNKNOWN_STRATEGY",
+        message=f"Strategy '{strategy}' is not registered.",
+        status=400,
+    )
 
 
 def _api_eval_to_core(

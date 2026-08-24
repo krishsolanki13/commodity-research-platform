@@ -67,17 +67,33 @@ async def get_curve_pca(
                 detail=f"Invalid to_date format: '{to_date}'. Use YYYY-MM-DD.",
             ) from exc
 
+    if parsed_from is None:
+        today = _dt.date.today()
+        parsed_from = _dt.date(today.year - 3, today.month, 1)
+        logger.info(
+            "CurvePCA: no from_date provided — applying 3-year default: %s",
+            parsed_from,
+        )
+
     # DEV-EM10-1: Config.load() — no arguments
     config = Config.load()
     engine = CurvePCAEngine(config)
 
     try:
-        result = engine.compute(
-            asset=asset,
-            n_components=n_components,
-            n_contracts=n_contracts,
-            from_date=parsed_from,
-            to_date=parsed_to,
+        import asyncio  # noqa: PLC0415
+        import functools  # noqa: PLC0415
+
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None,
+            functools.partial(
+                engine.compute,
+                asset=asset,
+                n_components=n_components,
+                n_contracts=n_contracts,
+                from_date=parsed_from,
+                to_date=parsed_to,
+            ),
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
