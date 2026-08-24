@@ -118,7 +118,7 @@ export default function ResearchWorkbenchScreen() {
       setHasEvaluated(true)
     } catch (e) {
       console.error('Evaluate chain failed:', e)
-      setEvalError(formatEvalError(e, progressRef.current?.step ?? null))
+      setEvalError(formatEvalError(e, (progressRef.current as EvaluateProgress | null)?.step ?? null))
       setEvaluationResult(null)
       setHasEvaluated(false)
     } finally {
