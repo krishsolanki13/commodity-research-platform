@@ -80,18 +80,18 @@ test.describe('Sweep Explorer', () => {
       await page.getByRole('option', { name: /gold/i }).click()
       await page.getByLabel('Select strategy').click()
       await page.getByRole('option', { name: /EMA Crossover/i }).click()
-      // SweepParamGridBuilder: comma-separated text inputs, ≥2 values required PER param.
-      // Cannot fix slow_period at a single 200 — both fast_period and slow_period need ≥2 values.
-      // 2 × 2 = 4 combinations (not 2). Inputs share placeholder "e.g. 10, 20, 50, 100".
+      // EMA Crossover has 3 params: fast_period, slow_period, signal_threshold.
+      // 2 × 1 × 1 = 2 combinations. Inputs share placeholder "e.g. 10, 20, 50, 100".
       const paramInputs = page.getByPlaceholder('e.g. 10, 20, 50, 100')
-      await expect(paramInputs).toHaveCount(2, { timeout: 10_000 })
+      await expect(paramInputs).toHaveCount(3, { timeout: 10_000 })
       await paramInputs.nth(0).fill('10, 50')
-      await paramInputs.nth(1).fill('200, 200')
+      await paramInputs.nth(1).fill('200')
+      await paramInputs.nth(2).fill('0')
       await page.getByRole('button', { name: /Launch Sweep/i }).click()
       await expect(page.locator('text=/running|combinations|queued/i').first()).toBeVisible({
         timeout: 10_000,
       })
-      await expect(page.locator('table tbody tr')).toHaveCount(4, { timeout: 120_000 })
+      await expect(page.locator('table tbody tr')).toHaveCount(2, { timeout: 120_000 })
       await assertNoErrorBoundary(page)
     }
   )
