@@ -153,6 +153,14 @@ class RunManager:
         if run_dir.exists():
             shutil.rmtree(run_dir)
             self._logger.info("RunManager: deleted run %s", run_id)
+        try:
+            from src.data.run_index import (
+                delete_run as delete_index_run,  # noqa: PLC0415
+            )
+
+            delete_index_run(run_id, runs_dir=Path(self._config.paths["runs"]))
+        except Exception as exc:  # noqa: BLE001
+            self._logger.warning("Run index delete failed for %s: %s", run_id, exc)
 
     def save_metrics(self, run_id: str, report: PerformanceReport) -> None:
         """Write metrics.json to an existing run directory.
@@ -190,6 +198,39 @@ class RunManager:
 
         with open(run_dir / "metrics.json", "w") as f:
             json.dump(metrics_dict, f, indent=2, default=str)
+
+        try:
+            from src.data.run_index import upsert_run  # noqa: PLC0415
+
+            index_payload = dict(metrics_dict)
+            params_path = run_dir / "params.json"
+            if params_path.exists():
+                params = json.loads(params_path.read_text(encoding="utf-8"))
+                index_payload["asset"] = params.get("asset", "")
+                index_payload["strategy"] = params.get("strategy_name") or params.get(
+                    "strategy", ""
+                )
+                index_payload["executed_at"] = params.get("executed_at", "")
+                index_payload["from_date"] = params.get("data_start") or params.get(
+                    "from_date", ""
+                )
+                index_payload["to_date"] = params.get("data_end") or params.get(
+                    "to_date", ""
+                )
+                if params.get("signal_evaluation"):
+                    index_payload["signal_evaluation"] = params["signal_evaluation"]
+            upsert_run(
+                run_id,
+                index_payload,
+                runs_dir=Path(self._config.paths["runs"]),
+            )
+        except Exception as exc:  # noqa: BLE001
+            self._logger.warning(
+                "Run index upsert failed for %s — index will be rebuilt "
+                "on next startup. Error: %s",
+                run_id,
+                exc,
+            )
 
         self._logger.info(
             "RunManager: saved metrics.json for run %s (Sharpe=%.4f)",

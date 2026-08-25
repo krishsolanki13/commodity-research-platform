@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from api.exceptions import ApiError
 from api.models import ErrorDetail, ErrorEnvelope, HealthResponse
+
+logger = logging.getLogger(__name__)
 
 
 def create_app() -> FastAPI:
@@ -74,6 +78,33 @@ def create_app() -> FastAPI:
     app.include_router(sweeps_router.router)
     app.include_router(intelligence_router.router)
     app.include_router(regime_attribution_router)
+
+    @app.on_event("startup")
+    async def startup_backfill_run_index() -> None:
+        """Backfill run index from disk on startup if index is empty or stale."""
+        import asyncio  # noqa: PLC0415
+        from pathlib import Path as _Path  # noqa: PLC0415
+
+        async def _backfill() -> None:
+            from src.data.run_index import (  # noqa: PLC0415
+                backfill_from_disk,
+                query_runs,
+            )
+
+            existing = query_runs(limit=1)
+            if not existing:
+                logger.info("Startup: run index empty — backfilling from disk...")
+                loop = asyncio.get_running_loop()
+                n = await loop.run_in_executor(
+                    None, lambda: backfill_from_disk(_Path("data/runs"))
+                )
+                logger.info("Startup backfill complete: %d runs indexed", n)
+            else:
+                logger.info(
+                    "Startup: run index has existing entries — skipping backfill"
+                )
+
+        asyncio.create_task(_backfill())
 
     return app
 

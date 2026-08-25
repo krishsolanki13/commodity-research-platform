@@ -118,29 +118,22 @@ def _load_parquet_series(run_dir: Path, name: str) -> pd.Series:
     return df[col]
 
 
-def _list_all_runs() -> list[dict[str, Any]]:
-    """Scan data/runs/ and return list of run metadata dicts."""
+def _list_all_runs(
+    strategy: str | None = None,
+    asset: str | None = None,
+) -> list[dict[str, Any]]:
+    """List runs from SQLite index. Falls back to disk scan if index empty."""
+    from src.data.run_index import backfill_from_disk, query_runs  # noqa: PLC0415
+
     rd = _runs_dir()
-    if not rd.exists():
-        return []
-    runs = []
-    for params_file in sorted(rd.glob("*/params.json"), reverse=True):
-        run_id = params_file.parent.name
-        params = _load_params(params_file.parent)
-        metrics = _load_metrics(params_file.parent)
-        if metrics is None:
-            continue
-        task = state.get(run_id)
-        status = task["status"] if task else "complete"
-        runs.append(
-            {
-                "run_id": run_id,
-                "params": params,
-                "metrics": metrics,
-                "status": status,
-            }
-        )
-    return runs
+    results = query_runs(strategy=strategy, asset=asset, limit=None, runs_dir=rd)
+
+    if not results:
+        logger.info("Run index empty — backfilling from disk...")
+        backfill_from_disk(rd)
+        results = query_runs(strategy=strategy, asset=asset, limit=None, runs_dir=rd)
+
+    return results
 
 
 def _build_provenance(params: dict[str, Any]) -> ProvenanceInfo:
@@ -164,40 +157,33 @@ def list_runs(
 ) -> RunListResponse:
     """List all completed backtest runs with headline metrics."""
     del sort  # reserved for future sort options
-    all_runs = _list_all_runs()
+    all_runs = _list_all_runs(strategy=strategy, asset=asset)
 
     items: list[RunListItem] = []
     for r in all_runs:
-        p = r["params"]
-        m = r["metrics"]
-        run_asset = p.get("asset", "")
-        run_strategy = p.get("strategy_name") or p.get("strategy", "")
-
-        if asset and run_asset != asset:
-            continue
-        if strategy and run_strategy != strategy:
-            continue
-        if q and q.lower() not in r["run_id"].lower():
+        if q and q.lower() not in str(r["run_id"]).lower():
             continue
 
-        ic = m.get("ic")
+        task = state.get(r["run_id"])
+        status = task["status"] if task else "complete"
+        n_trades = r.get("n_trades")
         items.append(
             RunListItem(
                 run_id=r["run_id"],
-                asset=run_asset,
-                strategy=run_strategy,
-                status=r["status"],
-                from_date=_param_date(p, start=True),
-                to_date=_param_date(p, start=False),
-                sharpe=m.get("sharpe"),
-                max_drawdown=m.get("max_drawdown"),
-                total_return=m.get("total_return"),
-                cagr=m.get("cagr"),
-                win_rate=m.get("win_rate"),
-                n_trades=int(m["n_trades"]) if m.get("n_trades") is not None else None,
-                ic=ic,
-                ic_band=m.get("ic_band"),
-                executed_at=p.get("executed_at", r["run_id"]),
+                asset=r.get("asset") or "",
+                strategy=r.get("strategy") or "",
+                status=status,
+                from_date=r.get("from_date") or "",
+                to_date=r.get("to_date") or "",
+                sharpe=r.get("sharpe"),
+                max_drawdown=r.get("max_drawdown"),
+                total_return=r.get("total_return"),
+                cagr=r.get("cagr"),
+                win_rate=r.get("win_rate"),
+                n_trades=int(n_trades) if n_trades is not None else None,
+                ic=r.get("ic"),
+                ic_band=r.get("ic_band"),
+                executed_at=r.get("executed_at") or r["run_id"],
             )
         )
 
