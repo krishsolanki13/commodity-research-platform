@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { client } from '@/api/client'
 import { qk } from '@/api/queryKeys'
 import type { components } from '@/api/schema'
@@ -22,5 +22,6 @@ export function useRuns(filters: RunFilters = {}) {
     queryFn: () => client.get<RunListResponse>(`/api/runs${qsStr ? `?${qsStr}` : ''}`),
     staleTime: 30 * 1000,
     gcTime: 60 * 60 * 1000,
+    placeholderData: keepPreviousData,
   })
 }

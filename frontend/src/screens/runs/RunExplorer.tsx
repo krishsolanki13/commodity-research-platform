@@ -113,6 +113,11 @@ export function RunExplorer() {
       </div>
 
       <div className="flex-1 overflow-auto px-6 py-4">
+        {data && data.total > 0 && (
+          <p className="mb-2 px-1 font-mono text-xs text-text-secondary">
+            Showing {(page - 1) * 50 + 1}–{Math.min(page * 50, data.total)} of {data.total} runs
+          </p>
+        )}
         <RunTable
           rows={data?.runs ?? []}
           onRowClick={(runId) => {
