@@ -17,10 +17,9 @@ async function auditPage(page: Page) {
 
 test.describe('Accessibility Audit (Axe)', () => {
   test('Market Overview has no critical/serious a11y violations', async ({ page }) => {
-    // networkidle + cold multi-asset OHLCV can exceed the default 30s test timeout
+    // Cold multi-asset OHLCV can exceed the default 30s test timeout
     test.setTimeout(60_000)
     await page.goto('/market')
-    await page.waitForLoadState('networkidle')
     // UniverseGrid/DataGrid renders a real <table>; cold API can exceed 10s
     await page.waitForSelector('table tbody tr', { timeout: 20_000 })
     await auditPage(page)
@@ -28,7 +27,9 @@ test.describe('Accessibility Audit (Axe)', () => {
 
   test('Research Workbench has no critical/serious a11y violations', async ({ page }) => {
     await page.goto('/research')
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('button', { name: /Evaluate/i })).toBeVisible({
+      timeout: 15_000,
+    })
     await auditPage(page)
   })
 
@@ -36,7 +37,9 @@ test.describe('Accessibility Audit (Axe)', () => {
     await page.goto(
       '/backtest/new?asset=gold&strategy=ema_crossover&params={"fast_period":50,"slow_period":200}'
     )
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('button', { name: /Launch/i })).toBeVisible({
+      timeout: 15_000,
+    })
     await auditPage(page)
   })
 
@@ -57,7 +60,6 @@ test.describe('Accessibility Audit (Axe)', () => {
     await page.waitForURL(/\/runs\/[^/]+$/, { timeout: 5_000 })
     // Wait for Run Detail chrome so the explorer RunTable (IC badges) is unmounted
     await page.getByRole('button', { name: /copy run id/i }).waitFor({ timeout: 10_000 })
-    await page.waitForLoadState('networkidle')
     await auditPage(page)
   })
 
@@ -93,7 +95,9 @@ test.describe('Accessibility Audit (Axe)', () => {
     }
 
     await page.goto(`/intelligence?asset=${firstAsset}`)
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('heading', { name: /futures curve/i })).toBeVisible({
+      timeout: 15_000,
+    })
     await auditPage(page)
   })
 
@@ -111,13 +115,17 @@ test.describe('Accessibility Audit (Axe)', () => {
 
     const [a1, a2] = assets
     await page.goto(`/intelligence/compare?assets=${a1},${a2}&n_contracts=4`)
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('heading', { name: /curve comparison/i })).toBeVisible({
+      timeout: 15_000,
+    })
     await auditPage(page)
   })
 
   test('Portfolio Analytics has no critical/serious a11y violations', async ({ page }) => {
     await page.goto('/portfolio')
-    await page.waitForLoadState('networkidle')
+    await expect(
+      page.getByRole('button', { name: /Launch Portfolio Backtest/i }),
+    ).toBeVisible({ timeout: 15_000 })
     await auditPage(page)
   })
 
@@ -134,7 +142,6 @@ test.describe('Accessibility Audit (Axe)', () => {
     }
 
     await page.goto(`/portfolio?run_id=${encodeURIComponent(runId)}`)
-    await page.waitForLoadState('networkidle')
 
     await page
       .waitForSelector(

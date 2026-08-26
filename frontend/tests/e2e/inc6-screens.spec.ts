@@ -4,21 +4,19 @@ import { assertNoErrorBoundary } from './helpers'
 test.describe('Inc6 — Sweep Explorer & Curve PCA', () => {
   test('/sweeps route loads and shows Sweep Configuration panel', async ({ page }) => {
     await page.goto('/sweeps')
-    await page.waitForLoadState('networkidle')
 
     await expect(
       page.getByRole('heading', { name: /sweep explorer/i }),
-    ).toBeVisible({ timeout: 10_000 })
+    ).toBeVisible({ timeout: 15_000 })
     await expect(page.getByText('Sweep Configuration')).toBeVisible()
     await expect(page.getByLabel('Select commodity asset')).toBeVisible()
   })
 
   test('/intelligence/pca route loads and shows PCA Configuration panel', async ({ page }) => {
     await page.goto('/intelligence/pca')
-    await page.waitForLoadState('networkidle')
 
     await expect(page.getByRole('heading', { name: /curve pca/i })).toBeVisible({
-      timeout: 10_000,
+      timeout: 15_000,
     })
     await expect(page.getByText('PCA Configuration')).toBeVisible()
     await expect(page.getByLabel('Select commodity asset')).toBeVisible()
@@ -30,15 +28,16 @@ test.describe('Sweep Explorer', () => {
     // Existing Inc6 test already covers heading + asset selector.
     // This adds the strategy combobox (aria-label="Select strategy").
     await page.goto('/sweeps')
-    await page.waitForLoadState('networkidle')
-    await expect(page.getByLabel('Select commodity asset')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByLabel('Select commodity asset')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByLabel('Select strategy')).toBeVisible()
     await assertNoErrorBoundary(page)
   })
 
   test('completed sweep results table renders', async ({ page }) => {
     await page.goto('/sweeps')
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('heading', { name: /sweep explorer/i })).toBeVisible({
+      timeout: 15_000,
+    })
     // Config view: recent-sweeps table or "No previous sweeps."
     // Results view (after selecting a completed sweep): SweepResultsTable or "No sweep results yet."
     const hasResults = await page
@@ -75,7 +74,7 @@ test.describe('Sweep Explorer', () => {
       test.slow()
       test.setTimeout(360_000)
       await page.goto('/sweeps')
-      await page.waitForLoadState('networkidle')
+      await expect(page.getByLabel('Select commodity asset')).toBeVisible({ timeout: 15_000 })
       await page.getByLabel('Select commodity asset').click()
       await page.getByRole('option', { name: /gold/i }).click()
       await page.getByLabel('Select strategy').click()

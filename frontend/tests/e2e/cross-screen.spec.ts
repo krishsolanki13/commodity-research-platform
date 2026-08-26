@@ -31,7 +31,9 @@ test.describe('Cross-screen state', () => {
     await page.getByRole('tab', { name: 'Trades' }).click()
     await page.waitForTimeout(500)
     await page.goto('/runs')
-    await page.waitForLoadState('networkidle', { timeout: 60_000 })
+    await expect(
+      page.locator('table tbody tr').first().or(page.getByText(/no runs/i)),
+    ).toBeVisible({ timeout: 60_000 })
     await page.goto(`/runs/${recentRunId}`)
     const tradesTab = page.getByRole('tab', { name: 'Trades' })
     const isActive = await tradesTab.getAttribute('aria-selected')
@@ -49,12 +51,14 @@ test.describe('Cross-screen state', () => {
   }) => {
     // Tests the 0d06bfd fix — RouteErrorBoundary on all 16 routes
     await page.goto('/research')
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('button', { name: /Evaluate signal/i }).first()).toBeVisible({
+      timeout: 15_000,
+    })
     await page.getByRole('link', { name: 'Research' }).click()
     await page.waitForTimeout(500)
     await assertNoErrorBoundary(page)
     await expect(page.getByRole('button', { name: /Evaluate signal/i }).first()).toBeVisible({
-      timeout: 5_000,
+      timeout: 15_000,
     })
   })
 })

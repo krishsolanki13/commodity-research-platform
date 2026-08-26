@@ -13,7 +13,6 @@ async function fillParam(page: Page, param: string, value: string) {
 async function evaluateStrategy(page: Page, asset: string, strategy: string, params: Record<string, unknown>) {
   const encoded = encodeURIComponent(JSON.stringify(params))
   await page.goto(`/research?asset=${asset}&strategy=${strategy}&params=${encoded}`)
-  await page.waitForLoadState('networkidle')
   const evaluateBtn = page.getByRole('button', { name: /evaluate signal/i })
   await expect(evaluateBtn).toBeEnabled({ timeout: 15_000 })
   await evaluateBtn.click()
@@ -25,9 +24,8 @@ test.describe('Strategy Builder and Run Detail (S4/S5)', () => {
     test.setTimeout(60_000)
     const params = encodeURIComponent(JSON.stringify({ fast_period: 50, slow_period: 200 }))
     await page.goto(`/backtest/new?asset=gold&strategy=ema_crossover&params=${params}`)
-    await page.waitForLoadState('networkidle')
     await expect(page.getByRole('heading', { name: /strategy builder/i })).toBeVisible({
-      timeout: 10_000,
+      timeout: 15_000,
     })
     await expect(page.getByRole('button', { name: /launch backtest/i })).toBeVisible({
       timeout: 5_000,
@@ -41,7 +39,6 @@ test.describe('Strategy Builder and Run Detail (S4/S5)', () => {
   test('Run Detail tabs switch and ?tab= updates URL', async ({ page }) => {
     test.setTimeout(60_000)
     await page.goto('/runs')
-    await page.waitForLoadState('networkidle')
     await page.waitForSelector('table tbody tr', { timeout: 20_000 })
     const rows = page.locator('table tbody tr')
     if ((await rows.count()) === 0) {
