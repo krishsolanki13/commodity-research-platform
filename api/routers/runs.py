@@ -121,17 +121,33 @@ def _load_parquet_series(run_dir: Path, name: str) -> pd.Series:
 def _list_all_runs(
     strategy: str | None = None,
     asset: str | None = None,
+    sort_by: str = "executed_at",
+    sort_order: str = "desc",
 ) -> list[dict[str, Any]]:
     """List runs from SQLite index. Falls back to disk scan if index empty."""
     from src.data.run_index import backfill_from_disk, query_runs  # noqa: PLC0415
 
     rd = _runs_dir()
-    results = query_runs(strategy=strategy, asset=asset, limit=None, runs_dir=rd)
+    results = query_runs(
+        strategy=strategy,
+        asset=asset,
+        limit=None,
+        runs_dir=rd,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
 
     if not results:
         logger.info("Run index empty — backfilling from disk...")
         backfill_from_disk(rd)
-        results = query_runs(strategy=strategy, asset=asset, limit=None, runs_dir=rd)
+        results = query_runs(
+            strategy=strategy,
+            asset=asset,
+            limit=None,
+            runs_dir=rd,
+            sort_by=sort_by,
+            sort_order=sort_order,
+        )
 
     return results
 
@@ -151,13 +167,18 @@ def list_runs(
     strategy: str | None = Query(None),
     asset: str | None = Query(None),
     sort: str | None = Query(None),
+    order: str | None = Query(None),
     q: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
 ) -> RunListResponse:
     """List all completed backtest runs with headline metrics."""
-    del sort  # reserved for future sort options
-    all_runs = _list_all_runs(strategy=strategy, asset=asset)
+    all_runs = _list_all_runs(
+        strategy=strategy,
+        asset=asset,
+        sort_by=sort or "executed_at",
+        sort_order=order or "desc",
+    )
 
     items: list[RunListItem] = []
     for r in all_runs:

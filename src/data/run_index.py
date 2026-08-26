@@ -181,12 +181,31 @@ def upsert_run(
     logger.debug("Run index upserted: %s", run_id)
 
 
+SAFE_SORT_COLUMNS: frozenset[str] = frozenset(
+    {
+        "executed_at",
+        "sharpe",
+        "total_return",
+        "max_drawdown",
+        "n_trades",
+        "win_rate",
+        "cagr",
+        "ic",
+        "asset",
+        "strategy",
+        "run_id",
+    }
+)
+
+
 def query_runs(
     strategy: str | None = None,
     asset: str | None = None,
     limit: int | None = 200,
     offset: int = 0,
     runs_dir: Path | None = None,
+    sort_by: str = "executed_at",
+    sort_order: str = "desc",
 ) -> list[dict[str, Any]]:
     """Query the run index. Returns list of run summary dicts.
 
@@ -216,6 +235,10 @@ def query_runs(
         limit_sql = "LIMIT ? OFFSET ?"
         params.extend([limit, offset])
 
+    # Validate sort column against allowlist (SQL injection prevention)
+    col = sort_by if sort_by in SAFE_SORT_COLUMNS else "executed_at"
+    direction = "ASC" if sort_order.lower() == "asc" else "DESC"
+
     with _get_connection(runs_dir) as conn:
         rows = conn.execute(
             f"""
@@ -224,7 +247,7 @@ def query_runs(
                    cagr, from_date, to_date, ic, ic_band, metrics_json
             FROM runs
             {where}
-            ORDER BY executed_at DESC
+            ORDER BY {col} {direction}
             {limit_sql}
             """,
             params,
