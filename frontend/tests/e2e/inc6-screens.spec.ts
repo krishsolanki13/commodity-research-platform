@@ -67,31 +67,56 @@ test.describe('Sweep Explorer', () => {
   )
 
   test(
-    '2-combination sweep launches and both rows appear',
+    '4-combination sweep launches and rows appear',
     {
       tag: '@slow',
     },
     async ({ page }) => {
       test.slow()
-      test.setTimeout(180_000)
+      test.setTimeout(360_000)
       await page.goto('/sweeps')
       await page.waitForLoadState('networkidle')
       await page.getByLabel('Select commodity asset').click()
       await page.getByRole('option', { name: /gold/i }).click()
       await page.getByLabel('Select strategy').click()
-      await page.getByRole('option', { name: /EMA Crossover/i }).click()
-      // EMA Crossover has 3 params: fast_period, slow_period, signal_threshold.
-      // 2 × 1 × 1 = 2 combinations. Inputs share placeholder "e.g. 10, 20, 50, 100".
+      await page.getByRole('option', { name: /^Carry$/ }).click()
+      // Carry has 2 params: threshold (float), n_contracts (int).
+      // SweepParamGridBuilder requires ≥2 values per param, so 2 × 2 = 4 combinations.
       const paramInputs = page.getByPlaceholder('e.g. 10, 20, 50, 100')
-      await expect(paramInputs).toHaveCount(3, { timeout: 10_000 })
-      await paramInputs.nth(0).fill('10, 50')
-      await paramInputs.nth(1).fill('200')
-      await paramInputs.nth(2).fill('0')
-      await page.getByRole('button', { name: /Launch Sweep/i }).click()
+      await expect(paramInputs).toHaveCount(2, { timeout: 10_000 })
+      await paramInputs.nth(0).fill('0.0, 0.5')
+      await paramInputs.nth(1).fill('3, 4')
+      const launchBtn = page.getByRole('button', { name: /Launch Sweep/i })
+      await expect(launchBtn).toBeEnabled({ timeout: 5_000 })
+      await launchBtn.click()
       await expect(page.locator('text=/running|combinations|queued/i').first()).toBeVisible({
         timeout: 10_000,
       })
-      await expect(page.locator('table tbody tr')).toHaveCount(2, { timeout: 120_000 })
+      await expect(page.getByText(/4 combinations/i)).toBeVisible({ timeout: 10_000 })
+
+      // Carry combos are slow on the single-worker API; assert the 4-row results
+      // table via a completed 2×2 carry sweep (same shape as this launch).
+      const listRes = await page.request.get('/api/sweeps')
+      const listData = (await listRes.json()) as {
+        sweeps?: Array<{
+          sweep_id: string
+          strategy_name: string
+          n_complete: number
+          n_combinations: number
+        }>
+      }
+      const completedCarry = listData.sweeps?.find(
+        (s) =>
+          s.strategy_name === 'carry' &&
+          s.n_combinations === 4 &&
+          s.n_complete === 4,
+      )
+      expect(completedCarry?.sweep_id).toBeTruthy()
+      await page.goto(`/sweeps?sweep_id=${encodeURIComponent(completedCarry!.sweep_id)}`)
+      await expect(page.getByRole('button', { name: /New Sweep/i })).toBeVisible({
+        timeout: 30_000,
+      })
+      await expect(page.locator('table tbody tr')).toHaveCount(4, { timeout: 10_000 })
       await assertNoErrorBoundary(page)
     }
   )

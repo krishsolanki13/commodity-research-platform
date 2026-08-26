@@ -255,7 +255,7 @@ test.describe('Portfolio lifecycle', () => {
     },
     async ({ page }) => {
       test.slow()
-      test.setTimeout(240_000)
+      test.setTimeout(360_000)
       if (!portfolioRunId) {
         test.skip()
         return
@@ -265,10 +265,12 @@ test.describe('Portfolio lifecycle', () => {
         timeout: 15_000,
       })
 
-      const unavailable = page.getByText('Regime attribution unavailable')
-      const isUnavailable = await unavailable.isVisible().catch(() => false)
-
-      if (isUnavailable) {
+      // asset_run_ids load async — wait for the select (not the loading flash of
+      // "Regime attribution unavailable", which is shown while assetsQuery is pending).
+      const assetSelect = page.getByLabel('Select asset for regime attribution')
+      try {
+        await expect(assetSelect).toBeVisible({ timeout: 30_000 })
+      } catch {
         // Run predates asset_run_ids — regime tests require a newer run
         // This is expected behavior for old runs — see AD-FEP-001
         console.log(
@@ -281,11 +283,33 @@ test.describe('Portfolio lifecycle', () => {
       await page.locator('text=/Regime/i').first().scrollIntoViewIfNeeded()
       // Native <select aria-label="Select asset for regime attribution"> — not Radix.
       // Option values are asset slugs; Gold display_name is "Gold".
-      await page.getByLabel('Select asset for regime attribution').selectOption('gold')
-      await page.getByRole('button', { name: 'Compute Regime Attribution' }).click()
-      await expect(page.locator('text=/contango|backwardation|flat/i').first()).toBeVisible({
-        timeout: 180_000,
-      })
+      await assetSelect.selectOption('gold')
+      const [computeResponse] = await Promise.all([
+        page.waitForResponse(
+          (r) =>
+            /\/api\/regime-attribution\/compute$/.test(new URL(r.url()).pathname) &&
+            r.request().method() === 'POST',
+        ),
+        page.getByRole('button', { name: 'Compute Regime Attribution' }).click(),
+      ])
+      const { job_id: jobId } = (await computeResponse.json()) as { job_id: string }
+      await expect
+        .poll(
+          async () => {
+            const res = await page.request.get(`/api/regime-attribution/${jobId}/status`)
+            const data = (await res.json()) as { status?: string; error?: string | null }
+            if (data.status === 'failed') {
+              throw new Error(`regime job failed: ${data.error ?? 'unknown'}`)
+            }
+            return data.status ?? 'unknown'
+          },
+          { timeout: 300_000, intervals: [2000] },
+        )
+        .toBe('complete')
+      // Hidden <option>Gold — Flat</option> is in DOM but not visible; filter visible only.
+      await expect(
+        page.getByText(/contango|backwardation|flat/i).filter({ visible: true }).first(),
+      ).toBeVisible({ timeout: 60_000 })
       await assertNoErrorBoundary(page)
     }
   )
@@ -297,7 +321,7 @@ test.describe('Portfolio lifecycle', () => {
     },
     async ({ page }) => {
       test.slow()
-      test.setTimeout(420_000)
+      test.setTimeout(960_000)
       if (!portfolioRunId) {
         test.skip()
         return
@@ -307,10 +331,12 @@ test.describe('Portfolio lifecycle', () => {
         timeout: 15_000,
       })
 
-      const unavailable = page.getByText('Regime attribution unavailable')
-      const isUnavailable = await unavailable.isVisible().catch(() => false)
-
-      if (isUnavailable) {
+      // asset_run_ids load async — wait for the select (not the loading flash of
+      // "Regime attribution unavailable", which is shown while assetsQuery is pending).
+      const assetSelect = page.getByLabel('Select asset for regime attribution')
+      try {
+        await expect(assetSelect).toBeVisible({ timeout: 30_000 })
+      } catch {
         // Run predates asset_run_ids — regime tests require a newer run
         // This is expected behavior for old runs — see AD-FEP-001
         console.log(
@@ -322,11 +348,34 @@ test.describe('Portfolio lifecycle', () => {
 
       await page.locator('text=/Regime/i').first().scrollIntoViewIfNeeded()
       // Default selectedAsset is already PORTFOLIO_KEY ('__portfolio__') = "Portfolio Combined"
-      await page.getByLabel('Select asset for regime attribution').selectOption('__portfolio__')
-      await page.getByRole('button', { name: 'Compute Regime Attribution' }).click()
-      await expect(page.locator('text=/contango|flat|backwardation/i').first()).toBeVisible({
-        timeout: 360_000,
-      })
+      await assetSelect.selectOption('__portfolio__')
+      const [computeResponse] = await Promise.all([
+        page.waitForResponse(
+          (r) =>
+            r.url().includes('/api/regime-attribution/compute-portfolio') &&
+            r.request().method() === 'POST',
+        ),
+        page.getByRole('button', { name: 'Compute Regime Attribution' }).click(),
+      ])
+      const { job_id: jobId } = (await computeResponse.json()) as { job_id: string }
+      // 6-asset portfolio regime can exceed 10 minutes on a contended API.
+      await expect
+        .poll(
+          async () => {
+            const res = await page.request.get(`/api/regime-attribution/${jobId}/status`)
+            const data = (await res.json()) as { status?: string; error?: string | null }
+            if (data.status === 'failed') {
+              throw new Error(`portfolio regime job failed: ${data.error ?? 'unknown'}`)
+            }
+            return data.status ?? 'unknown'
+          },
+          { timeout: 900_000, intervals: [3000] },
+        )
+        .toBe('complete')
+      // Hidden <option> text is ignored; wait for coverage footer / select label.
+      await expect(
+        page.getByText(/contango|backwardation|flat/i).filter({ visible: true }).first(),
+      ).toBeVisible({ timeout: 60_000 })
       await assertNoErrorBoundary(page)
     }
   )
