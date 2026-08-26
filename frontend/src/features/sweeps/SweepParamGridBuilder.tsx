@@ -53,12 +53,15 @@ export function SweepParamGridBuilder({
     Object.fromEntries(paramNames.map((n) => [n, null]))
   )
 
-  // Reset when paramNames changes (strategy switch)
+  // Reset when paramNames changes (strategy switch).
+  // Depend on the joined key only — `paramNames` is a new array every parent
+  // render, which would wipe in-progress values after every keystroke.
   const paramNamesKey = paramNames.join(',')
   useEffect(() => {
-    setRawValues(Object.fromEntries(paramNames.map((n) => [n, ''])))
-    setErrors(Object.fromEntries(paramNames.map((n) => [n, null])))
-  }, [paramNamesKey, paramNames])
+    const names = paramNamesKey.length === 0 ? [] : paramNamesKey.split(',')
+    setRawValues(Object.fromEntries(names.map((n) => [n, ''])))
+    setErrors(Object.fromEntries(names.map((n) => [n, null])))
+  }, [paramNamesKey])
 
   function handleChange(param: string, raw: string) {
     const nextRaw = { ...rawValues, [param]: raw }
