@@ -158,6 +158,10 @@ test.describe('Portfolio Analytics', () => {
     await perAssetToggle.click()
     await page.waitForTimeout(600)
 
+    // Per-asset table loads async after expand — wait before count/View assertions
+    const rows = page.locator('table tbody tr')
+    await expect(rows.first()).toBeVisible({ timeout: 15_000 })
+
     // Check for View links (only present for post-fix runs with asset_run_ids)
     const viewLinks = page.getByRole('link', { name: /view.*run detail/i })
     const count = await viewLinks.count()
@@ -165,7 +169,6 @@ test.describe('Portfolio Analytics', () => {
     if (count === 0) {
       // Pre-fix run: all rows show — which is correct behavior
       // Verify table still renders correctly
-      const rows = page.locator('table tbody tr')
       expect(await rows.count()).toBeGreaterThan(0)
       console.log('Pre-fix run: no View links (expected) — table renders correctly')
       return
