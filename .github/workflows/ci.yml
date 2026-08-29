@@ -24,7 +24,9 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          # Pin to 3.11 — matches local dev; numpy stubs use PEP 695 type
+          # statement syntax that requires mypy >= 1.9 on 3.12 (not yet pinned)
+          python-version: "3.11"
           cache: "pip"
 
       - name: Install dependencies
