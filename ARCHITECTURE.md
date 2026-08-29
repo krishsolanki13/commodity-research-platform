@@ -1,10 +1,10 @@
 # Commodity Systematic Research Platform
 ## Architecture Reference Document
 
-**Version:** 3.0
-**Status:** Active — Phase 1 Complete, Phase 2 Complete, Phase 3 Complete. Next: F-track (React + FastAPI).
+**Version:** 4.0
+**Status:** Active — Phase 1–3 Complete. Enhancement Modules EM1–EM14 Complete. F-Track + FEP Complete. E2E Suite Complete.
 **Audience:** Developers, quantitative researchers, architecture reviewers
-**Last Updated:** Phase 3 completion (M01–M19, 267 tests, phase-3-complete tag)
+**Last Updated:** EM14 + FEP + E2E completion (M01–M19 + EM1–EM14, 429 backend tests, 406 frontend vitest, 114 E2E)
 
 ---
 
@@ -22,7 +22,7 @@
 10. [Signal Research Workflow](#10-signal-research-workflow)
 11. [Backtesting Assumptions](#11-backtesting-assumptions)
 12. [Position Sizing Model](#12-position-sizing-model)
-13. [Dashboard Architecture](#13-dashboard-architecture)
+13. [Dashboard and API Architecture](#13-dashboard-and-api-architecture)
 14. [Configuration Reference](#14-configuration-reference)
 15. [Phase Roadmap](#15-phase-roadmap)
 16. [Known Limitations](#16-known-limitations)
@@ -38,12 +38,16 @@ The Commodity Systematic Research Platform is a modular quantitative research an
 The platform provides a unified environment for:
 
 - Historical commodity futures data ingestion, validation, and storage
+- Alternative data ingestion (CFTC COT positioning, EIA petroleum inventory)
 - Feature engineering and technical indicator computation
-- Signal generation, quality evaluation, and research
+- Signal generation, quality evaluation, and rolling IC analysis
+- Walk-forward statistical validation with Probabilistic Sharpe Ratio and Deflated Sharpe Ratio
 - Systematic strategy development and backtesting under realistic execution assumptions
+- Parameter sweep infrastructure for performance surface characterisation
 - Performance measurement, attribution, and risk analysis
-- Commodity-specific market structure analysis (term structure, contango, backwardation, roll yield, basis)
-- Cross-asset correlation and regime analysis
+- Commodity-specific market structure analysis (term structure, contango, backwardation, roll yield, basis, PCA)
+- Cross-asset correlation, regime-conditional attribution, and alternative data signal integration
+- React/TypeScript research workbench with IC Gate enforcement in the UI
 
 **Intended users:** Quantitative researchers, systematic strategy developers, and commodity market analysts.
 
@@ -61,51 +65,67 @@ The platform provides a unified environment for:
 - Continuous futures data ingestion from Yahoo Finance (CSV/Parquet)
 - Data validation and normalization pipeline with configurable OHLC strictness
 - Feature engineering pipeline (SMA, EMA, RSI, RVGI, Momentum)
-- FeatureFrame and FeatureSpec management
 - Signal generation layer with RawSignal and PositionSignal separation
 - Signal evaluation metrics: IC, ICIR, signal decay, turnover
 - Vectorized single-asset backtesting engine
 - Transaction cost and slippage modeling
 - Fixed notional position sizing ($100,000 per signal)
-- Performance metrics: Total Return, CAGR, Sharpe, Sortino, Calmar, Max Drawdown, Win Rate, Profit Factor, Turnover, Rolling Sharpe
-- File-based run tracking and experiment management
+- Performance metrics: 16 scalar + rolling metrics
+- File-based run tracking and MLflow experiment management
 - Streamlit dashboard: Market Overview, Research Workbench, Strategy Builder, Backtest Results, Performance Analysis
-- Institutional dark theme (navy #0e1628) with monospace typography
 
 **Phase 2 — Commodity Intelligence (COMPLETE — M08–M13, 186 tests):**
-- Contract-level futures data ingestion via Yahoo Finance individual contract tickers (e.g., GCZ24.CMX)
-- Futures curve construction: `FuturesCurveBuilder` producing `FuturesCurve` snapshots
-- Term structure analytics: `TermStructureAnalyzer` producing `TermStructureSnapshot`
-- Contango/backwardation slope (annualized, normalized to front price)
-- Roll yield calculation (annualized, sign convention: positive = backwardation)
-- Basis calculation (continuous close − front contract price; pseudo-basis per ADR-001)
-- Term structure regime detection: `TermStructureRegime` (CONTANGO / BACKWARDATION / FLAT)
-- Volatility-scaled position sizing: `VolatilityScaledSizer` with `configure()` protocol
+- Contract-level futures data ingestion via Yahoo Finance individual contracts
+- `FuturesCurveBuilder` producing `FuturesCurve` snapshots
+- `TermStructureAnalyzer` producing `TermStructureSnapshot`
+- Contango/backwardation slope, roll yield, basis, regime classification
+- `VolatilityScaledSizer` with `configure()` protocol
 - MLflow experiment tracking: local filesystem backend, one experiment per asset
-- Dashboard Page 6: Futures Curve (forward curve visualization, regime KPIs, history charts)
+- Dashboard Page 6: Futures Curve
 
 **Phase 3 — Portfolio Analytics and Infrastructure (COMPLETE — M14–M19, 267 tests):**
-- Multi-asset runner: `MultiAssetRunner` producing portfolio equity curve across all 6 assets
-- Portfolio performance: `PortfolioPerformanceEngine` — Sharpe, drawdown, attribution, `absolute_pnl_by_asset`
-- Risk analytics: `RiskEngine` — historical VaR (95/99%), Expected Shortfall, notional exposure, diversification benefit
-- Cross-asset correlation: `CorrelationEngine` — pairwise matrix, rolling 63/126-day, realized strategy vol
-- ClickHouse integration: `ClickHouseStore` behind `DataStore` ABC, 24,862 rows migrated, config-switchable
-- Portfolio persistence: `save_portfolio_summary()` writes `portfolio_summary.json` per run
-- Dashboard Page 7: Cross-Asset Analytics (7 sections: KPIs, equity curve, attribution, risk, heatmap, rolling, vol)
+- `MultiAssetRunner` — portfolio equity curve across all 6 assets
+- `PortfolioPerformanceEngine` — Sharpe, drawdown, attribution, `absolute_pnl_by_asset`
+- `RiskEngine` — historical VaR (95/99%), Expected Shortfall, notional exposure, diversification benefit
+- `CorrelationEngine` — pairwise matrix, rolling 63/126-day, realized strategy vol
+- `ClickHouseStore` behind `DataStore` ABC, 24,862 rows migrated, config-switchable
+- `save_portfolio_summary()` with portfolio persistence per run
+- Dashboard Page 7: Cross-Asset Analytics
 
-**F-Track — React + FastAPI Frontend (Planned):**
-- FastAPI serialization shell (F0): HTTP boundary over all `src/` analytics
-- React + TypeScript SPA (F1–F8): IC Gate doctrine, immutability-derived caching, type-generation chain
-- Commodity Intelligence UI (F9–F11): curve scrubber, regime timelines, basis/roll-yield charts
-- Portfolio UI (F12–F15): multi-asset portfolio view, risk dashboards, correlation heatmap
+**Enhancement Modules EM1–EM14 (COMPLETE — 429 tests):**
+
+| Module | Key Deliverable |
+|---|---|
+| EM1 | Foundation: golden master tests, CI, `pipeline_builder.py` extracted, TD-M14-A closed |
+| EM2 | Engine correctness: rolling MTM equity (TD-B resolved), point-in-time vol scaling (TD-C resolved) |
+| EM3 | Portfolio persistence: 7 disk artifacts per run, disk-based fallback |
+| EM4 | Risk analytics depth: Kupiec VaR backtesting, contribution-to-risk decomposition |
+| EM5 | Statistical validation: `WalkForwardValidator`, PSR, Deflated Sharpe Ratio (scipy-free) |
+| EM6 | Rolling IC endpoint: `GET /api/signals/rolling-ic` |
+| EM7 | Carry signal: roll yield z-score from FuturesCurve data |
+| EM8 | Regime attribution: `RegimeAttributionEngine`, conditional Sharpe/return/drawdown per regime |
+| EM9 | `SweepRunner`: parameter grid expansion, async API, MLflow tagging |
+| EM10 | Testing infrastructure: Hypothesis property tests, QC reports, `reproduce_run.py` |
+| EM11 | Curve PCA: Level/Slope/Curvature factor decomposition |
+| EM12 | WTI-Brent spread signal: Engle-Granger cointegration, numpy-only ADF |
+| EM13 | Alternative data: CFTC COT positioning + EIA petroleum inventory signals |
+| EM14 | Async improvements: portfolio persisting status, async regime attribution, sweep progress |
+
+**F-Track — React + FastAPI Frontend (COMPLETE — 406 vitest, 114 E2E):**
+- FastAPI serialization shell: 30+ endpoints, consistent async job pattern (POST → poll → result)
+- React/TypeScript SPA with IC Gate enforcement, TanStack Query, Zustand, ECharts
+- 13 screens across all platform capabilities
+- Walk-forward validation tab, regime attribution panel (per-asset + Portfolio Combined), rolling IC chart
+- COT and EIA data sections in Data Manager
+- SQLite run index (`data/runs/index.db`) for sub-second `GET /api/runs` regardless of run count
+- Comprehensive Playwright E2E suite: 114 passed / 3 skipped / 0 failed
 
 ### 2.2 Out of Scope
 
 - Live trading, order routing, or execution simulation beyond vectorized backtesting
 - Real-time or intraday data feeds
 - Options, structured products, or derivatives beyond vanilla futures
-- Multi-user access, authentication, or authorization
-- Cloud deployment or containerized infrastructure
+- Multi-user access, authentication, or authorization (under consideration for future hosted deployment)
 - Tick-level or high-frequency data analysis
 - Equity, fixed income, or FX instruments
 
@@ -117,15 +137,17 @@ The platform provides a unified environment for:
 
 1. Continuous futures series (GC=F, CL=F, SI=F, HG=F, NG=F, BZ=F) are obtained from Yahoo Finance and represent front-month contracts stitched without documented back-adjustment methodology. These series are treated as opaque vendor-provided continuous price streams. See ADR-001.
 
-2. Yahoo Finance continuous series are NOT back-adjusted. Price discontinuities occur at roll dates. All return-based calculations must use log returns or percentage changes rather than raw price differences. Long-period price-level indicators (EMA-200, SMA-200) will include roll gaps and this is accepted as a known limitation of free data sources. See the Known Limitations section.
+2. Yahoo Finance continuous series are NOT back-adjusted. Price discontinuities occur at roll dates. All return-based calculations must use log returns or percentage changes rather than raw price differences. Long-period price-level indicators (EMA-200, SMA-200) will include roll gaps and this is accepted as a known limitation.
 
 3. Contract-level data (individual expiry contracts, e.g., GCZ24, CLF25) is obtained from Yahoo Finance using asset-specific exchange suffix tickers (e.g., GCZ24.CMX for COMEX contracts, CLF25.NYM for NYMEX contracts). Contract data is maintained as a separate dataset used exclusively for term structure analysis. It is never used in signal generation or backtesting.
 
-4. `OHLCVValidator` uses `strict_ohlc=False` for all Yahoo Finance data (both continuous and contract-level). Yahoo Finance settlement prices are volume-weighted averages of the closing range and can legally fall outside the intraday High/Low. The 2020-04-20 WTI negative price event (−$37.63) is genuine historical data, not a data error. `strict_ohlc=True` is reserved for Phase 3 institutional vendor data where OHLC consistency is guaranteed.
+4. `OHLCVValidator` uses `strict_ohlc=False` for all Yahoo Finance data (both continuous and contract-level). Yahoo Finance settlement prices are volume-weighted averages of the closing range and can legally fall outside the intraday High/Low. OHLC constraint flags from `QCReport` are expected artifacts for 5 of 6 assets (Gold 25, Silver 57, Copper 29, Brent 34, NatGas 1 violations; WTI 0) — these are data artifacts, not errors. The 2020-04-20 WTI negative price event (−$37.63) is genuine historical data, not a data error.
 
-5. Open Interest field is optional; Yahoo Finance does not provide reliable OI data for commodity futures.
+5. CFTC COT data uses the Managed Money category (`m_money_positions_long/short_all`). URL format: `dea/history/fut_disagg_txt_{year}.zip`. Requires `User-Agent: Mozilla/5.0` header. Brent has no CFTC COT coverage (ICE London, not CME). COT `percentile_rank` is on a 0–100 scale throughout the entire pipeline — frontend must NOT multiply by 100 again.
 
-6. All data quality issues — OHLC consistency violations, trading gaps, anomalous prices, zero-volume sessions — are detected and logged as warnings during ingestion. Structural violations (duplicate dates) raise `DataValidationError`.
+6. EIA petroleum inventory uses `WCRSTUS1` (WTI) and `WCSSTUS1` (Brent proxy). API key required (`EIA_API_KEY`). Only meaningful for WTI and Brent crude — signals for other assets are flat/zero by design.
+
+7. Open Interest field is optional; Yahoo Finance does not provide reliable OI data for commodity futures.
 
 ### 3.2 Backtesting Assumptions
 
@@ -135,75 +157,91 @@ The platform provides a unified environment for:
 4. The backtester is vectorized. It does not simulate an event-driven order queue, partial fills, margin calls, or forced liquidations.
 5. Short selling is permitted on all assets, reflecting the symmetric long/short capability of futures markets.
 6. Roll handling is not modeled. The continuous series is treated as a single uninterrupted price stream.
-7. Position sizers implement the `configure(ohlcv)` protocol. `VectorizedBacktester.run()` calls `sizer.configure(ohlcv)` before the simulation loop. Static sizers (FixedNotionalSizer) inherit a no-op default. Dynamic sizers (VolatilityScaledSizer) override to pre-compute data-driven state.
+7. Position sizers implement the `configure(ohlcv)` protocol. `VectorizedBacktester.run()` calls `sizer.configure(ohlcv)` before the simulation loop.
 
 ### 3.3 Infrastructure Constraints
 
 1. Single developer. Architecture prioritizes clarity and correctness over engineering throughput.
-2. All data is stored on the local filesystem. No cloud storage in Phase 1 or 2.
-3. No paid data subscriptions in Phase 1 or 2. Free data sources only (Yahoo Finance).
-4. No hardcoded credentials, API keys, or filesystem paths. Secrets via `.env`. Paths via `config.yaml`.
-5. Python ecosystem only. No JVM, C++, or non-Python dependencies in Phase 1 or 2.
-6. MLflow 3.x requires `MLFLOW_ALLOW_FILE_STORE=true` for local filesystem tracking. This is set programmatically in `_try_log_to_mlflow()` and exported by the launcher scripts.
+2. All data is stored on the local filesystem. No cloud storage in Phase 1, 2, or 3.
+3. No paid data subscriptions. Free data sources only (Yahoo Finance, CFTC public, EIA API free tier).
+4. No hardcoded credentials, API keys, or filesystem paths. Secrets via `config/local.yaml` (gitignored). Paths via `config.yaml`.
+5. Python ecosystem for all `src/` analytics. React/TypeScript for the frontend.
+6. FastAPI serves the HTTP boundary between the frontend and all `src/` analytics.
+7. MLflow 3.x requires `MLFLOW_ALLOW_FILE_STORE=true` for local filesystem tracking. Set programmatically in `_try_log_to_mlflow()` and exported by launcher scripts.
 
 ---
 
 ## 4. Architecture Overview
 
-The platform is organized into nine logical layers. Dependencies flow strictly downward. No layer imports from or depends on a layer above it. The dashboard (Layer 8) is the only layer permitted to compose outputs from multiple layers simultaneously.
+The platform is organized into nine logical layers. Dependencies flow strictly downward. No layer imports from or depends on a layer above it. The FastAPI layer and React frontend consume layer outputs via clean HTTP interfaces.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  LAYER 0 — DATA INFRASTRUCTURE                                  │
 │  ContinuousDataSource + ContractDataSource                       │
-│  Ingestion → Validation (strict_ohlc=False) → Normalization      │
-│  Storage: raw/ (CSV) → processed/ (Parquet)                     │
+│  COTDataLoader (CFTC) + EIADataLoader (EIA API)                 │
+│  QCReport — data quality assessment per asset                   │
+│  run_index.py — SQLite run index (sub-second GET /api/runs)     │
+│  Storage: raw/ (CSV) → processed/ (Parquet + COT + EIA)        │
 └──────────────────────────────┬──────────────────────────────────┘
-                               │  NormalizedOHLCV DataFrame
+                               │  NormalizedOHLCV + Alternative DataFrames
 ┌──────────────────────────────▼──────────────────────────────────┐
 │  LAYER 1 — FEATURE ENGINEERING                                  │
-│  Indicator registry → FeaturePipeline → FeatureFrame + FeatureSpec│
+│  Indicator registry → FeaturePipeline → FeatureFrame            │
+│  FeaturePipeline([]) valid for data-owning signals              │
 └──────────────────────────────┬──────────────────────────────────┘
                                │  FeatureFrame
 ┌──────────────────────────────▼──────────────────────────────────┐
 │  LAYER 2 — SIGNAL RESEARCH                                      │
-│  RawSignal → IC / ICIR / Decay / Turnover → PositionSignal      │
+│  8 Signals: EMA, Momentum, RSI, Donchian, Carry,               │
+│             WTIBrentSpread, COTPositioning, EIAInventory         │
+│  SignalEvaluator: IC, ICIR, Rolling IC (EM6)                    │
+│  PositionSignalConstructor → PositionSignal {+1, 0, -1}        │
 └──────────────────────────────┬──────────────────────────────────┘
                                │  PositionSignal + RawSignal
 ┌──────────────────────────────▼──────────────────────────────────┐
 │  LAYER 3 — BACKTESTING ENGINE                                   │
 │  VectorizedBacktester + CostModel                               │
-│  PositionSizer (Fixed | VolatilityScaled) + RunManager + MLflow  │
+│  PositionSizer (Fixed | VolatilityScaled) + RunManager          │
+│  pipeline_builder.py — canonical 2-tuple strategy dispatch      │
+│  SweepRunner — parameter grid with progress_callback (EM9+EM14) │
+│  WalkForwardValidator — expanding splits with embargo (EM5)     │
 └──────────────────────────────┬──────────────────────────────────┘
-                               │  BacktestResult
+                               │  BacktestResult / SweepResult / ValidationReport
 ┌──────────────────────────────▼──────────────────────────────────┐
 │  LAYER 4 — PERFORMANCE AND ATTRIBUTION                          │
-│  Scalar metrics → Rolling metrics → PerformanceReport           │
+│  PerformanceEngine (src.performance.report)                     │
+│  PortfolioPerformanceEngine                                     │
+│  StatisticalValidation: PSR, DSR (scipy-free) (EM5)            │
 └──────────────────────────────┬──────────────────────────────────┘
-                               │  PerformanceReport
+                               │  PerformanceReport / PortfolioPerformanceReport
              ┌─────────────────┴──────────────────┐
              │                                     │
 ┌────────────▼───────────────┐     ┌───────────────▼──────────────┐
 │  LAYER 5 — COMMODITY       │     │  LAYER 6 — RISK ANALYTICS    │
-│  INTELLIGENCE (Complete)   │     │  (Phase 3)                   │
-│  ContractDataLoader         │     │  VaR → ES → Exposure         │
-│  FuturesCurveBuilder        │     └──────────────────────────────┘
-│  TermStructureAnalyzer      │     ┌──────────────────────────────┐
-│  FuturesCurve + Snapshot    │     │  LAYER 7 — CROSS-ASSET       │
-└────────────────────────────┘     │  ANALYTICS (Phase 3)         │
-                                   │  Correlations → Regime → Vol │
+│  INTELLIGENCE (Complete)   │     │  VaR 95/99, ES, Kupiec LR,  │
+│  FuturesCurveBuilder        │     │  contribution-to-risk (EM4) │
+│  TermStructureAnalyzer      │     └──────────────────────────────┘
+│  CurvePCAEngine (EM11)      │     ┌──────────────────────────────┐
+│  PC1=Level, PC2=Slope       │     │  LAYER 7 — CROSS-ASSET       │
+└────────────────────────────┘     │  CorrelationEngine           │
+                                   │  RegimeAttributionEngine (EM8)│
                                    └──────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────────┐
-│  LAYER 8 — DASHBOARD (Streamlit — Phase 1/2/3 complete)         │
-│  Presentation layer only. Consumes Layer 0–7 via clean APIs.    │
-│  No data manipulation in dashboard code.                        │
-│  7 pages: Market Overview, Research Workbench, Strategy Builder, │
-│  Backtest Results, Performance Analysis, Futures Curve,          │
-│  Cross-Asset Analytics                                          │
+│  FASTAPI LAYER (F0 + EM endpoints) — COMPLETE                  │
+│  Serialization shell: 30+ endpoints, async job pattern          │
+│  Pydantic → OpenAPI → TypeScript schema.d.ts                   │
+│  SQLite run index: GET /api/runs < 0.5s for 925+ runs          │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │  HTTP / JSON
+┌──────────────────────────────▼──────────────────────────────────┐
+│  LAYER 8 — PRESENTATION LAYER                                   │
 │                                                                 │
-│  F-TRACK (Planned): FastAPI (F0) + React/TypeScript SPA (F1–F15)│
-│  Replaces Streamlit. IC Gate enforced in UI. Typed contracts     │
-│  from types.py → Pydantic → OpenAPI → TypeScript.              │
+│  Streamlit (Phase 1/2/3 reference — 7 pages, all complete)     │
+│                                                                 │
+│  React/TypeScript SPA (F-Track + FEP — COMPLETE)               │
+│  IC Gate in UI, TanStack Query, Zustand, ECharts               │
+│  13 screens, 406 vitest, 114 E2E passing                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -215,27 +253,27 @@ The platform is organized into nine logical layers. Dependencies flow strictly d
 
 **Purpose:** Single source of truth for all data access. The only layer that reads from the filesystem, external APIs, or external data sources.
 
-**Phase 1 responsibilities (implemented):**
+**Phase 1/2/3 responsibilities (implemented):**
 - `ContinuousDataSource` abstraction → `LocalCSVSource` implementation
-- OHLCV validation: gap detection, anomaly flagging, consistency checks (strict_ohlc=False for Yahoo Finance data)
+- OHLCV validation: gap detection, anomaly flagging, consistency checks (`strict_ohlc=False` for Yahoo Finance)
 - Field normalization: standard column names, float64 dtypes, UTC DatetimeIndex
 - `ParquetStore`: read/write normalized continuous series at `data/processed/continuous/{asset}.parquet`
 - `DataLoader`: orchestrates Source → Validator → Normalizer → Store pipeline
+- `FuturesContractSource`, `ContractParquetStore`, `ContractDataLoader` (Phase 2)
 
-**Phase 2 responsibilities (implemented):**
-- `FuturesContractSource`: reads individual contract CSVs from `data/raw/contracts/{asset}/{ticker}.csv`
-- `parse_contract_ticker()`: converts canonical ticker string (e.g., GCZ24) to `ContractMetadata`
-- `ContractParquetStore`: read/write contract OHLCV + sidecar metadata JSON at `data/processed/contracts/{asset}/{ticker}.parquet`
-- `ContractDataLoader`: orchestrates contract pipeline; provides `load_contract()`, `load_curve()`, `list_contracts()`
-- `scripts/acquire_contract_data.py`: downloads individual contracts from Yahoo Finance using exchange-suffix tickers (e.g., GCZ24.CMX); saves as canonical tickers (GCZ24.csv)
+**Enhancement module additions:**
 
-**Key design decisions:**
-- Exchange suffix (`.CMX` for COMEX, `.NYM` for NYMEX/ICE) is a yfinance API concern only. Storage and `ContractMetadata.ticker` always use the canonical ticker without suffix.
-- `OHLCVNormalizer.normalize()` clears `result.attrs = {}` before returning to prevent pyarrow UserWarning during Parquet serialization. `DataLoader.load()` re-populates `asset`, `source`, `continuous` attrs on both fast and slow paths.
+- `src/data/acquisition_qc.py`: `compute_qc(ohlcv, asset)` → `QCReport`. Checks: bar count, OHLC constraint violations (expected for Yahoo Finance), zero-volume days, large gap flags. Health classification: ok/warn/crit. OHLC flags are expected artifacts — not actionable errors.
+
+- `src/data/cot_loader.py`: `COTDataLoader.load(asset)` → DataFrame. Columns: `net_speculative`, `long_specs`, `short_specs`, `percentile_rank` (0–100 scale). Brent returns empty (no CFTC coverage). `available_assets()` → list.
+
+- `src/data/eia_loader.py`: `EIADataLoader.load(asset)` → DataFrame. `EIA_SUPPORTED_ASSETS` (public constant) = `{"wti", "brent"}`. Columns: `inventory`, `inventory_change`, `surprise`, `surprise_zscore`. Non-crude returns empty.
+
+- `src/data/run_index.py`: SQLite run index at `data/runs/index.db`. `upsert_run()` called by `RunManager.save_metrics()` after every backtest. `query_runs(strategy, asset, limit, offset, sort_by, sort_order)` — sub-millisecond. `backfill_from_disk()` on startup (async, background). `SAFE_SORT_COLUMNS` allowlist prevents SQL injection. WAL journal mode (Windows uses DELETE journal).
+
+**Acquisition scripts (all in `scripts/`):** `acquire_data.py`, `acquire_contract_data.py`, `acquire_cot_data.py`, `acquire_eia_data.py`, `reproduce_run.py`.
 
 **Does NOT do:** Indicator computation, signal generation, or any analytical transformation.
-
-**Output contracts:** `NormalizedOHLCV` DataFrame; `ContractMetadata` dataclass.
 
 ---
 
@@ -244,13 +282,10 @@ The platform is organized into nine logical layers. Dependencies flow strictly d
 **Purpose:** Transform normalized price data into a feature space suitable for signal research.
 
 **Responsibilities:**
-- `Indicator` abstract base class defining the `compute(df: DataFrame) -> Series` interface
-- Indicator registry: dictionary mapping indicator names to Indicator implementations
+- `Indicator` ABC defining `compute(df: DataFrame) -> Series` interface
 - Implementations: SMA, EMA, RSI, RVGI, Momentum
-- Parameter-aware column naming convention: `ema_50`, `rsi_14`, `rvgi_10`
-- `FeaturePipeline`: applies a list of Indicator specs to a NormalizedOHLCV DataFrame, returns FeatureFrame
-- `FeatureSpec` dataclass: records indicator name, parameters, column name, asset, computation timestamp
-- `FeatureFrame` class: wraps DataFrame, tracks which columns are OHLCV vs. computed features
+- `FeaturePipeline`: applies a list of Indicator specs to NormalizedOHLCV, returns FeatureFrame
+- `FeaturePipeline([])` — empty indicators list — is valid. Data-owning signals (Carry, WTI-Brent Spread, COT, EIA) pass an empty list and own their data dependency in `generate()`.
 
 **Does NOT do:** Signal generation, threshold decisions, or position logic.
 
@@ -262,16 +297,32 @@ The platform is organized into nine logical layers. Dependencies flow strictly d
 
 **Purpose:** Generate and evaluate signals from feature data. This is the primary research layer.
 
-**Responsibilities:**
-- `SignalGenerator` abstract base class
-- `RawSignal` generation: continuous float signal values (z-scored, normalized, or unbounded depending on signal type)
-- Signal evaluation: IC (Pearson correlation of signal[t] vs. forward_return[t+1]), ICIR, signal decay at horizons {1, 2, 5, 10, 20 bars}, turnover
-- `PositionSignal` construction: discretize RawSignal into {+1, 0, -1} via thresholding or ranking rules
-- Signal implementations: EMA Crossover, Momentum, RSI Reversion, Donchian Breakout
+**All 8 signal generators:**
+
+| Signal | File | Key data dependency |
+|---|---|---|
+| EMA Crossover | signal/ema.py | OHLCV features (EMA fast/slow) |
+| Momentum | signal/momentum.py | OHLCV features (lookback return) |
+| RSI Reversion | signal/rsi.py | OHLCV features (RSI period) |
+| Donchian Breakout | signal/donchian.py | OHLCV features (channel period) |
+| Carry | signal/carry.py | FuturesCurveBuilder.build_historical_curves() |
+| WTI-Brent Spread | signal/spread.py | Continuous OHLCV, both assets |
+| COT Positioning | signal/cot.py | CFTC COT Parquet (weekly, forward-filled) |
+| EIA Inventory | signal/eia.py | EIA Parquet (weekly, forward-filled) |
+
+**Signal generator interface (all signals must conform — DEV-EM7-1/2/3):**
+- `@property name` — returns strategy identifier string; must be `@property`, not class attribute
+- `generate(feature_frame) → pd.Series` with `series.name = self.name` set before returning
+- `feature_frame.data.index` for DatetimeIndex; `feature_frame.asset` is `@property`
+- Graceful degradation: flat signal (all zeros) when data unavailable, not exception
+
+**Rolling IC (EM6):** `SignalEvaluator.compute_rolling_ic()` — raw signal, consistent with static IC definition. File: `src/signal/evaluation.py`. `SignalEvaluator(asset, ic_rolling_window)`.
+
+**IC Gate (confirmed by E2E):** IC state is TanStack Query cache (not Zustand) — resets on full page navigation. ICGateStrip gate: `isEnabled = evaluation !== null && band !== 'noise' && band !== null`. Doctrine-with-override: backtest launch available without evaluation but override recorded in run artifacts.
 
 **Critical rule:** IC evaluation precedes backtesting. IC is a precondition for deciding whether a backtest is warranted, not a post-hoc diagnostic.
 
-**Output contract:** `RawSignal` (pd.Series, float64) + `PositionSignal` (pd.Series, int or float, {-1, 0, +1}).
+**Output contract:** `RawSignal` (pd.Series, float64) + `PositionSignal` (pd.Series, {-1, 0, +1}).
 
 ---
 
@@ -279,19 +330,32 @@ The platform is organized into nine logical layers. Dependencies flow strictly d
 
 **Purpose:** Simulate strategy execution over historical data under realistic cost assumptions.
 
-**Responsibilities:**
-- `VectorizedBacktester`: consumes PositionSignal + OHLCV, applies Close[t] → Open[t+1] execution rule. Accepts optional `sizer: PositionSizer | None = None` parameter for sizer dependency injection.
-- `CostModel`: commission per trade (flat fee) + proportional slippage (ticks × tick_value)
-- `PositionSizer` ABC: `configure(ohlcv)` no-op hook + abstract `compute_size(signal, asset, equity)`
-  - `FixedNotionalSizer(notional_usd=...)`: Phase 1 default; returns fixed USD notional regardless of asset volatility
-  - `VolatilityScaledSizer(target_annual_vol, lookback_days, vol_cap, ...)`: Phase 2; sizes positions to target a fixed annualized volatility contribution; `configure(ohlcv)` pre-computes realized vol
-- `TradeLog`: detects position changes, constructs TradeRecord objects, computes trade-level PnL
-- `EquityCurve`: cumulative PnL series indexed by date
-- `RunManager`: assigns run ID (YYYYMMDD_HHMMSS_{strategy}_{asset}), persists BacktestResult artifacts to `data/runs/{run_id}/`, logs to MLflow via `_try_log_to_mlflow()` in `save_metrics()`
+**Phase 1/2/3 responsibilities (implemented):** `VectorizedBacktester`, `CostModel`, `FixedNotionalSizer`, `VolatilityScaledSizer`, `TradeLog`, `EquityCurve`, `RunManager`, MLflow integration.
 
-**configure() protocol:** `VectorizedBacktester.run()` calls `self._sizer.configure(ohlcv)` before the simulation begins. `FixedNotionalSizer` inherits the no-op. `VolatilityScaledSizer` overrides to pre-compute realized volatility from the OHLCV close series.
+**`pipeline_builder.py` (canonical — EM1):**
+Sequential if-blocks with early return, always returns 2-tuple `(indicators, signal_gen)`. This is the canonical dispatch — both `api/routers/backtests.py` and `api/routers/signals.py` use it.
 
-**Does NOT do:** Performance metric computation, signal generation, or any indicator calculation.
+**`RunManager` (confirmed EM8):**
+- `load_run(run_id)` → dict: `{params, trades (pd.DataFrame), equity_curve (pd.Series), pnl_series, positions}`
+- `save(backtest_result)` → Path
+- `save_metrics(run_id, report)` → None; upserts into SQLite run index via `try/except` guard
+- No `.load()` method (DEV-EM8-1)
+
+**`SweepRunner` (`src/backtesting/sweep_runner.py`):**
+- OHLCV loaded once before combination loop
+- Each combination in try/except → `SweepRunSummary(status="failed")` on error
+- MLflow tagging: `sweep_id` tag per combination for DSR trial count
+- `progress_callback: Callable[[int], None] | None = None` — increments `n_complete` after each successful combination (EM14)
+
+**`WalkForwardValidator` (`src/validation/walk_forward.py`):**
+- Expanding windows: `test_size = (n - min_train_bars - embargo_bars) // n_splits`
+- 5 folds, 10-bar embargo default
+- PSR → DSR with MLflow n_trials correction
+- scipy-free: Beasley-Springer-Moro rational approximation for normal CDF
+
+**configure() protocol:** `VectorizedBacktester.run()` calls `self._sizer.configure(ohlcv)` before simulation begins. Rolling MTM equity (TD-B) and point-in-time vol scaling (TD-C) resolved in EM2.
+
+**Does NOT do:** Performance metric computation, signal generation, or indicator calculation.
 
 **Output contract:** `BacktestResult`.
 
@@ -301,71 +365,65 @@ The platform is organized into nine logical layers. Dependencies flow strictly d
 
 **Purpose:** Compute performance metrics and assemble structured reports from BacktestResult.
 
-**Responsibilities:**
-- Scalar metrics: Total Return, CAGR, Sharpe Ratio, Sortino Ratio, Calmar Ratio, Max Drawdown, Average Drawdown, Win Rate, Profit Factor, Average Trade Duration, Turnover, Average Win/Loss, Largest Win/Loss
-- Rolling metrics: Rolling Sharpe (63-day, 126-day), Rolling Volatility, Rolling Drawdown
-- Trade-level statistics: Consecutive Wins/Losses
-- Signal performance metrics: IC, ICIR, decay (surfaced from BacktestResult.signal_evaluation)
-- `PerformanceReport` assembly
+**Phase 1/2/3 responsibilities (unchanged):** 16 scalar metrics, rolling metrics, trade statistics, signal metrics.
 
-**Does NOT do:** Chart rendering, dashboard display logic, or backtest simulation.
-
-**Output contract:** `PerformanceReport`.
+**EM5 additions:**
+- `src/validation/walk_forward.py`, `inference.py`, `mlflow_client.py`, `report.py`
+- `PerformanceEngine` is at `src.performance.report` (DEV-EM5-2)
+- `ValidationReport`: walk-forward folds, PSR, DSR, IS/OOS Sharpe, overfitting ratio
 
 ---
 
-### Layer 5 — Commodity Intelligence (Implemented — Phase 2)
+### Layer 5 — Commodity Intelligence (Implemented — Phase 2 + EM11)
 
-**Purpose:** Futures term structure analysis using contract-level (individual expiry) data.
+**Purpose:** Futures term structure analysis using contract-level data.
 
-**Responsibilities:**
-- `ContractDataLoader` (Layer 0 extension): provides contract data to this layer
-- `FuturesCurveBuilder`: constructs `FuturesCurve` snapshots from contract OHLCV data
-  - `build(asset, observation_date, n_contracts)` → `FuturesCurve`
-  - `build_historical_curves(asset, dates, n_contracts)` → `list[FuturesCurve]`
-  - `available_assets()` → `list[str]` (assets with processed Parquet contract data)
-- `TermStructureAnalyzer`: computes analytics from `FuturesCurve` objects
-  - `analyze(curve, continuous_close)` → `TermStructureSnapshot`
-  - `analyze_series(curves, continuous_closes)` → `list[TermStructureSnapshot]`
-  - `contango_slope_annualized(curve)`: (back/front − 1) / years_to_back
-  - `roll_yield_annualized(curve)`: (front − second) / second × (365 / days_between)
-  - `compute_basis(curve, continuous_close)`: continuous_close − front_contract_price
+**Phase 2 responsibilities:** `ContractDataLoader`, `FuturesCurveBuilder`, `TermStructureAnalyzer`.
 
-**Layer 5 / Layer 0 connection for basis:** `TermStructureAnalyzer.compute_basis()` receives `continuous_close` as a parameter (not by calling `DataLoader` internally). The dashboard is the orchestration point that loads both pipelines and passes the continuous close to the analyzer. This is the only point in the platform where the two data pipelines interact.
+**`CurvePCAEngine` (`src/commodity/pca.py` — EM11):**
+- `compute(asset, n_components=3, n_contracts=4, from_date, to_date)` → `CurvePCAResult`
+- Price matrix normalization: `price[t,i] / price[t,0]` (shape PCA, not level PCA)
+- sklearn PCA preferred, numpy SVD fallback (mathematically equivalent)
+- Gold: PC1≈100% — correct, near-constant term structure. WTI/NatGas: meaningful 3-factor decompositions.
 
-**Uses exclusively:** Contract-level data (e.g., GCZ24, CLF25). The continuous series is provided externally as a parameter for basis computation only; it is never mixed with contract data in the analytical pipeline.
+**`FuturesCurve` attribute access (confirmed EM11):** `.prices` property → `list[float]` (primary). `.points[N].close` (fallback). (DEV-EM11)
+
+**`FuturesCurveBuilder.build_historical_curves()` is the expensive call** — used by CarrySignal, RegimeAttributionEngine, CurvePCAEngine. Endpoints handle this two ways: `CurvePCAEngine` and `RegimeAttributionEngine` run via `asyncio.run_in_executor()` to avoid blocking Uvicorn's event loop, with 3-year and default date windows respectively to bound computation; the signal-evaluate endpoint (sync) wraps `CarrySignal` generation in a `ThreadPoolExecutor` with a hard 120-second timeout (HTTP 408 on expiry) plus a 2-year default date range when none is supplied, since a full-history Carry evaluation on Gold takes 4–40 minutes uncapped.
+
+**Layer 5 / Layer 0 connection for basis:** `TermStructureAnalyzer.compute_basis()` receives `continuous_close` as a parameter — the analyzer never calls `DataLoader` directly. The API router is the orchestration point.
 
 ---
 
-### Layer 6 — Risk Analytics (Implemented — Phase 3)
+### Layer 6 — Risk Analytics (Implemented — Phase 3 + EM4)
 
 **Purpose:** Portfolio-level risk measurement on a notional-aware basis.
 
-**Responsibilities (implemented):**
-- `RiskEngine.compute(multi_result, lookback_days=252)` → `RiskReport`
-- Historical VaR at 95% and 99% confidence (historical simulation, no parametric assumption)
-- Expected Shortfall (CVaR) at 95% and 99%
-- Average gross and net notional exposure per asset (averaged over active trading days)
-- Portfolio diversification benefit: sum(asset_var_99) / portfolio_var_99
-- VaR expressed as positive USD loss magnitudes; NaN for < 20 observations
+**Phase 3 responsibilities:** Historical VaR 95/99%, ES 95/99%, notional exposure, diversification benefit.
 
-**Known gap (evaluation finding):** VaR is backward-looking (realized strategy P&L). Forward-looking VaR (current positions × return scenarios) is not implemented. Kupiec backtesting (VaR calibration verification) is not implemented. No margin model.
+**EM4 additions to `RiskReport` (9 new fields):**
+- `n_backtesting_days`, `exceptions_95`, `exceptions_99`, `exception_rate_95`, `exception_rate_99`
+- `kupiec_lr_99`, `kupiec_pvalue_99` — Kupiec LR test: p < 0.05 indicates miscalibrated VaR model
+- `asset_contribution_to_vol`, `asset_contribution_to_vol_pct` — contribution-to-risk (sums to ~1.0)
+
+**Known gap:** VaR is backward-looking (realized strategy P&L). Forward-looking VaR (current positions × return scenarios) is not implemented.
 
 ---
 
-### Layer 7 — Cross-Asset Analytics (Implemented — Phase 3)
+### Layer 7 — Cross-Asset Analytics (Implemented — Phase 3 + EM8)
 
-**Purpose:** Multi-asset statistical analysis.
+**Purpose:** Multi-asset statistical analysis and regime-conditional attribution.
 
-**Responsibilities (implemented):**
-- `CorrelationEngine.compute(multi_result)` → `CorrelationReport`
-- Pairwise Pearson correlation matrix of strategy daily returns (not price returns)
-- Rolling correlations at 63-day and 126-day windows (upper-triangle storage only, TD-M17-A)
-- Realized strategy volatility per asset (annualized std of strategy P&L returns)
+**Phase 3 responsibilities:** `CorrelationEngine` — pairwise Pearson matrix, rolling 63/126-day, realized strategy vol.
 
-**Note on strategy vol vs price vol:** `realized_vol_by_asset` values are strategy P&L vols (2–8%/yr for EMA 50/200), not commodity price vols (15–60%/yr). Labels must say "Strategy Realized Vol" not "Asset Volatility."
+**`RegimeAttributionEngine` (`src/analytics/regime_attribution.py` — EM8 + TD-EM8-C):**
+- Regime keys always **lowercase**: "contango", "backwardation", "flat" (DEV-EM8-3)
+- `compute(backtest_result, asset, n_contracts)` → `RegimeAttributionReport`
+- `compute_portfolio(portfolio_run_id, n_contracts)` → `PortfolioRegimeAttributionReport` (TD-EM8-C)
+- Portfolio: ThreadPoolExecutor (6 assets parallel, ~90s)
+- P&L-weighted Sharpe aggregation per regime; minimum 20 days per regime for valid statistics
+- `_RunProxy`, `_TradeProxy`, `_convert_trades`, `_make_run_proxy` live in `src/analytics/` (Layer 7 owns these — no upward import to api/)
 
-**Known gap (evaluation finding):** Layer 7 architecture text originally promised "volatility regime analysis" and "regime-conditional performance attribution." These were not implemented in M17 and have no owning module in the roadmap. The architecture promise has been removed from this version to match the actual implementation. Regime-conditional attribution is a planned future extension.
+**Note on strategy vol vs price vol:** `realized_vol_by_asset` values (2–8%/yr for EMA 50/200) are strategy P&L vols, not commodity price vols (15–60%/yr). Labels must say "Strategy Realized Vol" not "Asset Volatility."
 
 ---
 
@@ -373,14 +431,11 @@ The platform is organized into nine logical layers. Dependencies flow strictly d
 
 **Purpose:** Interactive presentation layer. Orchestrates user interaction and displays layer outputs.
 
-**Rules:**
-- No data manipulation, computation, or business logic in dashboard code
-- All data consumed through layer interfaces (function calls to Layers 0–7)
-- Dashboard pages import from `src/` modules only; they do not access `data/` directly
-- Streamlit session state manages page-level user inputs
-- Dark institutional theme (#0e1628 navy) applied via `inject_global_css()` from `_theme.py`
-- `render_kpi_row()` for KPI displays (replaces `st.metric()` on pages 3, 4, 5, 6)
-- `section_header()` for labeled section dividers
+**Rule (unchanged from Phase 1):** No data manipulation, computation, or business logic in presentation code. All computation in `src/` modules. This applies identically to Streamlit and to FastAPI route handlers.
+
+**Streamlit dashboard (Phase 1/2/3 reference — all 7 pages functional):** The Streamlit implementation remains the working reference implementation. All pages consume `src/` functions only. No data manipulation in page code. Dark institutional theme (#0e1628 navy) applied via `inject_global_css()` from `_theme.py`.
+
+**React/TypeScript SPA (F-Track + FEP — primary interface, COMPLETE):** All research is now conducted in the React workbench. FastAPI serves as the HTTP boundary. See Section 13 for the full API and screen inventory.
 
 ---
 
@@ -401,10 +456,10 @@ Layer 0: DataLoader: LocalCSVSource → OHLCVValidator(strict_ohlc=False)
 Layer 1: FeaturePipeline.compute(ohlcv) → FeatureFrame + List[FeatureSpec]
          │
          ▼
-Layer 2: SignalGenerator.generate(feature_frame) → RawSignal
+Layer 2: SignalGenerator.generate(feature_frame) → RawSignal (series.name = self.name)
          │
          ▼
-Layer 2: SignalEvaluator.evaluate(raw_signal, ohlcv) → IC, ICIR, Decay
+Layer 2: SignalEvaluator.evaluate(raw_signal, ohlcv) → IC, ICIR, Decay  ← IC GATE
          │
          ▼
 Layer 2: PositionSignalConstructor.build(raw_signal) → PositionSignal
@@ -413,14 +468,15 @@ Layer 2: PositionSignalConstructor.build(raw_signal) → PositionSignal
 Layer 3: VectorizedBacktester.run(position_signal, ohlcv) → BacktestResult
          │  ↑ sizer.configure(ohlcv) called before simulation
          │
-         ├─ [Parquet write: data/runs/{run_id}/]
+         ├─ RunManager.save() → data/runs/{run_id}/ (7 artifacts)
+         ├─ run_index.upsert_run() → data/runs/index.db
          │
          ▼
 Layer 4: PerformanceEngine.compute(backtest_result) → PerformanceReport
-         │  ↳ RunManager.save_metrics() → [JSON write + MLflow log]
+         │  ↳ RunManager.save_metrics() → metrics.json + MLflow log
          │
          ▼
-Layer 8: Dashboard pages render PerformanceReport charts and tables
+Layer 8: Streamlit pages 1–5 / React screens render PerformanceReport
 ```
 
 ### Phase 3 — Portfolio Analytics Pipeline
@@ -438,13 +494,15 @@ MultiAssetBacktestResult (portfolio_equity_curve + per-asset BacktestResults)
          │
          ├──▶ RiskEngine.compute() → RiskReport
          │       [VaR 95/99, ES 95/99, notional exposure, diversification benefit]
+         │       [+ Kupiec LR, contribution-to-risk (EM4)]
          │
          ├──▶ CorrelationEngine.compute() → CorrelationReport
          │       [correlation matrix, rolling correlations, strategy realized vol]
          │
-         ├──▶ save_portfolio_summary() → data/runs/{run_id}/portfolio_summary.json
+         ├──▶ save_portfolio_summary() → portfolio_summary.json
+         │       [includes asset_run_ids, has_regime_attribution flag]
          │
-         └──▶ Layer 8: Dashboard Page 7 renders all three reports
+         └──▶ Layer 8: Dashboard Page 7 / React Portfolio screen
 ```
 
 ### Phase 2 — Term Structure Pipeline
@@ -468,7 +526,31 @@ Layer 5: FuturesCurveBuilder.build(asset, observation_date) → FuturesCurve
 Layer 5: TermStructureAnalyzer.analyze(curve, continuous_close) → TermStructureSnapshot
          │
          ▼
-Layer 8: Dashboard Page 6 renders term structure charts and KPI row
+Layer 8: Dashboard Page 6 / React Intelligence screen renders term structure
+```
+
+### Enhancement Module Pipelines (EM5, EM9, EM13, EM8)
+
+```
+Statistical Validation (EM5):
+WalkForwardValidator.validate(asset, strategy, params, n_splits=5, embargo_bars=10)
+  → data/validation/{id}/validation_report.json
+
+Parameter Sweep (EM9):
+SweepRunner.run_sweep(asset, strategy, param_grid, sweep_id, progress_callback)
+  → data/sweeps/{sweep_id}/sweep_result.json
+
+Alternative Data Signals (EM13):
+COT: CFTC ZIP → Managed Money positions → 52-week percentile rank (0–100)
+     → data/processed/cot/{asset}.parquet → forward-filled to daily in generate()
+EIA: EIA API v2 → inventory surprise z-score
+     → data/processed/eia/{asset}.parquet → forward-filled to daily in generate()
+
+Portfolio Regime Attribution (EM8 + TD-EM8-C):
+RegimeAttributionEngine.compute_portfolio(portfolio_run_id)
+  → ThreadPoolExecutor: 6 assets parallel (~90s)
+  → P&L-weighted Sharpe aggregation per regime
+  → data/regime_attribution/{job_id}/result.json
 ```
 
 ---
@@ -495,7 +577,8 @@ Metadata (stored as DataFrame attrs — not preserved by Parquet):
   continuous      bool      # True for continuous series
 Invariants:
   No duplicate index entries
-  OHLC consistency violations logged as WARNING (strict_ohlc=False for Yahoo Finance)
+  OHLC constraint violations logged as WARNING (strict_ohlc=False for Yahoo Finance)
+  5 of 6 assets have expected OHLC violations — not errors
 ```
 
 ### FeatureSpec
@@ -516,7 +599,7 @@ Fields:
 Type: Python class wrapping a pandas.DataFrame
   feature_frame.data          → the underlying DataFrame
   feature_frame.feature_specs → List[FeatureSpec] for all computed columns
-  feature_frame.asset         → str, the asset identifier
+  feature_frame.asset         → str, @property (not _asset)
 Index: same DatetimeIndex as NormalizedOHLCV
 Column naming convention: {indicator_name}_{primary_parameter}
 ```
@@ -526,6 +609,7 @@ Column naming convention: {indicator_name}_{primary_parameter}
 ```
 RawSignal:
   Type: pandas.Series, float64
+  series.name = self.name must be set before returning from generate()
   Constraint: No look-ahead. Values at index t use only Close[t] and earlier.
 
 PositionSignal:
@@ -544,8 +628,8 @@ Fields:
   contract_root    str    # CME root symbol, e.g. 'GC'
   contract_month   int    # Delivery month 1-12
   contract_year    int    # Delivery year (4-digit)
-  expiry_date      date | None   # None in Phase 2 (no roll calendar)
-  first_notice_date date | None  # None in Phase 2
+  expiry_date      date | None
+  first_notice_date date | None
   n_bars           int    # Bars downloaded (0 if not yet downloaded)
 Properties:
   month_code → str   # CME month code (F=Jan, G=Feb, ... Z=Dec)
@@ -560,9 +644,8 @@ Fields:
   close            float   # Settlement price at or nearest to observation_date
   volume           float   # May be NaN
   observation_date date    # Anchor date for curve construction
-  data_date        date    # Actual date of price used (may be before observation_date)
+  data_date        date    # Actual date of price used
   days_to_delivery int     # Approx days from observation_date to delivery month start
-                           # Negative for expired contracts still in dataset
 ```
 
 ### FuturesCurve
@@ -574,10 +657,10 @@ Fields:
   observation_date date
   points           list[CurvePoint]   # Sorted nearest delivery first
 Properties:
-  n_points, is_empty, front_price, back_price, prices, tickers
-  is_contango: back_price > front_price (False if < 2 points)
-  is_backwardation: front_price > back_price (False if < 2 points)
-  slope: (back_price - front_price) / (back_dtd - front_dtd)  [USD/day; NaN if < 2 points]
+  n_points, is_empty, front_price, back_price
+  prices → list[float]   # PRIMARY ACCESS PATH (DEV-EM11)
+  tickers, is_contango, is_backwardation
+  slope: (back_price - front_price) / (back_dtd - front_dtd)  [USD/day]
   spread(front_idx, back_idx): price difference between two points
 ```
 
@@ -589,7 +672,7 @@ Values:
   CONTANGO      = "contango"       # annualized_slope_pct > threshold (default 0.5%/yr)
   BACKWARDATION = "backwardation"  # annualized_slope_pct < -threshold
   FLAT          = "flat"           # |annualized_slope_pct| <= threshold or < 2 contracts
-Inherits str for JSON serialization and direct string comparison.
+str() returns lowercase value — regime dict keys are ALWAYS lowercase (DEV-EM8-3)
 ```
 
 ### TermStructureSnapshot
@@ -597,19 +680,12 @@ Inherits str for JSON serialization and direct string comparison.
 ```
 Type: dataclass
 Fields:
-  asset                  str
-  observation_date       date
-  regime                 TermStructureRegime
-  front_price            float    # NaN if curve empty
-  back_price             float    # NaN if curve empty
-  n_contracts            int
+  asset, observation_date, regime, front_price, back_price, n_contracts
   raw_slope              float    # USD/day; NaN if < 2 contracts
   annualized_slope_pct   float    # (back/front - 1) / years_to_back; NaN if < 2
-  roll_yield_annualized  float    # (front - second) / second * (365/days_between)
-                                  # Positive in backwardation (tailwind for longs)
-                                  # NaN if < 2 contracts
+  roll_yield_annualized  float    # Positive in backwardation (tailwind for longs)
   basis                  float    # continuous_close - front_price; NaN if not provided
-  basis_pct              float    # basis / continuous_close; NaN if not provided
+  basis_pct              float    # basis / continuous_close
   curve                  FuturesCurve   # source curve reference
 ```
 
@@ -618,20 +694,16 @@ Fields:
 ```
 Type: dataclass
 Fields:
-  strategy_name      str
-  signal_name        str
-  parameters         dict[str, Any]
+  strategy_name, signal_name, parameters
   assets             list[str]          # successfully backtested assets
-  skipped_assets     list[str]          # assets that failed pipeline execution
+  skipped_assets     list[str]
   run_id             str                # YYYYMMDD_HHMMSS_portfolio_{strategy}
-  executed_at        datetime.datetime  # UTC
-  asset_results      dict[str, BacktestResult]  # per-asset results
+  executed_at        datetime.datetime
+  asset_results      dict[str, BacktestResult]  # primary per-asset data
   portfolio_equity_curve  pd.Series    # sum of per-asset equity curves (inner-join)
   portfolio_pnl_series    pd.Series    # sum of per-asset PnL (zero-filled)
-Properties:
-  n_assets, assets_with_trades, total_trades
 Capital model: each asset runs with same initial capital independently.
-  Portfolio equity starts at n_assets × initial_capital_per_asset.
+Portfolio equity starts at n_assets × initial_capital_per_asset.
 Alignment: inner-join (intersection of all asset date ranges).
 ```
 
@@ -641,13 +713,12 @@ Alignment: inner-join (intersection of all asset date ranges).
 Type: dataclass
 Fields:
   strategy_name, run_id, assets, skipped_assets
-  initial_capital_per_asset   float   # USD
-  initial_capital_total       float   # n_assets × initial_capital_per_asset
-  portfolio_date_range        tuple[datetime.date, datetime.date]  # inner-join range
+  initial_capital_per_asset   float
+  initial_capital_total       float
+  portfolio_date_range        tuple[datetime.date, datetime.date]
   portfolio_metrics           dict[str, float]   # total_return, cagr, sharpe, sortino,
-                                                 # calmar, max_drawdown, portfolio_vol,
-                                                 # n_trading_days
-  asset_contributions         dict[str, float]   # fractional P&L contribution
+                                                 # calmar, max_drawdown, portfolio_vol
+  asset_contributions         dict[str, float]   # fractional P&L (unstable near zero)
   absolute_pnl_by_asset       dict[str, float]   # USD P&L per asset (always stable)
   per_asset_reports           dict[str, PerformanceReport]
 Note: use absolute_pnl_by_asset (not asset_contributions) when |total_pnl/capital| < 1%
@@ -657,18 +728,23 @@ Note: use absolute_pnl_by_asset (not asset_contributions) when |total_pnl/capita
 
 ```
 Type: dataclass
-Fields:
+Phase 3 fields:
   portfolio_var_95/99      float   # positive USD loss magnitude (historical simulation)
   portfolio_var_95/99_pct  float   # as fraction of initial_capital_total
-  portfolio_es_95/99       float   # Expected Shortfall (always >= VaR at same confidence)
-  asset_var_95/99          dict[str, float]  # per-asset VaR
-  avg_gross_notional_by_asset  dict[str, float]  # mean |position| over active days
-  avg_net_notional_by_asset    dict[str, float]  # mean signed position over active days
-  total_avg_gross_notional     float
-  total_avg_net_notional       float
+  portfolio_es_95/99       float   # Expected Shortfall (always >= VaR)
+  asset_var_95/99          dict[str, float]
+  avg_gross_notional_by_asset, avg_net_notional_by_asset  dict[str, float]
+  total_avg_gross_notional, total_avg_net_notional        float
   portfolio_diversification_benefit  (property) sum(asset_var_99) / portfolio_var_99
-VaR methodology: historical simulation on pnl_series over lookback_days (default 252).
-  Returns NaN if < 20 observations.
+
+EM4 additions (9 new fields):
+  n_backtesting_days       int
+  exceptions_95/99         int     # actual VaR exceedances
+  exception_rate_95/99     float   # exceptions / n_backtesting_days
+  kupiec_lr_99             float   # likelihood ratio statistic
+  kupiec_pvalue_99         float   # p < 0.05 → miscalibrated
+  asset_contribution_to_vol     dict[str, float]
+  asset_contribution_to_vol_pct dict[str, float]   # sums to ~1.0
 ```
 
 ### CorrelationReport
@@ -682,27 +758,91 @@ Fields:
   realized_vol_by_asset      dict[str, float]   # strategy return vol (NOT price vol)
   portfolio_realized_vol     float
   avg_pairwise_correlation   float
-  most_correlated_pair       tuple[str, str, float]  # alphabetically ordered
-  least_correlated_pair      tuple[str, str, float]  # alphabetically ordered
+  most_correlated_pair       tuple[str, str, float]
+  least_correlated_pair      tuple[str, str, float]
 Upper-triangle rolling lookup (TD-M17-A):
-  rolling_correlations_63[a][b] only exists when a < b alphabetically.
   Always look up as: a, b = min(x,y), max(x,y)
-Return normalization: pnl_series / initial_capital_per_asset (not equity_curve.pct_change())
+Return normalization: pnl_series / initial_capital_per_asset
 ```
 
 ### BacktestResult / PerformanceReport
 
 ```
 BacktestResult:
-  run_id, asset, trades: List[TradeRecord], equity_curve, positions, pnl_series,
+  run_id (set by VectorizedBacktester.run() — DEV-EM9-3)
+  asset, trades: List[TradeRecord], equity_curve, positions, pnl_series
   metadata: BacktestMetadata, signal_evaluation: Optional[SignalEvaluation]
+  Trade attrs: .entry_date, .net_pnl (DEV-EM8-5)
 
 PerformanceReport:
   run_id, initial_capital_usd,
-  scalar_metrics: Dict[str, float]  # ~16 keys including initial_capital
+  scalar_metrics: Dict[str, float]  # 16 keys including initial_capital
   rolling_metrics: Dict[str, pd.Series]
   trade_statistics: Dict[str, Any]
-  signal_metrics: Dict[str, float]   # from signal_evaluation if present
+  signal_metrics: Dict[str, float]
+```
+
+### New contracts (Enhancement Modules)
+
+**ValidationReport (EM5):**
+```
+Type: dataclass
+Fields:
+  validation_run_id, asset, strategy_name, parameters
+  n_splits, embargo_bars
+  folds: list[WalkForwardFold]
+  insample_sharpe, outsample_sharpe, overfitting_ratio
+  sharpe_se        # Newey-West standard error
+  psr              # P[true SR > 0]
+  n_trials         # from MLflow experiment (for DSR)
+  sr_benchmark     # E[max SR | n_trials]
+  dsr              # Deflated Sharpe Ratio
+  is_significant   # dsr >= 0.95
+```
+
+**SweepResult (EM9):**
+```
+Type: dataclass
+Fields:
+  sweep_id, asset, strategy_name, param_grid
+  n_combinations, n_complete (set on completion only), n_failed
+  runs: list[SweepRunSummary]
+```
+
+**RegimeAttributionReport (EM8):**
+```
+Type: dataclass
+Fields:
+  run_id, asset, strategy_name, n_contracts, computation_date
+  regime_metrics: dict[str, RegimeMetrics]   # keys ALWAYS lowercase
+  regime_coverage: dict[str, float]
+  dominant_regime: str                        # lowercase
+  total_days_with_regime, total_days_in_run
+```
+
+**PortfolioRegimeAttributionReport (TD-EM8-C):**
+```
+Type: dataclass
+Fields:
+  portfolio_run_id, n_assets_computed, assets_computed
+  computation_date
+  portfolio_regime_metrics: dict[str, RegimeMetrics]  # P&L-weighted aggregation
+  per_asset_metrics: dict[str, RegimeAttributionReport]
+  dominant_regime: str
+  asset_weights: dict[str, float]
+```
+
+**CurvePCAResult (EM11):**
+```
+Type: dataclass
+Fields:
+  asset, n_components, n_contracts, n_observation_dates
+  explained_variance_ratio: list[float]
+  cumulative_variance_ratio: list[float]
+  loadings: dict[str, list[float]]       # {"PC1": [...], "PC2": [...]}
+  factor_series: dict[str, list[float]]
+  factor_index_epoch_ms: list[int]       # epoch-ms, aligns with factor_series
+  pc_labels: list[str]
 ```
 
 ---
@@ -712,7 +852,7 @@ PerformanceReport:
 ### 8.1 Continuous Futures (Phase 1 and 2)
 
 | Asset | Yahoo Ticker | Exchange | Price Unit | Contract Multiplier | Tick Size | Tick Value |
-|-------|-------------|----------|------------|-------------------|-----------|-----------|
+|-------|-------------|----------|------------|-------------------|-----------|-----------  |
 | Gold | GC=F | COMEX | USD/troy oz | 100 oz | $0.10 | $10.00 |
 | Silver | SI=F | COMEX | USD/troy oz | 5,000 oz | $0.005 | $25.00 |
 | Copper | HG=F | COMEX | USD/lb | 25,000 lb | $0.0005 | $12.50 |
@@ -724,7 +864,7 @@ Data coverage: 4,100–4,150 bars per asset (2010–2026, varying by asset).
 
 ### 8.2 Contract-Level Futures (Phase 2 — Implemented)
 
-Individual expiry contracts are obtained from Yahoo Finance using exchange-suffix API tickers.
+Individual expiry contracts obtained from Yahoo Finance using exchange-suffix API tickers.
 
 **Ticker convention:**
 - Canonical ticker (storage): `{root}{month_code}{2-digit-year}` — e.g., `GCZ24`
@@ -732,14 +872,10 @@ Individual expiry contracts are obtained from Yahoo Finance using exchange-suffi
 - Exchange suffix: `.CMX` for COMEX assets (Gold, Silver, Copper), `.NYM` for NYMEX/ICE assets (WTI, Brent, Natural Gas)
 - Month codes: F(Jan) G(Feb) H(Mar) J(Apr) K(May) M(Jun) N(Jul) Q(Aug) U(Sep) V(Oct) X(Nov) Z(Dec)
 
-Note: Brent (BZ) is ICE-listed but Yahoo Finance exposes the NYMEX-cleared version using `.NYM`. This is the correct suffix for yfinance API calls.
-
-**Coverage:** Typically 2–3 years per contract from yfinance. Expired contracts older than this are generally unavailable. Brent contracts have historically thinner coverage than WTI or Gold.
-
-**Asset configuration** (in `assets.yaml`):
+**Asset configuration (in `assets.yaml`):**
 
 | Asset | Root | Exchange Suffix |
-|-------|------|-----------------|
+|-------|------|-----------------  |
 | Gold | GC | CMX |
 | Silver | SI | CMX |
 | Copper | HG | CMX |
@@ -747,129 +883,113 @@ Note: Brent (BZ) is ICE-listed but Yahoo Finance exposes the NYMEX-cleared versi
 | Brent Crude | BZ | NYM |
 | Natural Gas | NG | NYM |
 
+### 8.3 Alternative Data (EM13)
+
+| Source | Assets | Coverage | Notes |
+|---|---|---|---|
+| CFTC COT Disaggregated | Gold/Silver: 2015+ (604 wk), Copper/WTI/NatGas: 2022+ (234 wk) | Weekly (Tuesday) | Managed Money category. Brent: no coverage (ICE London). |
+| EIA API v2 | WTI (WCRSTUS1), Brent proxy (WCSSTUS1) | 1982+ (2,287 wk) | Free API key required. |
+
 ---
 
 ## 9. Storage Strategy
 
-### 9.0 Repository Structure (Current — Post Phase 2)
+### 9.0 Repository Structure (Current — Post EM14)
 
 ```
 commodity_research/
 │
 ├── config/
 │   ├── config.yaml                    # System config: paths, logging, costs, sizing, mlflow
-│   ├── assets.yaml                    # Per-asset metadata: multipliers, ticks, tickers,
-│   │                                  #   contract_root, exchange_suffix
-│   └── strategies.yaml                # Strategy parameter defaults
+│   ├── assets.yaml                    # Per-asset metadata
+│   ├── strategies.yaml                # All 8 strategy parameter defaults
+│   └── local.yaml                     # Gitignored — EIA API key
 │
 ├── data/                              # All data files — never committed to git
 │   ├── raw/
-│   │   ├── continuous/                # Downloaded source CSVs (immutable)
-│   │   └── contracts/                 # Individual contract CSVs by asset (Phase 2, immutable)
-│   │       └── {asset}/
-│   │           └── {ticker}.csv       # e.g., gold/GCZ24.csv
+│   │   ├── continuous/
+│   │   ├── contracts/
+│   │   └── cot/                       # 17 CFTC ZIP files cached (2010–2026)
 │   ├── processed/
-│   │   ├── continuous/                # Canonical Parquet — one file per asset
-│   │   └── contracts/                 # One Parquet + sidecar .meta.json per contract ticker
-│   │       └── {asset}/
-│   │           ├── {ticker}.parquet
-│   │           └── {ticker}.meta.json
-│   ├── runs/                          # Backtest run artifacts
-│   │   └── {run_id}/
+│   │   ├── continuous/
+│   │   ├── contracts/
+│   │   ├── cot/                       # Per-asset Parquets (percentile_rank 0–100)
+│   │   └── eia/                       # Per-asset Parquets (surprise_zscore)
+│   ├── runs/
+│   │   ├── index.db                   # SQLite run index (WAL mode; gitignored)
+│   │   └── {run_id}/                  # 7 artifacts per backtest run
 │   │       ├── params.json
 │   │       ├── trades.parquet
 │   │       ├── equity_curve.parquet
 │   │       ├── pnl_series.parquet
 │   │       ├── positions.parquet
-│   │       └── metrics.json
-│   └── mlruns/                        # MLflow experiment tracking (Phase 2)
-│       └── {experiment_id}/           # commodity_research_{asset} experiments
+│   │       ├── metrics.json
+│   │       └── portfolio_summary.json # Portfolio runs only
+│   ├── sweeps/                        # {sweep_id}/sweep_result.json
+│   ├── validation/                    # {id}/validation_report.json
+│   ├── regime_attribution/            # {job_id}/result.json
+│   └── mlruns/
 │
 ├── src/
-│   ├── core/
-│   │   ├── types.py                   # All shared types (Phase 1 + Phase 2 additions)
-│   │   ├── registry.py                # ABCs including PositionSizer with configure()
-│   │   ├── config.py                  # Config loader with mlflow_tracking_uri,
-│   │   │                              #   mlflow_experiment_prefix properties
-│   │   └── logging_config.py
-│   │
+│   ├── core/types.py, registry.py, config.py, logging_config.py
 │   ├── data/
-│   │   ├── sources/
-│   │   │   ├── base.py                # ContinuousDataSource ABC
-│   │   │   ├── csv.py                 # LocalCSVSource (strict_ohlc=False)
-│   │   │   └── futures_contract.py    # FuturesContractSource + parse_contract_ticker()
-│   │   ├── validator.py               # OHLCVValidator (strict_ohlc: bool = True)
-│   │   ├── normalizer.py              # OHLCVNormalizer (clears attrs before return)
-│   │   ├── store.py                   # ParquetStore
-│   │   ├── loader.py                  # DataLoader (re-populates attrs after both paths)
-│   │   ├── contract_store.py          # ContractStore ABC + ContractParquetStore
-│   │   └── contract_loader.py         # ContractDataLoader
-│   │
-│   ├── research/                      # Layer 1 (unchanged)
-│   ├── signal/                        # Layer 2 (unchanged)
-│   │
+│   │   ├── sources/, validator.py, normalizer.py, store.py, loader.py
+│   │   ├── contract_store.py, contract_loader.py
+│   │   ├── acquisition_qc.py          # QCReport (EM10)
+│   │   ├── cot_loader.py              # COTDataLoader (EM13)
+│   │   ├── eia_loader.py              # EIADataLoader, EIA_SUPPORTED_ASSETS (EM13)
+│   │   └── run_index.py               # SQLite run index (TD-RUN-EXPLORER-PERF)
+│   ├── signal/
+│   │   ├── [ema, momentum, rsi, donchian].py
+│   │   ├── carry.py (EM7), spread.py (EM12), cot.py (EM13), eia.py (EM13)
+│   │   └── evaluation.py              # SignalEvaluator + compute_rolling_ic() (EM6)
 │   ├── backtesting/
-│   │   ├── engine.py                  # VectorizedBacktester (sizer param + configure call)
-│   │   ├── costs.py
-│   │   ├── sizing.py                  # FixedNotionalSizer + VolatilityScaledSizer
-│   │   ├── trade_log.py
-│   │   └── run_manager.py             # RunManager + _try_log_to_mlflow() + _sanitize_mlflow_key()
-│   │
-│   ├── performance/                   # Layer 4 (unchanged)
-│   │
-│   └── commodity/                     # Layer 5 (Phase 2 — new)
-│       ├── __init__.py
-│       ├── curve.py                   # FuturesCurveBuilder
-│       └── term_structure.py          # TermStructureAnalyzer
+│   │   ├── engine.py, costs.py, sizing.py, trade_log.py, run_manager.py
+│   │   ├── pipeline_builder.py        # Canonical 2-tuple strategy dispatch (EM1)
+│   │   ├── multi_asset.py             # MultiAssetRunner with from_date/to_date
+│   │   └── sweep_runner.py            # SweepRunner with progress_callback (EM9+EM14)
+│   ├── performance/
+│   │   ├── report.py                  # PerformanceEngine (import from here — DEV-EM5-2)
+│   │   └── portfolio.py               # PortfolioPerformanceEngine, save_portfolio_summary()
+│   ├── analytics/
+│   │   └── regime_attribution.py      # RegimeAttributionEngine + _RunProxy (EM8+TD-EM8-C)
+│   ├── commodity/
+│   │   ├── curve.py, term_structure.py
+│   │   └── pca.py                     # CurvePCAEngine (EM11)
+│   ├── risk/risk_engine.py
+│   └── validation/
+│       ├── walk_forward.py, inference.py, mlflow_client.py, report.py (EM5)
+│
+├── api/
+│   ├── main.py                        # Startup backfill of run_index
+│   ├── models.py                      # All Pydantic models
+│   └── routers/
+│       ├── backtests.py               # _build_full_pipeline (all 8 strategies)
+│       ├── signals.py                 # _build_signal_pipeline (all 8 strategies)
+│       ├── portfolio.py, runs.py, sweeps.py, validation.py
+│       ├── intelligence.py, regime_attribution.py, system.py
 │
 ├── dashboard/
 │   ├── app.py
 │   ├── components/
-│   │   ├── _theme.py                  # Dark theme, inject_global_css, render_kpi_row,
-│   │   │                              #   section_header, apply_base_layout, palette constants
-│   │   ├── price_chart.py
-│   │   ├── equity_curve_chart.py
-│   │   ├── metrics_table.py
-│   │   ├── signal_chart.py
-│   │   └── curve_chart.py             # render_forward_curve_chart,
-│   │                                  #   render_term_structure_history_chart (Phase 2)
+│   │   ├── _theme.py, price_chart.py, equity_curve_chart.py
+│   │   ├── metrics_table.py, signal_chart.py, curve_chart.py
+│   │   └── correlation_heatmap.py
 │   └── pages/
-│       ├── 1_market_overview.py
-│       ├── 2_research_workbench.py
-│       ├── 3_strategy_builder.py
-│       ├── 4_backtest_results.py
-│       ├── 5_performance_analysis.py
-│       └── 6_futures_curve.py         # Phase 2
+│       ├── 1_market_overview.py through 7_cross_asset_analytics.py
+│
+├── frontend/
+│   ├── tests/e2e/                     # 11 spec files + helpers.ts
+│   └── src/api/, features/, lib/
 │
 ├── scripts/
-│   ├── acquire_data.py                # Downloads continuous series CSVs
-│   └── acquire_contract_data.py       # Downloads individual contract CSVs (Phase 2)
+│   ├── acquire_data.py, acquire_contract_data.py
+│   ├── acquire_cot_data.py, acquire_eia_data.py (EM13)
+│   └── reproduce_run.py (EM10)
 │
-├── tests/
-│   ├── conftest.py
-│   ├── test_config.py
-│   ├── test_types.py
-│   ├── test_data_validation.py        # OHLCVValidator with strict_ohlc tests
-│   ├── test_data_loader.py
-│   ├── test_indicators.py
-│   ├── test_pipeline.py
-│   ├── test_signal_evaluation.py
-│   ├── test_signals.py
-│   ├── test_backtester.py
-│   ├── test_performance.py
-│   ├── test_contract_data.py          # Phase 2 — ContractDataLoader etc.
-│   ├── test_futures_curve.py          # Phase 2 — FuturesCurveBuilder
-│   ├── test_term_structure.py         # Phase 2 — TermStructureAnalyzer
-│   ├── test_volatility_sizer.py       # Phase 2 — VolatilityScaledSizer
-│   └── test_mlflow_integration.py     # Phase 2 — MLflow logging
-│
-├── docs/
-│   ├── adr/ADRs.md
-│   └── implementation_notes/          # Per-module notes (M01–M13)
-│
-├── launch_dashboard.ps1               # Windows launcher (.venv + MLFLOW_ALLOW_FILE_STORE)
-├── launch_dashboard.sh                # Mac/Linux launcher
-└── .streamlit/config.toml             # Dark theme: backgroundColor=#0e1628
+└── tests/
+    ├── fixtures/engine_golden_master.json  # n_trades=19, final_equity=1108823.88
+    └── [429 total tests]
 ```
 
 ### 9.1 Storage Rules
@@ -878,11 +998,12 @@ commodity_research/
 - Processed Parquet files are regenerated from raw on demand (idempotent normalization).
 - Run artifacts are immutable once written. Reruns create new run IDs.
 - File paths are never hardcoded. All paths resolved via `config.yaml` + `src/core/config.py`.
-- MLflow run artifacts (parameters, metrics) duplicate a subset of the file-based artifacts. MLflow is the searchable interface; file-based storage is the authoritative source.
+- MLflow run artifacts duplicate a subset of the file-based artifacts. MLflow is the searchable interface; file-based storage is the authoritative source.
+- SQLite run index (`data/runs/index.db`) is a queryable cache. Gitignored — regenerated from disk on startup.
 
 ### 9.2 ClickHouse (Implemented — Phase 3)
 
-ClickHouse is now available as an opt-in analytical backend. `ClickHouseStore` implements the `DataStore` ABC and is config-switchable.
+ClickHouse is available as an opt-in analytical backend for OHLCV data.
 
 ```yaml
 # config.yaml — switch between backends:
@@ -898,27 +1019,13 @@ storage:
     send_receive_timeout: 30
 ```
 
-**Docker:**
-```bash
-docker compose up -d     # starts clickhouse/clickhouse-server:24.3-alpine
-# HTTP: localhost:8123   # Native: localhost:9000
-```
+**Current state:** 24,862 rows across 6 assets. Parquet vs ClickHouse numerical equivalence confirmed at rtol=1e-6. `storage.backend = "parquet"` remains the default.
 
-**Migration:**
-```bash
-python scripts/setup_clickhouse_schema.py
-python scripts/migrate_to_clickhouse.py   # migrates all 6 assets (24,862 rows total)
-```
-
-**Current state:** 24,862 rows across 6 assets. Parquet vs ClickHouse numerical equivalence confirmed at rtol=1e-6. `storage.backend = "parquet"` remains the default — ClickHouse is opt-in. Upper layers are unchanged regardless of backend.
-
-**Honest sizing note:** 24,862 rows does not require ClickHouse. DuckDB is the right-sized alternative for this data volume. ClickHouse is retained as a migration-seam demonstration and production-infrastructure resemblance exercise, consistent with the project's stated objective of defensible architecture. See ADR-004.
+**Honest sizing note:** 24,862 rows does not require ClickHouse. ClickHouse is retained as a migration-seam demonstration and production-infrastructure resemblance exercise. Run metadata uses the SQLite run index — ClickHouse is not involved in run tracking. See ADR-004.
 
 ---
 
 ## 10. Signal Research Workflow
-
-The signal research workflow follows standard institutional practice. Signal quality must be assessed before committing to a full backtest.
 
 ```
 1. Load asset data
@@ -926,29 +1033,32 @@ The signal research workflow follows standard institutional practice. Signal qua
 
 2. Build feature frame
    └─ FeaturePipeline.compute(ohlcv, specs=[...]) → FeatureFrame
+   Note: FeaturePipeline([]) valid — data-owning signals bypass this step
 
 3. Generate raw signal
    └─ SignalGenerator.generate(feature_frame) → RawSignal
+      series.name = self.name must be set before returning
 
-4. Evaluate signal quality  ← THIS STEP PRECEDES BACKTESTING
+4. Evaluate signal quality  ← IC GATE — enforced in Research Workbench UI
    └─ SignalEvaluator.evaluate(raw_signal, ohlcv)
-      ├─ IC    = corr(signal[t], log_return[t+1])
+      ├─ IC    = Pearson(signal[t], log_return[t+1])   ← raw signal, not position
       ├─ ICIR  = mean(IC_rolling) / std(IC_rolling)
-      └─ Decay = IC at horizons {1, 2, 5, 10, 20}
+      └─ Decay = IC at horizons {1, 2, 5, 10, 20 bars}
+   "Configure backtest →" carries evaluation JSON to Strategy Builder via URL params
 
 5. Construct position signal
    └─ PositionSignalConstructor.build(raw_signal, threshold=0.0) → PositionSignal
 
 6. Run backtest
    └─ VectorizedBacktester.run(position_signal, ohlcv) → BacktestResult
-      ↑ configure(ohlcv) called on sizer before simulation
+      └─ run_id set by VectorizedBacktester.run() (DEV-EM9-3)
 
-7. Compute performance
-   └─ PerformanceEngine.compute(backtest_result) → PerformanceReport
+7. Statistical validation (EM5, async)
+   └─ WalkForwardValidator.validate(...) → PSR, DSR
 
 8. Store run
    └─ RunManager.save(backtest_result) + RunManager.save_metrics(run_id, report)
-      ↳ Writes file artifacts AND logs to MLflow (best-effort)
+      ↳ Writes 7 file artifacts + upserts SQLite index + logs to MLflow (best-effort)
 ```
 
 ### IC Interpretation Guidelines
@@ -960,14 +1070,16 @@ The signal research workflow follows standard institutional practice. Signal qua
 | \|IC\| ≥ 0.05 | Meaningful predictive content. Proceed to backtest. |
 | ICIR ≥ 0.5 | Signal consistent across time. |
 
-**Direction matters:** Negative IC (e.g., −0.35) indicates an inverse signal — predictive but in the opposite direction. Five-way classification: positive meaningful / inverse meaningful / weak positive / weak inverse / noise.
+**Direction matters:** Negative IC (e.g., −0.129 for EMA Crossover on Gold) indicates an inverse signal — predictive but in the opposite direction. Five-way classification: positive meaningful / inverse meaningful / weak positive / weak inverse / noise.
+
+**Window length matters:** Alternative data signals (COT, EIA) and EMA-200 require 3Y+ date windows for non-noise IC. On 1-year windows, noise-band IC is expected — not a regression.
 
 ---
 
 ## 11. Backtesting Assumptions
 
 | Parameter | Value | Rationale |
-|-----------|-------|-----------|
+|-----------|-------|-----------  |
 | Signal generation time | Close[t] | Realistic end-of-day signal computation |
 | Trade execution time | Open[t+1] | Eliminates look-ahead bias |
 | Bar frequency | Daily | Appropriate for systematic commodity research |
@@ -990,7 +1102,7 @@ The signal research workflow follows standard institutional practice. Signal qua
 position_size_notional = config.sizing.fixed_notional_usd  # default: $100,000
 ```
 
-**Limitation:** Equal notional ≠ equal risk. Natural Gas (~60%/yr vol) with $100K notional carries 4× the risk of Gold (~15%/yr vol). Documented as accepted Phase 1 simplification.
+**Limitation:** Equal notional ≠ equal risk. Natural Gas (~60%/yr vol) with $100K notional carries 4× the risk of Gold (~15%/yr vol).
 
 ### Phase 2 — Volatility-Scaled Sizing (Implemented)
 
@@ -1001,13 +1113,13 @@ target_notional = (target_annual_vol * current_equity) / realized_vol
 position_size  = target_notional * |signal|
 ```
 
-`VolatilityScaledSizer` parameters: `target_annual_vol` (default 0.01 = 1%/yr), `lookback_days` (default 63), `vol_cap` (default 0.50), `min_notional`, `max_notional`.
+`VolatilityScaledSizer` parameters: `target_annual_vol`, `lookback_days` (default 63), `vol_cap` (default 0.50), `min_notional`, `max_notional`.
 
-**Economic property:** Verified — Gold (~23%/yr vol) at $1M equity with 1%/yr target produces ~$42,567 notional vs. $100,000 fixed. Natural Gas (~60%/yr vol) produces ~$16,667. Equal vol contributions confirmed to within 5% tolerance.
+**EM2 corrections (both resolved):**
+- **TD-B (static equity):** RESOLVED. `VectorizedBacktester` now passes rolling MTM equity — not static initial capital.
+- **TD-C (end-of-sample vol estimate):** RESOLVED. `VolatilityScaledSizer.configure()` stores rolling `_vol_series` (not scalar).
 
-**Known limitations (deferred to Phase 3):**
-- TD-B: Static equity — `current_equity` is passed as initial capital throughout the simulation rather than rolling MTM equity. Fix in Phase 3 engine.
-- TD-C: End-of-sample vol estimate — `configure()` is called once with the full OHLCV before simulation. The vol estimate uses the final lookback period, creating mild look-ahead bias for early bars. Fix in Phase 3 via rolling vol Series with bar_date parameter.
+**Verified:** Gold (~23%/yr vol) at $1M equity with 1%/yr target produces ~$42,567 notional vs. $100,000 fixed. Equal vol contributions confirmed.
 
 ### Phase 3 — Risk Budgeting (Planned)
 
@@ -1015,20 +1127,21 @@ Portfolio-level risk budgeting allocates capital across strategies and assets ba
 
 ---
 
-## 13. Dashboard Architecture
+## 13. Dashboard and API Architecture
 
-The dashboard is implemented in Streamlit. It is a pure presentation layer.
+The platform has two presentation layers: the Streamlit dashboard (Phase 1/2/3 reference implementation) and the React/TypeScript SPA (F-Track + FEP — primary interface).
 
-**Visual theme:** Institutional dark navy (#0e1628 background, #162033 sidebar), teal-green/red P&L encoding, monospace throughout. Defined in `dashboard/components/_theme.py` and `.streamlit/config.toml`. Applied via `inject_global_css()` called at the top of every page file.
+**Architectural rule (unchanged):** No data manipulation, computation, or business logic in presentation code. All computation in `src/` modules. FastAPI route handlers are a serialization shell only.
+
+### Streamlit Dashboard (Phase 1/2/3 Reference — All 7 Pages Complete)
+
+**Visual theme:** Institutional dark navy (#0e1628 background, #162033 sidebar), teal-green/red P&L encoding, monospace throughout. Defined in `dashboard/components/_theme.py`. Applied via `inject_global_css()` called at the top of every page file.
 
 **Rules:**
 - No data manipulation, computation, or business logic in dashboard code
-- All data consumed through layer interfaces (function calls to Layers 0–7)
-- Dashboard pages import from `src/` only; they do not access `data/` directly
 - `render_kpi_row()` for structured KPI displays (HTML table — no st.metric fingerprint)
 - `section_header()` for labeled section dividers
 - `@st.cache_data` / `@st.cache_resource` for expensive computations
-- No `use_container_width` parameter (deprecated 2025-12-31)
 - No emoji in any dashboard file
 
 ### Page Map
@@ -1043,8 +1156,6 @@ The dashboard is implemented in Streamlit. It is a pure presentation layer.
 | 6. Futures Curve | Forward curve, term structure regime, roll yield, basis, history | Layers 0, 5 | 2 | Complete |
 | 7. Cross-Asset Analytics | Portfolio KPIs, equity curve, attribution, VaR, correlation heatmap, rolling corr, strategy vol | Layers 4, 6, 7 | 3 | Complete |
 
-**F-Track (Planned):** Page 7 (and all prior pages) will be replaced by the React + FastAPI workstation (F0–F15). The Streamlit dashboard remains functional as the Phase 3 reference implementation. The React frontend adds IC Gate enforcement in UI, URL-shareable state, Run Comparison, and the full commodity-intelligence screen.
-
 ### Component Organization
 
 ```
@@ -1058,16 +1169,69 @@ dashboard/components/
   curve_chart.py          — render_forward_curve_chart(),
                             render_term_structure_history_chart()
   correlation_heatmap.py  — render_correlation_heatmap() (6×6 annotated heatmap),
-                            render_rolling_correlation_chart() (Phase 3)
+                            render_rolling_correlation_chart()
 ```
 
 Component rules: Pure functions returning Plotly figures. No `st.*` calls. No `src/` imports at module level (TYPE_CHECKING guard for type annotations only). Components do not import from other components.
+
+### FastAPI + React/TypeScript SPA (F-Track + FEP — Primary Interface, COMPLETE)
+
+**API endpoint surface (selected):**
+
+| Method | Path | Description |
+|---|---|---|
+| POST | /api/backtests/run | Single-asset backtest (async 202) |
+| GET | /api/strategies | All 8 strategies with param schemas |
+| GET | /api/runs | Run list (SQLite index, <0.5s) |
+| POST | /api/portfolio/run | Multi-asset portfolio (async 202, persisting status) |
+| GET | /api/signals/evaluate | IC evaluation |
+| GET | /api/signals/rolling-ic | Rolling IC time series (EM6) |
+| POST | /api/validation/run | Walk-forward validation (async 202, EM5) |
+| POST | /api/sweeps | Parameter sweep (async 202, EM9) |
+| GET | /api/system/data/qc | QC report per asset (EM10) |
+| GET | /api/intelligence/pca | Curve PCA (async thread pool, EM11) |
+| GET | /api/system/data/cot, /data/eia | Alternative data history (EM13) |
+| POST | /api/regime-attribution/compute | Async per-asset regime (EM14) |
+| POST | /api/regime-attribution/compute-portfolio | Async portfolio regime (TD-EM8-C) |
+| GET | /api/regime-attribution/{id}/portfolio-result | Portfolio regime result (TD-EM8-C) |
+
+**Async job pattern (all long-running computations):**
+```
+POST /api/{resource}        → 202 + {id, status: "queued"}
+GET  /api/{resource}/{id}/status → queued | running | [persisting] | complete | failed
+GET  /api/{resource}/{id}/result → full result when complete
+```
+`persisting` status (portfolio only): set before disk writes, flipped to `complete` after all 7 artifacts confirmed written. Eliminates 404 race condition.
+
+**React screen map:**
+
+| Route | Screen |
+|---|---|
+| /market | Market Overview |
+| /market/:asset | Asset Detail |
+| /research | Research Workbench (IC Gate) |
+| /backtest/new | Strategy Builder |
+| /runs | Run Explorer |
+| /runs/:runId | Run Detail (Overview / Signal Quality / Validation / Trades / Artifacts) |
+| /runs/compare | Run Comparison |
+| /intelligence | Futures Curve |
+| /intelligence/compare | Curve Comparison |
+| /intelligence/pca | Curve PCA |
+| /sweeps | Sweep Explorer |
+| /portfolio | Portfolio Analytics |
+| /system | Data Manager |
+
+**Strategy registration — two required locations (DEV-EM7-5):**
+1. `api/routers/signals.py` — `_build_signal_pipeline()` AND catalog entry
+2. `api/routers/backtests.py` — `_build_full_pipeline()`
+
+Both must be updated when adding a strategy. Missing either produces `400 UNKNOWN_STRATEGY`.
 
 ---
 
 ## 14. Configuration Reference
 
-### config.yaml (Current — Post Phase 3)
+### config.yaml (Current — Post EM14)
 
 ```yaml
 paths:
@@ -1099,6 +1263,16 @@ data:
 mlflow:
   tracking_uri: "file:./data/mlruns"
   experiment_prefix: "commodity_research"
+
+storage:
+  backend: "parquet"     # default; "clickhouse" opt-in after docker-compose up
+  clickhouse:
+    host: "localhost"
+    port: 8123
+    database: "commodity_research"
+    table_ohlcv: "ohlcv_continuous"
+    connect_timeout: 10
+    send_receive_timeout: 30
 ```
 
 ### assets.yaml (Current — Post Phase 2)
@@ -1171,18 +1345,16 @@ natural_gas:
   tick_value: 10.00
 ```
 
-### strategies.yaml
+### strategies.yaml (Current — All 8 Strategies)
 
 ```yaml
 ema_crossover:
   fast_period: 50
   slow_period: 200
-  signal_threshold: 0.0
 
 momentum:
   lookback_period: 20
   z_score_window: 63
-  signal_threshold: 0.5
 
 donchian_breakout:
   channel_period: 20
@@ -1191,6 +1363,28 @@ rsi_reversion:
   period: 14
   oversold_threshold: 30
   overbought_threshold: 70
+
+carry:
+  threshold: 0.0
+  n_contracts: 4
+
+wti_brent_spread:
+  lookback: 63
+  threshold: 1.0
+
+cot_positioning:
+  upper_pct: 80.0
+  lower_pct: 20.0
+
+eia_inventory:
+  threshold: 1.0
+```
+
+### config/local.yaml (Gitignored)
+
+```yaml
+eia:
+  api_key: your_key_here
 ```
 
 ---
@@ -1199,85 +1393,87 @@ rsi_reversion:
 
 ### Phase 1 — Research MVP (COMPLETE)
 
-**Tag:** `phase-1-complete` (after M07) / `pre-phase-2-complete` (after sprint)
-**Tests:** 107 passing
-**Modules:** M01–M07 + Pre-Phase 2 Sprint
-
-**Delivered:**
-- End-to-end single-asset research pipeline for all 6 commodities
-- All 4 signal generators operational (EMA Crossover, Momentum, RSI Reversion, Donchian)
-- Vectorized backtester with file-based run tracking
-- PerformanceReport with 16 scalar metrics + rolling metrics
-- Dashboard pages 1–5 with dark institutional theme
-- Real continuous futures data: 4,100–4,150 bars per asset (2010–2026)
+**Tag:** `phase-1-complete` | **Tests:** 107
+M01–M07: end-to-end single-asset research pipeline, 4 signal generators, vectorized backtester, 16 scalar performance metrics, dashboard pages 1–5, real continuous futures data for all 6 assets.
 
 ### Phase 2 — Commodity Intelligence (COMPLETE)
 
-**Tag:** `phase-2-complete` (after M13)
-**Tests:** 186 passing (no regressions from Phase 1)
-**Modules:** M08–M13
-
-**Delivered:**
-- Contract-level data ingestion (Yahoo Finance individual contracts, exchange suffix routing)
-- `FuturesCurve` term structure snapshots with contango/backwardation properties
-- `TermStructureSnapshot` with annualized slope, roll yield, basis, regime classification
-- `VolatilityScaledSizer` with `configure()` protocol — equal vol contributions verified
-- MLflow local experiment tracking (commodity_research_{asset} experiments)
-- Dashboard Page 6: forward curve chart, dual-subplot history, 5-KPI row
+**Tag:** `phase-2-complete` | **Tests:** 186
+M08–M13: contract-level data ingestion, FuturesCurve term structure, contango/backwardation/flat regime classification, roll yield, basis, VolatilityScaledSizer with configure() protocol, MLflow tracking, dashboard page 6.
 
 ### Phase 3 — Portfolio Analytics and Infrastructure (COMPLETE)
 
-**Tag:** `phase-3-complete` (after M19)
-**Tests:** 267 passing (188 after Phase 2 + 79 in Phase 3)
-**Modules:** M14–M19
+**Tag:** `phase-3-complete` | **Tests:** 267
+M14–M19: MultiAssetRunner, PortfolioPerformanceEngine, RiskEngine (VaR/ES), CorrelationEngine, ClickHouseStore (opt-in), portfolio persistence, dashboard page 7.
 
-**Delivered:**
-- M14: `MultiAssetRunner` — runs VectorizedBacktester across all 6 assets, aggregates into portfolio equity curve (inner-join alignment, $6M portfolio start for 6 × $1M assets)
-- M15: `PortfolioPerformanceEngine` — portfolio Sharpe, drawdown, CAGR, attribution; `absolute_pnl_by_asset` (always-stable per-asset attribution); `save_portfolio_summary()` for portfolio persistence
-- M16: `RiskEngine` — historical VaR (95/99%), Expected Shortfall, avg gross/net notional, diversification benefit (2.23× confirmed on real data)
-- M17: `CorrelationEngine` — pairwise Pearson correlation matrix of strategy returns, rolling correlations (63/126-day), realized strategy vol; confirmed Gold-Silver corr 0.65, WTI-Brent 0.62 (strategy returns)
-- M18: `ClickHouseStore` implementing `DataStore` ABC; ClickHouse 24.3 via Docker; 24,862 rows migrated; config-switchable (`storage.backend = "parquet"` default)
-- M19: Dashboard Page 7 (Cross-Asset Analytics); `correlation_heatmap.py` component; portfolio persistence per run
+### Enhancement Modules EM1–EM14 (COMPLETE)
 
-**F-Track — React + FastAPI Frontend (Next):**
-- F0: FastAPI serialization shell (HTTP boundary over all `src/` functions)
-- F1–F8: React/TypeScript SPA — IC Gate doctrine, immutability-derived caching, type-generation chain (`types.py → Pydantic → OpenAPI → TypeScript`)
-- F9–F11: Commodity Intelligence UI
-- F12–F15: Portfolio UI, scale pass
+**Final tag:** `EM14-complete` | **Tests:** 429
+
+| Tag | Tests | Key deliverable |
+|---|---|---|
+| EM1-complete | 334 | Foundation: golden master, CI, pipeline_builder.py, epoch-ms fix |
+| EM2-complete | 339 | Engine correctness: rolling MTM equity, point-in-time vol |
+| EM3-complete | 342 | Portfolio persistence: 7 disk artifacts, disk fallback |
+| EM4-complete | 348 | Risk depth: Kupiec LR, contribution-to-risk |
+| EM5-complete | 369 | Statistical validation: PSR, DSR (scipy-free), walk-forward |
+| EM6-complete | 376 | Rolling IC endpoint |
+| EM7-complete | 382 | Carry signal (Gold structural contango confirmed correct) |
+| EM8-complete | 388 | Regime attribution engine |
+| EM9-complete | 396 | SweepRunner with async API and MLflow tagging |
+| EM10-complete | 402 | Hypothesis property tests, QCReport, reproduce_run.py |
+| EM11-complete | 407 | Curve PCA (Gold PC1=100%, WTI meaningful 3-factor) |
+| EM12-complete | 411 | WTI-Brent spread (ADF p=0.0030, cointegrated) |
+| EM13-complete | 424 | CFTC COT + EIA inventory signals |
+| EM14-complete | 429 | Async regime, portfolio persisting status, sweep progress, mypy CI |
+
+**Golden master:** `tests/fixtures/engine_golden_master.json` — n_trades=19, final_equity=1,108,823.88. Locked.
+
+### F-Track + FEP — React + FastAPI Frontend (COMPLETE)
+
+**Tags:** `FEP-complete` | **Tests:** 406 vitest, 114 E2E passed / 3 skipped / 0 failed
+
+F0: FastAPI shell. F1–F18: React/TypeScript SPA, IC Gate, 9 initial screens. FEP: All deferred frontend work. TD-EM8-C: Portfolio regime frontend. E2E: 117 Playwright tests.
 
 ---
 
 ## 16. Known Limitations
 
-1. **Yahoo Finance roll gaps.** Continuous series are not back-adjusted. Price-level indicators spanning roll dates include artificial discontinuities. Mitigated by preferring log-return-based signals. F-track mitigation: in-house back-adjusted series from contract-level data (ADR-001 migration step 3).
+1. **Yahoo Finance OHLC violations are expected data artifacts.** Settlement prices are VWAP-based. QCReport flags for 5 of 6 assets are correct and not actionable (Gold 25, Silver 57, Copper 29, Brent 34, NatGas 1; WTI 0). `strict_ohlc=False` is the correct setting.
 
-2. **Vectorized backtester.** Does not simulate order routing, partial fills, margin calls, or forced liquidations. Suitable for signal research; insufficient for execution simulation.
+2. **Yahoo Finance roll gaps.** Continuous series are not back-adjusted. Price-level indicators spanning roll dates include artificial discontinuities. Mitigated by preferring log-return-based signals.
 
-3. **No real-time data.** Platform is entirely historical.
+3. **Vectorized backtester.** Does not simulate order routing, partial fills, margin calls, or forced liquidations. Suitable for signal research; insufficient for execution simulation.
 
-4. **No roll calendar.** The platform does not know when roll events occurred in the Yahoo Finance continuous series. `days_to_delivery` in `CurvePoint` uses delivery month start as proxy. Future: `config/roll_calendar.yaml` with CME roll dates.
+4. **No real-time data.** Platform is entirely historical.
 
-5. **Basis is pseudo-basis.** `TermStructureAnalyzer.compute_basis()` uses the continuous front-month series as a spot proxy. Labeled "Continuous-Contract Basis" in the dashboard.
+5. **No roll calendar.** The platform does not know when roll events occurred in the Yahoo Finance continuous series. `days_to_delivery` uses delivery month start as proxy.
 
-6. **Static equity in position sizing (TD-B).** `VolatilityScaledSizer` receives initial capital, not rolling MTM equity. Future fix: rolling equity passed to engine's internal sizing call.
+6. **Basis is pseudo-basis.** `TermStructureAnalyzer.compute_basis()` uses the continuous front-month series as a spot proxy. Labeled "Continuous-Contract Basis" throughout.
 
-7. **End-of-sample volatility estimate (TD-C).** `VolatilityScaledSizer.configure()` uses the final lookback window. Early bars technically sized with look-ahead vol. Future fix: rolling vol Series indexed by bar_date.
+7. **COT percentile_rank is 0–100 scale** throughout the entire pipeline. Frontend must not multiply by 100 again — double-multiply produces values like 3137.
 
-8. **Brent thin contract coverage.** Brent (BZ) typically shows 2–3 curve points in yfinance instead of 6. Dashboard Page 6 handles this gracefully.
+8. **Alternative data signals produce noise-band IC on 1-year windows.** COT and EIA require 3Y+ windows for non-noise IC. This is expected behavior, not a regression.
 
-9. **No statistical validation.** All results are full-sample in-sample. No walk-forward testing, no out-of-sample split, no inference (no Sharpe standard errors, no p-values), no multiple-testing correction. This is the defining research limitation of the platform in its current state. The `src/validation/` module is the highest-priority future extension.
+9. **Carry signal flat on Gold.** Gold is structurally in contango — carry signal near-flat (0 long, 443 short, 3705 flat on full history). Carry is more meaningful for energy and agricultural commodities with regime-switching term structure.
 
-10. **MLflow 3.x filesystem restriction.** `MLFLOW_ALLOW_FILE_STORE=true` required. Set programmatically and in launcher scripts. Future: HTTP tracking server eliminates this requirement.
+10. **WTI-Brent Spread: Brent leg not in P&L.** The spread signal is a single-asset approximation. True spread P&L requires a multi-asset engine.
 
-11. **Strategy vol vs price vol.** `CorrelationEngine.realized_vol_by_asset` values (2–8%/yr for EMA 50/200) are strategy P&L vols, not commodity price vols (15–60%/yr). Labeled "Strategy Realized Vol" throughout the dashboard to prevent confusion.
+11. **Regime attribution latency.** ~30–90 seconds per asset (`build_historical_curves` cost). Portfolio Combined takes ~90 seconds via ThreadPoolExecutor.
 
-12. **VaR is backward-looking.** `RiskEngine` computes VaR from realized strategy P&L history (not current positions × return scenarios). No Kupiec backtesting for VaR calibration. No margin model.
+12. **Gold PCA EVR collapse.** PC1=100% is correct for Gold's near-constant term structure over 2–3yr windows.
 
-13. **No data manifests or run provenance.** `BacktestMetadata` does not record git SHA, package versions, or data hashes. This means runs are code-reproducible but not fully environment-reproducible. Future: add provenance to `BacktestMetadata`.
+13. **OI-EM5-1: Features computed on full history before fold splitting.** WalkForwardValidator slices the pre-computed signal by date. Acceptable for slow-moving indicators.
 
-14. **Carry signal not implemented.** Roll yield (computed by `TermStructureAnalyzer`) never feeds a `CarrySignal` into the signal research layer. ADR-001 does not prohibit this — a carry signal derived from contract data and traded on the continuous series is architecturally compatible. This is the highest-value missing research module.
+14. **Brent has no CFTC COT data** (ICE London, not CME). COT signal on Brent returns flat — correct.
 
-15. **Pipeline duplication (TD-M14-A).** `_build_pipeline_components()` in `MultiAssetRunner` duplicates the strategy→pipeline mapping from `3_strategy_builder.py`. Future: extract to `src/backtesting/pipeline_builder.py`.
+15. **No statistical inference in Phase 1–3 full-sample backtests.** EM5 walk-forward validation provides out-of-sample correction.
+
+16. **No data manifests or run provenance recording.** `BacktestMetadata` does not record git SHA or package versions. `scripts/reproduce_run.py` provides equity curve hash verification as a proxy.
+
+17. **MLflow 3.x filesystem restriction.** `MLFLOW_ALLOW_FILE_STORE=true` required. Set programmatically and in launcher scripts.
+
+18. **Strategy vol vs price vol.** `CorrelationEngine.realized_vol_by_asset` values (2–8%/yr for EMA 50/200) are strategy P&L vols, not commodity price vols (15–60%/yr).
 
 ---
 
@@ -1289,46 +1485,58 @@ rsi_reversion:
 Phase 1: Per-asset signal research → single-asset backtest → performance report [DONE]
 Phase 2: Term structure analytics + volatility sizing → regime display [DONE]
 Phase 3: Portfolio construction → risk analytics → correlation → ClickHouse [DONE]
-Next (Essential):   src/validation/ → walk-forward + inference + PSR/DSR
-Next (High-value):  CarrySignal → commodity-native factor
-Next (High-value):  In-house back-adjusted series (ADR-001 migration step 3)
-Later:  Seasonality, CFTC COT, cross-sectional IC, SweepRunner, CapitalAllocator
+EM1–EM14: Engine correctness, validation, alternative data, async infrastructure [DONE]
+F-Track + FEP: React/TypeScript research workbench, IC Gate, 13 screens [DONE]
+E2E: 114 Playwright tests, full platform coverage [DONE]
+Future (high-value):
+  - In-house back-adjusted continuous series from contract data (ADR-001 migration step 3)
+  - Seasonality signal (calendar-based commodity factor)
+  - Cross-sectional IC (rank signals across assets)
+  - CapitalAllocator (risk-budgeted multi-strategy allocation)
+  - Multi-user deployment with authentication and data isolation
 ```
 
 ### Infrastructure Evolution
 
 ```
-Data:     CSV ingestion (done) → Parquet local lake (done) → ClickHouse OLAP store (done M18)
-Storage:  Local filesystem (done) → ClickHouse available (done M18) → object storage (future)
-Compute:  Pandas vectorized (done) → Polars/Dask for large data (future)
-Tracking: File-based (done) → MLflow local (done M12) → MLflow remote server (future F-track)
-Frontend: Streamlit (done M07, M13, M19) → FastAPI + React (F-track F0–F15)
-Pipeline: Manual execution (done) → SweepRunner (future) → Prefect/Airflow (future)
+Data:     CSV (done) → Parquet (done) → ClickHouse OLAP (done M18, opt-in)
+Runs:     File artifacts (done) → SQLite index (done TD-RUN-EXPLORER-PERF)
+Tracking: File-based (done) → MLflow local (done M12) → MLflow remote (future)
+Frontend: Streamlit (done, reference) → React + FastAPI (done F-Track + FEP)
+Testing:  pytest (429) + hypothesis (EM10) + vitest (406) + Playwright E2E (114)
+Hosting:  Local (current) → Render/Vercel deployment (under consideration)
+Auth:     Single-user (current) → JWT-based multi-user (under consideration)
 ```
 
 ### Backtesting Evolution
 
 ```
 Phase 1: Vectorized engine (done — signal research)
+EM1:     Golden-master + property tests on the engine (done)
+EM2:     Rolling equity + point-in-time vol (done)
 Future:  Event-driven engine (realistic execution simulation)
-Future:  Golden-master + property tests on the engine (needed before Phase 3+ refactors)
+Future:  Roll-cost modeling (requires roll calendar)
 ```
 
 ---
 
 ## 18. ADR Index
 
-All Architecture Decision Records are maintained in `docs/adr/ADRs.md`.
+All Architecture Decision Records are maintained in `ADRs_final.md`.
 
 | ADR | Title | Status |
 |-----|-------|--------|
 | ADR-001 | Continuous vs. Contract-Level Futures Data | Accepted |
 | ADR-002 | Signal Timing Convention (Close[t] → Open[t+1]) | Accepted |
 | ADR-003 | Vectorized Backtesting Engine | Accepted |
-| ADR-004 | Storage Strategy: Parquet + ClickHouse Migration Path | Accepted |
+| ADR-004 | Storage Strategy: Parquet + ClickHouse + SQLite Run Index | Accepted |
 | ADR-005 | Position Sizing Methodology | Accepted |
 | ADR-006 | FeatureFrame and FeatureSpec Design | Accepted |
 | ADR-007 | Signal Research Layer: RawSignal, PositionSignal, IC Evaluation | Accepted |
 | ADR-008 | Dashboard Architecture | Superseded by FRONTEND_TDR-001 |
 | ADR-009 | Run Tracking Strategy | Accepted |
 | ADR-010 | Multi-Asset Research Scope and Phasing | Accepted |
+| ADR-011 | Statistical Validation Layer (Walk-Forward + PSR/DSR) | Accepted |
+| ADR-012 | Alternative Data Integration (COT + EIA) | Accepted |
+| ADR-013 | Async Job Pattern for Long-Running Computations | Accepted |
+| ADR-014 | Signal Generator Interface Standards | Accepted |

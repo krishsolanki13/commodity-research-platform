@@ -22,3 +22,7 @@ frontend/.vite/
 
 # Run index SQLite database (regenerated from disk)
 data/runs/index.db
+# Temporary diagnostic and debug scripts
+debug_*.py
+diagnostics*.py
+verify_*.py
