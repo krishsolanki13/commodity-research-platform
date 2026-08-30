@@ -409,7 +409,7 @@ Phase 3 began after Phase 2 was complete and all 188 tests passed.
 ### EM1 — Foundation and Engine Correctness (COMPLETE — 334 tests)
 
 **Deliverables:**
-- `tests/fixtures/engine_golden_master.json` — n_trades=19, final_equity=1,108,823.88. Locked.
+- `tests/fixtures/engine_golden_master.json` — n_trades=21, final_equity=1,086,124.91. Locked.
 - `src/backtesting/pipeline_builder.py` — canonical strategy dispatch extracted from dashboard. Sequential `if`-blocks with early return, always returns 2-tuple `(indicators, signal_gen)`. Closes TD-M14-A.
 - Epoch-ms timestamp fix: all OHLCV datetime indices serialized as epoch milliseconds in API responses.
 - CI via GitHub Actions: ruff + pytest on every push.

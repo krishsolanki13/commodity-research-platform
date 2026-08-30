@@ -988,7 +988,7 @@ commodity_research/
 │   └── reproduce_run.py (EM10)
 │
 └── tests/
-    ├── fixtures/engine_golden_master.json  # n_trades=19, final_equity=1108823.88
+    ├── fixtures/engine_golden_master.json  # n_trades=21, final_equity=1,086,124.91
     └── [429 total tests]
 ```
 
@@ -1427,7 +1427,7 @@ M14–M19: MultiAssetRunner, PortfolioPerformanceEngine, RiskEngine (VaR/ES), Co
 | EM13-complete | 424 | CFTC COT + EIA inventory signals |
 | EM14-complete | 429 | Async regime, portfolio persisting status, sweep progress, mypy CI |
 
-**Golden master:** `tests/fixtures/engine_golden_master.json` — n_trades=19, final_equity=1,108,823.88. Locked.
+**Golden master:** `tests/fixtures/engine_golden_master.json` — n_trades=21, final_equity=1,086,124.91. Locked.
 
 ### F-Track + FEP — React + FastAPI Frontend (COMPLETE)
 
