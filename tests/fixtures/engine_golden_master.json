@@ -1,6 +1,14 @@
 {
-  "n_trades": 19,
-  "final_equity": 1108823.88,
+  "description": "Golden master for EMA 50/200 on full Gold history. Regenerated after data refresh to 2026-08-28. Engine behavior unchanged \u2014 first 5 trades stable.",
+  "asset": "gold",
+  "strategy": "ema_crossover",
+  "parameters": {
+    "fast_period": 50,
+    "slow_period": 200
+  },
+  "data_end_date": "2026-08-28",
+  "n_trades": 21,
+  "final_equity": 1086124.91,
   "first_5_trade_pnls": [
     12759.3612,
     -10070.7933,
@@ -8,11 +16,27 @@
     24991.2097,
     -1191.0869
   ],
-  "equity_checksum": "dc7220fc7f437b3d",
-  "asset": "gold",
-  "strategy": "ema_crossover",
-  "parameters": {
-    "fast_period": 50,
-    "slow_period": 200
-  }
+  "first_5_trades": [
+    {
+      "entry_date": "2010-10-19",
+      "net_pnl": 12759.36
+    },
+    {
+      "entry_date": "2012-05-16",
+      "net_pnl": -10070.79
+    },
+    {
+      "entry_date": "2012-09-06",
+      "net_pnl": -5108.14
+    },
+    {
+      "entry_date": "2013-02-19",
+      "net_pnl": 24991.21
+    },
+    {
+      "entry_date": "2016-02-23",
+      "net_pnl": -1191.09
+    }
+  ],
+  "equity_checksum": "00fe37877c431fdd"
 }
