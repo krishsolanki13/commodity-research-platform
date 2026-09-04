@@ -26,3 +26,5 @@ data/runs/index.db
 debug_*.py
 diagnostics*.py
 verify_*.py
+
+config/local.yaml

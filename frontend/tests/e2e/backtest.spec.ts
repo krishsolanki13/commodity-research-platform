@@ -55,12 +55,49 @@ test.describe('Strategy Builder and Run Detail (S4/S5)', () => {
 })
 
 test.describe('Backtest lifecycle', () => {
-  test('EIA Inventory WTI: full path evaluate → configure → launch → Run Detail', async () => {
-    // @bug eia_inventory is in the signals catalog (evaluate works) but not in the
-    // backtest strategy registry — Launch returns ApiError: Strategy 'eia_inventory'
-    // is not registered. Escalate to backend tech lead.
-    test.skip(true, "eia_inventory not in backtest strategy registry — escalate")
-  })
+  test(
+    'EIA Inventory WTI: full path evaluate → configure → launch → Run Detail',
+    {
+      tag: '@slow',
+    },
+    async ({ page }) => {
+      // eia_inventory registered for backtest in 44a75f1
+      test.slow()
+      test.setTimeout(360_000)
+      const eiaParams = { threshold: 1.0 }
+      const evalPromise = page.waitForResponse(
+        (r) => r.url().includes('/api/signals/evaluate') && r.ok()
+      )
+      await evaluateStrategy(page, 'wti', 'eia_inventory', eiaParams)
+      const evalRes = await evalPromise
+      const body = (await evalRes.json()) as { evaluation?: { ic?: number | null } }
+      const evaluation = body.evaluation ?? body
+
+      const configBtn = page.getByRole('button', { name: /Configure backtest/i })
+      if (await configBtn.isEnabled()) {
+        await configBtn.click()
+      } else {
+        const qs = new URLSearchParams({
+          asset: 'wti',
+          strategy: 'eia_inventory',
+          params: JSON.stringify(eiaParams),
+          evaluation: JSON.stringify(evaluation),
+        })
+        await page.goto(`/backtest/new?${qs.toString()}`)
+      }
+      await expect(page).toHaveURL(/\/backtest\/new.*evaluation=/)
+
+      await page.getByRole('button', { name: /Launch/i }).click()
+      await expect(page.getByText(/running|queued|launching/i).first()).toBeVisible({
+        timeout: 10_000,
+      })
+      await page.waitForURL(/\/runs\/[^/]+$/, { timeout: 300_000 })
+      await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 })
+      const runId = await getRecentRunId()
+      expect(runId).toBeTruthy()
+      await assertNoErrorBoundary(page)
+    }
+  )
 
   test(
     'EMA Crossover Gold: full path evaluate → PATH A → launch → Run Detail',
@@ -70,7 +107,6 @@ test.describe('Backtest lifecycle', () => {
     async ({ page }) => {
       // Live ic_band is noise for all strategies (Configure stays disabled by design).
       // PATH A is exercised by threading evaluate JSON into /backtest/new?evaluation=.
-      // EMA is registered for backtest launch (unlike eia_inventory).
       // Under single-worker load (regime/sweep jobs) launch→/runs can exceed 3 minutes.
       test.slow()
       test.setTimeout(360_000)
@@ -107,22 +143,30 @@ test.describe('Backtest lifecycle', () => {
     }
   )
 
-  test('EMA Crossover Gold: direct launch via override path', async ({ page }) => {
-    test.setTimeout(180_000)
-    const emaParams = encodeURIComponent(JSON.stringify({ fast_period: 50, slow_period: 200 }))
-    await page.goto(
-      `/backtest/new?asset=gold&strategy=ema_crossover&evalOverride=1&params=${emaParams}`
-    )
-    await expect(page.getByText(/IC Gate override|without.*evaluation/i).first()).toBeVisible({
-      timeout: 5_000,
-    })
-    await page.getByRole('button', { name: /Launch/i }).click()
-    await expect(page.getByText(/running|queued|launching/i).first()).toBeVisible({
-      timeout: 10_000,
-    })
-    await page.waitForURL(/\/runs\/[^/]+$/, { timeout: 120_000 })
-    await assertNoErrorBoundary(page)
-  })
+  test(
+    'EMA Crossover Gold: direct launch via override path',
+    {
+      tag: '@slow',
+    },
+    async ({ page }) => {
+      // Direct launch is as slow as the full IC Gate path under single-worker load.
+      test.slow()
+      test.setTimeout(360_000)
+      const emaParams = encodeURIComponent(JSON.stringify({ fast_period: 50, slow_period: 200 }))
+      await page.goto(
+        `/backtest/new?asset=gold&strategy=ema_crossover&evalOverride=1&params=${emaParams}`
+      )
+      await expect(page.getByText(/IC Gate override|without.*evaluation/i).first()).toBeVisible({
+        timeout: 5_000,
+      })
+      await page.getByRole('button', { name: /Launch/i }).click()
+      await expect(page.getByText(/running|queued|launching/i).first()).toBeVisible({
+        timeout: 10_000,
+      })
+      await page.waitForURL(/\/runs\/[^/]+$/, { timeout: 300_000 })
+      await assertNoErrorBoundary(page)
+    }
+  )
 
   test('Momentum Gold: non-default lookback_period=15 persists in Run Detail', async ({
     page,
@@ -134,6 +178,8 @@ test.describe('Backtest lifecycle', () => {
     await page.goto(
       `/backtest/new?asset=gold&strategy=momentum&evalOverride=1&params=${momentumParams}`
     )
+    // Param form loads after GET /api/strategies — wait before fill
+    await expect(page.locator('#lookback_period')).toBeVisible({ timeout: 10_000 })
     await fillParam(page, 'lookback_period', '15')
     await page.getByRole('button', { name: /Launch/i }).click()
     await page.waitForURL(/\/runs\/[^/]+$/, { timeout: 120_000 })
@@ -150,6 +196,8 @@ test.describe('Backtest lifecycle', () => {
     await page.goto(
       `/backtest/new?asset=gold&strategy=rsi_reversion&evalOverride=1&params=${rsiParams}`
     )
+    // Param form loads after GET /api/strategies — wait before fill
+    await expect(page.locator('#oversold_threshold')).toBeVisible({ timeout: 10_000 })
     await fillParam(page, 'oversold_threshold', '25')
     await fillParam(page, 'overbought_threshold', '75')
     await page.getByRole('button', { name: /Launch/i }).click()

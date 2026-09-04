@@ -78,7 +78,21 @@ test.describe('Strategy parameter panels', () => {
     })
   }
 
-  test('wti_brent_spread: @bug strategy not registered on backend', async () => {
-    test.skip(true, 'wti_brent_spread not in backend strategy registry — escalate')
+  test('wti_brent_spread on wti: parameter inputs render', async ({ page }) => {
+    // wti_brent_spread registered in 44a75f1
+    const encoded = encodeURIComponent(JSON.stringify({ lookback: 63, threshold: 1.0 }))
+    await page.goto(`/research?asset=wti&strategy=wti_brent_spread&params=${encoded}`)
+
+    if (await page.getByText(/something went wrong/i).isVisible().catch(() => false)) {
+      await page.reload()
+    }
+
+    await expect(page.getByRole('button', { name: /WTI-Brent Spread/i }).first()).toBeVisible({
+      timeout: 15_000,
+    })
+    for (const param of ['lookback', 'threshold']) {
+      await expect(page.locator(`#${param}`)).toBeVisible({ timeout: 15_000 })
+    }
+    await assertNoErrorBoundary(page)
   })
 })

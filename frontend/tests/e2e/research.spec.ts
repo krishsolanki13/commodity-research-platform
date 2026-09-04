@@ -94,12 +94,17 @@ test.describe('Research Workbench — IC evaluation', () => {
   })
 
   test('Carry Gold — evaluation completes or shows flat result gracefully', async ({ page }) => {
-    // @bug Carry/Gold evaluation hangs on backend — "Generating signal..." never resolves
-    // Skipping until backend registers Carry handler for Gold flat-signal case
-    test.skip(true, 'Carry/Gold hangs on backend — escalate to backend tech lead')
+    // 44a75f1: Carry returns in ~10s (IC may be null — data period, not a hang)
+    test.setTimeout(90_000)
     await openResearch(page, 'gold', 'carry')
     await evaluateSignal(page)
-    await expect(page.locator('text=/IC/i').first()).toBeVisible({ timeout: 60_000 })
+    await expect(
+      page
+        .locator('[data-testid="ic-result"]')
+        .or(page.locator('.ic-result'))
+        .or(page.locator('text=/IC/i'))
+        .first()
+    ).toBeVisible({ timeout: 30_000 })
     await assertNoErrorBoundary(page)
   })
 
@@ -131,11 +136,14 @@ test.describe('Research Workbench — IC evaluation', () => {
   })
 
   test('WTI-Brent Spread on WTI — IC result appears', async ({ page }) => {
-    // @bug 'wti_brent_spread' strategy not registered on backend — escalate
-    test.skip(true, 'wti_brent_spread not in backend strategy registry')
+    // wti_brent_spread registered in 44a75f1 — confirmed working on WTI
+    // IC may be null or near-zero — assert result card appears, not specific value
+    test.setTimeout(90_000)
     await openResearch(page, 'wti', 'wti_brent_spread')
     await evaluateSignal(page)
-    await expect(page.getByText('IC Decay')).toBeVisible({ timeout: 60_000 })
+    await expect(page.locator('text=/IC/i').first()).toBeVisible({ timeout: 60_000 })
+    await expect(page.locator('text=/500|internal server|UNKNOWN_STRATEGY/i')).not.toBeVisible()
+    await assertNoErrorBoundary(page)
   })
 
   test('COT Positioning Brent — result appears without error', async ({ page }) => {
