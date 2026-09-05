@@ -1,4 +1,4 @@
-export type RunStatus = 'queued' | 'running' | 'complete' | 'failed'
+export type RunStatus = 'queued' | 'running' | 'persisting' | 'complete' | 'failed'
 export type IcBand = 'strong' | 'inverse_meaningful' | 'weak_positive' | 'weak_inverse' | 'noise'
 export type Regime = 'contango' | 'backwardation' | 'flat'
 
@@ -32,6 +32,7 @@ export function statusTone(status: RunStatus): string {
   const map: Record<RunStatus, string> = {
     queued: 'var(--text-secondary)',
     running: 'var(--info-500)',
+    persisting: 'var(--info-500)',
     complete: 'var(--ok-500)',
     failed: 'var(--crit-500)',
   }

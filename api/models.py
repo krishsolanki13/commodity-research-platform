@@ -246,7 +246,7 @@ class TaskLaunchResponse(BaseModel):
 
 class TaskStatusResponse(BaseModel):
     run_id: str
-    status: Literal["queued", "running", "complete", "failed"]
+    status: Literal["queued", "running", "persisting", "complete", "failed"]
     error: str | None = None
     executed_at: str | None = None  # ISO datetime UTC; set on complete or failed
 

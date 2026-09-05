@@ -250,6 +250,11 @@ def _run_backtest_task(polling_run_id: str, request: BacktestLaunchRequest) -> N
 
         perf_report = PerformanceEngine().compute(backtest_result)
 
+        # EM14 / TD-FEP-PORTFOLIO-RACE: do not report complete until artifacts
+        # (and the SQLite index upsert) are on disk. Carry on MAX is slow enough
+        # that a launch-time poll_ id vs save-time run_id gap used to 404
+        # GET /api/runs/{stripped_poll_id} immediately after "complete".
+        state.update(polling_run_id, "persisting")
         run_manager = RunManager(cfg)
         run_manager.save(backtest_result)
         run_manager.save_metrics(backtest_result.run_id, perf_report)
@@ -289,7 +294,11 @@ def launch_backtest(
 
 @router.get("/backtests/{run_id}/status", response_model=TaskStatusResponse)
 def get_backtest_status(run_id: str) -> TaskStatusResponse:
-    """Poll task status. Returns queued|running|complete|failed."""
+    """Poll task status. Returns queued|running|persisting|complete|failed.
+
+    Once artifacts are written, run_id is the on-disk artifact id (not the
+    poll_ launch id) so the client can navigate to GET /api/runs/{id}.
+    """
     task = state.get(run_id)
     if task is None:
         raise ApiError(
@@ -297,8 +306,9 @@ def get_backtest_status(run_id: str) -> TaskStatusResponse:
             message=f"Run '{run_id}' not found.",
             status=404,
         )
+    artifact_id = state.get_artifact_id(run_id)
     return TaskStatusResponse(
-        run_id=run_id,
+        run_id=artifact_id or run_id,
         status=task["status"],
         error=task.get("error"),
         executed_at=task.get("executed_at"),

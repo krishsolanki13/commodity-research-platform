@@ -355,7 +355,7 @@ def get_portfolio_status(run_id: str) -> TaskStatusResponse:
             status=404,
         )
     return TaskStatusResponse(
-        run_id=run_id,
+        run_id=state.get_artifact_id(run_id) or run_id,
         status=task["status"],
         error=task.get("error"),
         executed_at=task.get("executed_at"),

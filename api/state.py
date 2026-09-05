@@ -11,7 +11,7 @@ from __future__ import annotations
 from threading import Lock
 from typing import Any, Literal
 
-TaskStatus = Literal["queued", "running", "complete", "failed"]
+TaskStatus = Literal["queued", "running", "persisting", "complete", "failed"]
 
 _store: dict[str, dict[str, Any]] = {}
 # Maps polling_run_id → actual artifact run_id (set after completion)
@@ -50,8 +50,16 @@ def get(run_id: str) -> dict[str, Any] | None:
 
 
 def set_artifact_id(polling_id: str, artifact_id: str) -> None:
+    """Map polling id → on-disk artifact id.
+
+    Also aliases the poll_-stripped form so GET /api/runs/{stripped} resolves
+    when the frontend strips the prefix before the timestamps match.
+    """
+    stripped = polling_id.removeprefix("poll_")
     with _lock:
         _artifact_map[polling_id] = artifact_id
+        if stripped != polling_id:
+            _artifact_map[stripped] = artifact_id
 
 
 def get_artifact_id(polling_id: str) -> str | None:

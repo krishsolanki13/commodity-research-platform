@@ -106,6 +106,9 @@ export function PortfolioLaunchPanel({
       {isPolling && pollStatus === 'running' && (
         <p className="font-mono text-xs text-text-secondary">Running… {elapsed}s</p>
       )}
+      {isPolling && pollStatus === 'persisting' && (
+        <p className="font-mono text-xs text-text-secondary">Saving… {elapsed}s</p>
+      )}
       {isPolling && pollStatus === 'failed' && (
         <div className="flex flex-col gap-2">
           <ErrorState error={{ message: status.data?.error ?? 'Portfolio run failed' }} compact />

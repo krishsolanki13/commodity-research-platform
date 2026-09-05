@@ -92,6 +92,13 @@ export function LaunchPanel({
           </div>
         )}
 
+        {isPolling && pollStatus === 'persisting' && (
+          <div className="mt-3 flex items-center gap-2 text-sm">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-info" />
+            <span className="font-mono text-text-secondary">Saving… {elapsed}s</span>
+          </div>
+        )}
+
         {isPolling && pollStatus === 'failed' && (
           <div className="flex flex-col gap-2">
             <ErrorState error={{ message: status.data?.error ?? 'Backtest failed' }} compact />
@@ -101,7 +108,7 @@ export function LaunchPanel({
           </div>
         )}
 
-        {isPolling && (pollStatus === 'queued' || pollStatus === 'running') && (
+        {isPolling && (pollStatus === 'queued' || pollStatus === 'running' || pollStatus === 'persisting') && (
           <div className="flex flex-col gap-1 font-mono text-xs text-text-secondary">
             <p>Asset: {launchRequest.asset?.toUpperCase()}</p>
             <p>Strategy: {launchRequest.strategy}</p>

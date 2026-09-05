@@ -116,7 +116,7 @@ export interface paths {
         };
         /**
          * Get Backtest Status
-         * @description Poll task status. Returns queued|running|complete|failed.
+         * @description Poll task status. Returns queued|running|persisting|complete|failed.
          */
         get: operations["get_backtest_status_api_backtests__run_id__status_get"];
         put?: never;
@@ -2433,7 +2433,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "queued" | "running" | "complete" | "failed";
+            status: "queued" | "running" | "persisting" | "complete" | "failed";
             /** Error */
             error?: string | null;
             /** Executed At */

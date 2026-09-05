@@ -98,6 +98,7 @@ def test_backtest_lifecycle_mocked(client: TestClient) -> None:
 
     def fake_task(polling_id: str, request) -> None:
         state.update(polling_id, "running")
+        state.update(polling_id, "persisting")
         state.set_artifact_id(polling_id, mock_result.run_id)
         state.update(polling_id, "complete", executed_at="2024-01-01T12:00:00Z")
 
@@ -114,7 +115,12 @@ def test_backtest_lifecycle_mocked(client: TestClient) -> None:
     polling_id = response.json()["run_id"]
 
     status_resp = client.get(f"/api/backtests/{polling_id}/status")
-    assert status_resp.json()["status"] in ("queued", "running", "complete")
+    assert status_resp.json()["status"] in (
+        "queued",
+        "running",
+        "persisting",
+        "complete",
+    )
 
 
 def test_backtest_launch_request_accepts_signal_evaluation() -> None:
@@ -202,3 +208,83 @@ def test_api_eval_to_core_maps_decay_and_window() -> None:
     assert core.ic_rolling_window == 63
     assert core.ic_decay == {1: 0.143, 20: 0.031}
     assert 5 not in core.ic_decay  # None ic dropped
+
+
+def test_poll_status_persisting(client: TestClient) -> None:
+    """persisting is a valid poll status (EM14 race window before disk write)."""
+    run_id = "test_poll_persisting_001"
+    state.register(run_id)
+    state.update(run_id, "persisting")
+    response = client.get(f"/api/backtests/{run_id}/status")
+    assert response.status_code == 200
+    assert response.json()["status"] == "persisting"
+    assert response.json()["run_id"] == run_id  # artifact id not set yet
+
+
+def test_complete_status_returns_artifact_run_id(client: TestClient) -> None:
+    """On complete, status.run_id is the on-disk artifact id, not poll_ launch id."""
+    poll_id = "poll_20990101_000000_carry_natural_gas"
+    artifact_id = "20990101_000001_carry_natural_gas"
+    state.register(poll_id)
+    state.update(poll_id, "persisting")
+    state.set_artifact_id(poll_id, artifact_id)
+    state.update(poll_id, "complete", executed_at="2026-09-05T10:59:10Z")
+
+    response = client.get(f"/api/backtests/{poll_id}/status")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "complete"
+    assert data["run_id"] == artifact_id
+    assert data["run_id"] != poll_id
+
+
+def test_stripped_poll_id_resolves_to_artifact_on_run_detail(
+    client: TestClient,
+) -> None:
+    """Frontend strips poll_ then GET /api/runs/{stripped} — must map to artifacts.
+
+    Reproduces Carry / Natural Gas MAX: launch-time id 105607 vs save-time 105910.
+    """
+    import json  # noqa: PLC0415
+    import shutil  # noqa: PLC0415
+    from pathlib import Path  # noqa: PLC0415
+
+    from src.core.config import Config  # noqa: PLC0415
+
+    poll_id = "poll_20990101_120000_carry_natural_gas"
+    stripped = "20990101_120000_carry_natural_gas"
+    artifact_id = "20990101_120001_carry_natural_gas_test"
+    runs_dir = Path(Config.load().paths["runs"])
+    artifact_dir = runs_dir / artifact_id
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    (artifact_dir / "params.json").write_text(
+        json.dumps(
+            {
+                "asset": "natural_gas",
+                "strategy_name": "carry",
+                "data_start": "2010-01-04",
+                "data_end": "2026-08-28",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    try:
+        missing = client.get(f"/api/runs/{stripped}")
+        assert missing.status_code == 404
+
+        state.register(poll_id)
+        state.update(poll_id, "persisting")
+        persisting = client.get(f"/api/backtests/{poll_id}/status")
+        assert persisting.json()["status"] == "persisting"
+
+        state.set_artifact_id(poll_id, artifact_id)
+        state.update(poll_id, "complete", executed_at="2026-09-05T10:59:10Z")
+
+        for rid in (poll_id, stripped, artifact_id):
+            detail = client.get(f"/api/runs/{rid}")
+            assert detail.status_code == 200, rid
+            assert detail.json()["run_id"] == artifact_id
+            assert detail.json()["asset"] == "natural_gas"
+    finally:
+        shutil.rmtree(artifact_dir, ignore_errors=True)

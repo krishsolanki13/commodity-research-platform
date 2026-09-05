@@ -105,6 +105,31 @@ describe('StrategyBuilder', () => {
     expect(screen.getByTestId('run-detail-page')).toHaveAttribute('data-run-id', cleanId)
   })
 
+  it('navigates to artifact run_id from status when it differs from poll_ id', async () => {
+    const user = userEvent.setup()
+    const pollId = 'poll_20260905_105607_carry_natural_gas'
+    const artifactId = '20260905_105910_carry_natural_gas'
+    server.use(
+      http.post('http://localhost:8000/api/backtests', () =>
+        HttpResponse.json({ run_id: pollId, status: 'queued' }, { status: 202 })
+      ),
+      http.get(`http://localhost:8000/api/backtests/${pollId}/status`, () =>
+        HttpResponse.json({
+          run_id: artifactId,
+          status: 'complete',
+          error: null,
+          executed_at: '2026-09-05T10:59:10Z',
+        })
+      )
+    )
+    renderStrategyBuilder(BASE_URL, createTestClient(), true)
+    await user.click(screen.getByRole('button', { name: /launch backtest/i }))
+    await waitFor(() => expect(screen.getByTestId('run-detail-page')).toBeInTheDocument(), {
+      timeout: 3000,
+    })
+    expect(screen.getByTestId('run-detail-page')).toHaveAttribute('data-run-id', artifactId)
+  })
+
   it('clicking Launch Backtest triggers the POST /api/backtests mutation', async () => {
     const user = userEvent.setup()
     let postWasCalled = false
