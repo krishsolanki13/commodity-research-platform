@@ -404,22 +404,37 @@ def _run_signal_pipeline(
     from src.research.pipeline import FeaturePipeline  # noqa: PLC0415
     from src.signal.position import PositionSignalConstructor  # noqa: PLC0415
 
-    # Scenario A: dates already reach DataLoader. Carry with no range
-    # loads full history (~4k bars) and hangs in build_historical_curves.
-    if strategy == "carry" and from_date is None:
-        to_d = _parse_date(to_date) or datetime.date.today()
+    # Carry's build_historical_curves is O(bars × contracts). Clamp any
+    # requested window (explicit UI dates included) to 2 years so 1Y/3Y/5Y
+    # and the Workbench default (2015-01-01) cannot run unbounded.
+    if strategy == "carry":
+        max_carry_window_years = 2
+        effective_to = _parse_date(to_date) or datetime.date.today()
         try:
-            from_d = datetime.date(to_d.year - 2, to_d.month, to_d.day)
+            min_allowed_from = datetime.date(
+                effective_to.year - max_carry_window_years,
+                effective_to.month,
+                effective_to.day,
+            )
         except ValueError:
-            from_d = datetime.date(to_d.year - 2, 2, 28)
-        from_date = from_d.isoformat()
-        to_date = to_date or to_d.isoformat()
-        logger.info(
-            "CarrySignal: no date range provided — applying 2-year default "
-            "to prevent full-history computation (%s to %s)",
-            from_date,
-            to_date,
-        )
+            min_allowed_from = datetime.date(
+                effective_to.year - max_carry_window_years, 2, 28
+            )
+        effective_from = _parse_date(from_date) or min_allowed_from
+
+        if effective_from < min_allowed_from:
+            logger.info(
+                "CarrySignal: requested window %s to %s exceeds %d-year cap. "
+                "Clamping to %s to %s for interactive evaluation.",
+                effective_from,
+                effective_to,
+                max_carry_window_years,
+                min_allowed_from,
+                effective_to,
+            )
+            effective_from = min_allowed_from
+
+        from_date, to_date = effective_from.isoformat(), effective_to.isoformat()
 
     cfg = Config.load()
     ohlcv = DataLoader(cfg).load(
@@ -459,13 +474,27 @@ def generate_signal(request: SignalGenerateRequest) -> SignalGenerateResponse:
             status=400,
         )
 
-    ohlcv, raw_signal, pos_signal = _run_signal_pipeline(
-        request.asset,
-        request.strategy,
-        request.params,
-        request.from_date,
-        request.to_date,
-    )
+    def _run_gen():
+        return _run_signal_pipeline(
+            request.asset,
+            request.strategy,
+            request.params,
+            request.from_date,
+            request.to_date,
+        )
+
+    try:
+        # Carry generate is on the Workbench evaluate chain and has no other
+        # timeout; wrap it unconditionally (not only the missing-date path).
+        if request.strategy == "carry":
+            ohlcv, raw_signal, pos_signal = _evaluate_with_timeout(_run_gen)
+        else:
+            ohlcv, raw_signal, pos_signal = _run_gen()
+    except TimeoutError as exc:
+        raise HTTPException(
+            status_code=408,
+            detail={"code": "EVALUATION_TIMEOUT", "message": str(exc)},
+        ) from exc
 
     valid = raw_signal.dropna()
     return SignalGenerateResponse(
