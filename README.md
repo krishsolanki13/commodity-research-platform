@@ -33,7 +33,7 @@ A **research tool, not a trading system** — no live orders, no execution. The 
 | **Run Explorer**                   | Full experiment memory — every run ever executed, searchable, sortable, sub-second lookup even at 900+ runs.                                                             |
 | **Run Detail**                     | Five-tab record per run — performance, signal quality, walk-forward validation, trades, and full reproducibility artifacts (git SHA, dirty-tree flag, package versions). |
 | **Run Comparison**                 | Up to 8 runs overlaid — equity curves, a metric-delta table, parameter diffs.                                                                                            |
-| **Sweep Explorer**                 | Parameter-grid search with a parallel-coordinates view of the performance landscape, every trial logged for the platform's own selection-bias correction.                |
+| **Sweep Explorer**                 | Parameter-grid search with a parallel-coordinates view of the performance landscape across all parameter combinations. Results stored as immutable sweep artifacts.      |
 | **Curve PCA**                      | Level/Slope/Curvature factor decomposition — Gold's curve is genuinely one-dimensional (PC1 ≈ 100%); WTI and Natural Gas aren't.                                         |
 | **Term Structure / Futures Curve** | Regime classification, roll yield, multi-contract curve comparison (up to 4 assets side by side).                                                                        |
 | **Portfolio Analytics**            | 6-asset book performance, 2.23× diversification benefit, Kupiec-calibrated VaR, and regime-conditional attribution computed per-asset and portfolio-wide.                |
@@ -267,15 +267,16 @@ CI enforces **mypy strict** (0 errors, 67 source files) and **ruff** on every pu
 ## Documentation
 
 
-| Document                   | Location                                 | Contents                                                           |
-| -------------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
-| **Architecture**           | `ARCHITECTURE.md`                        | System design, layer contracts, 9-layer diagram, known limitations |
-| **ADRs**                   | `docs/adr/ADRs.md`                       | 14 Architecture Decision Records (ADR-001 through ADR-014)         |
-| **Implementation Roadmap** | `IMPLEMENTATION_ROADMAP.md`              | Full module build log — Phase 1–3 + EM1–14 + F-Track               |
-| **Frontend Architecture**  | `docs/frontend/FRONTEND_ARCHITECTURE.md` | React/FastAPI design, state partitioning, TDR index                |
-| **Frontend TDRs**          | `docs/frontend/FRONTEND_TDRs.md`         | 25 technical design records                                        |
-| **Screen Specifications**  | `docs/frontend/SCREEN_SPECIFICATIONS.md` | All 13 screens with component and data contracts                   |
-| **Design System**          | `docs/frontend/DESIGN_SYSTEM.md`         | Tokens, typography, chart patterns                                 |
+| Document                            | Location                                           | Contents                                                           |
+| ----------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
+| **Architecture**                    | `ARCHITECTURE.md`                                  | System design, layer contracts, 9-layer diagram, known limitations |
+| **ADRs**                            | `docs/adr/ADRs.md`                                 | 14 Architecture Decision Records (ADR-001 through ADR-014)         |
+| **Implementation Roadmap**          | `IMPLEMENTATION_ROADMAP.md`                        | Full module build log — Phase 1–3 + EM1–14 + F-Track               |
+| **Frontend Implementation Roadmap** | `docs/frontend/FRONTEND_IMPLEMENTATION_ROADMAP.md` | Frontend build log — F-track, FEP, EM14, E2E                       |
+| **Frontend Architecture**           | `docs/frontend/FRONTEND_ARCHITECTURE.md`           | React/FastAPI design, state partitioning, TDR index                |
+| **Frontend TDRs**                   | `docs/frontend/FRONTEND_TDRs.md`                   | 25 technical design records                                        |
+| **Screen Specifications**           | `docs/frontend/SCREEN_SPECIFICATIONS.md`           | All 13 screens with component and data contracts                   |
+| **Design System**                   | `docs/frontend/DESIGN_SYSTEM.md`                   | Tokens, typography, chart patterns                                 |
 
 
 ## Project Structure
@@ -303,7 +304,7 @@ commodity-research-platform/
 │   │   ├── api/                  Generated schema.d.ts, queryKeys, client, hooks
 │   │   ├── features/              Screen-scoped React components
 │   │   └── lib/                  fmt.ts, chart-theme.ts, shared utilities
-│   └── tests/e2e/                11 Playwright spec files + helpers.ts
+│   └── tests/e2e/                15 Playwright spec files + helpers.ts
 ├── dashboard/                    Streamlit reference dashboard (7 pages)
 ├── scripts/                      Data acquisition + reproduce_run.py
 ├── tests/                        429 backend tests + golden master fixture
