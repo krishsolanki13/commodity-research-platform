@@ -91,7 +91,15 @@ export function WorkbenchEvidenceCanvas({
     },
   ]
 
-  const priceSeries = ohlcv?.data ?? evaluationResult.signal.raw_signal ?? EMPTY_SERIES
+  const priceSeries = ohlcv?.data
+  const hasPriceOhlcv = !!(
+    priceSeries?.index?.length &&
+    priceSeries.columns &&
+    'open' in priceSeries.columns &&
+    'high' in priceSeries.columns &&
+    'low' in priceSeries.columns &&
+    'close' in priceSeries.columns
+  )
 
   // RollingICResponse.data.columns.rolling_ic → ICRollingChart ic.columns.value
   const icSeries: ColumnarSeries = rollingIcData?.data
@@ -107,7 +115,7 @@ export function WorkbenchEvidenceCanvas({
         <div className="flex flex-col gap-3">
           <RegimeContextChip asset={asset} compact={false} />
           <SignalOverlayChart
-            ohlcv={priceSeries}
+            ohlcv={hasPriceOhlcv && priceSeries ? priceSeries : EMPTY_SERIES}
             raw={evaluationResult.signal.raw_signal}
             position={evaluationResult.signal.position_signal}
             title={`Signal — ${asset} · ${strategy}`}

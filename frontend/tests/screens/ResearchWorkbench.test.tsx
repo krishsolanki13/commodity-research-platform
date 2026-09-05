@@ -217,4 +217,40 @@ describe('ResearchWorkbenchScreen', () => {
     )
     expect(screen.queryByText(/crashed|Uncaught/i)).not.toBeInTheDocument()
   })
+
+  it('shows Evaluating elapsed counter while the mutation is in flight', async () => {
+    const user = userEvent.setup()
+    mutateAsync.mockImplementation(() => new Promise(() => {}))
+    render(<Wrapper initialEntry={emaUrl} />)
+
+    await waitFor(
+      () => expect(screen.getByRole('button', { name: /Evaluate signal/i })).toBeEnabled(),
+      { timeout: 5000 }
+    )
+    await user.click(screen.getByRole('button', { name: /Evaluate signal/i }))
+
+    await waitFor(() => expect(screen.getByText(/Evaluating\.\.\. \d+s/)).toBeInTheDocument(), {
+      timeout: 5000,
+    })
+    expect(screen.queryByText('IC Decay')).not.toBeInTheDocument()
+  })
+
+  it('shows carry window notice when strategy is carry and from_date is older than 2 years', async () => {
+    render(
+      <Wrapper initialEntry="/research?asset=gold&strategy=carry&from_date=2015-01-01" />
+    )
+    await waitFor(
+      () => expect(screen.getByText(/Carry evaluation uses a 2-year window/i)).toBeInTheDocument(),
+      { timeout: 5000 }
+    )
+  })
+
+  it('does not show carry window notice for ema_crossover', async () => {
+    render(<Wrapper initialEntry={emaUrl} />)
+    await waitFor(
+      () => expect(screen.getByRole('button', { name: /Evaluate signal/i })).toBeEnabled(),
+      { timeout: 5000 }
+    )
+    expect(screen.queryByText(/Carry evaluation uses a 2-year window/i)).not.toBeInTheDocument()
+  })
 })

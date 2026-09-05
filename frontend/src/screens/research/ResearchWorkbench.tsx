@@ -2,7 +2,9 @@ import { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { safeJsonParse } from '@/lib/json'
 import { ApiClientError } from '@/api/client'
+import { useAssetOhlcv } from '@/api/hooks/useAssetOhlcv'
 import { useEvaluateChainMutation } from '@/api/hooks/useEvaluateChainMutation'
+import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton'
 import {
   WorkbenchConfigRail,
   type EvaluateParams,
@@ -51,6 +53,7 @@ export default function ResearchWorkbenchScreen() {
   const [canEvaluate, setCanEvaluate] = useState(false)
   const [evaluateReason, setEvaluateReason] = useState<string | null>(null)
   const [hasEvaluated, setHasEvaluated] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
 
   // Ref to trigger evaluate from the button in the right half, while all param
   // building logic stays inside WorkbenchConfigRail.
@@ -73,6 +76,25 @@ export default function ResearchWorkbenchScreen() {
   // R-Q8: safeJsonParse from '@/lib/json'
   const parsedParams = safeJsonParse<Record<string, unknown>>(paramsJson, {})
   const parsedFeatures = safeJsonParse<FeatureSpecRequest[]>(featuresJson, [])
+
+  const { data: ohlcvData, isLoading: ohlcvLoading } = useAssetOhlcv(asset, {
+    from_date: fromDate,
+    to_date: toDate,
+    downsample: 'view',
+  })
+  const ohlcvLoaded = !!ohlcvData?.data?.index && ohlcvData.data.index.length > 0
+  // Wait for OHLCV to settle so results view never opens on a blank chart.
+  // Empty/error responses still switch (canvas shows empty state) — don't trap.
+  const showResults = hasEvaluated && (ohlcvLoaded || !ohlcvLoading)
+
+  useEffect(() => {
+    if (!evaluating) {
+      setElapsed(0)
+      return
+    }
+    const interval = setInterval(() => setElapsed((e) => e + 1), 1000)
+    return () => clearInterval(interval)
+  }, [evaluating])
 
   // Reset to config view when asset or strategy changes — not on param-only changes
   useEffect(() => {
@@ -134,7 +156,7 @@ export default function ResearchWorkbenchScreen() {
         <h1 className="text-xl font-semibold text-text-primary">Research Workbench</h1>
       </div>
 
-      {!hasEvaluated ? (
+      {!showResults ? (
         <div className="grid min-h-0 flex-1 grid-cols-2 gap-6 overflow-hidden px-6 pb-6">
           <div className="min-h-0 overflow-y-auto">
             <WorkbenchConfigRail
@@ -163,10 +185,21 @@ export default function ResearchWorkbenchScreen() {
                 >
                   {evaluating ? progressLabel : 'Evaluate signal'}
                 </Button>
+                {evaluating && (
+                  <div className="font-mono text-sm text-text-secondary">
+                    Evaluating... {elapsed}s
+                  </div>
+                )}
+                {hasEvaluated && !evaluating && !ohlcvLoaded && ohlcvLoading && (
+                  <div className="flex flex-col gap-2">
+                    <p className="font-mono text-sm text-text-secondary">Loading chart data...</p>
+                    <LoadingSkeleton variant="chart" />
+                  </div>
+                )}
                 {evaluateReason && !evaluating && (
                   <p className="text-xs text-text-secondary">{evaluateReason}</p>
                 )}
-                {!evaluating && (
+                {!evaluating && !hasEvaluated && (
                   <p className="text-xs text-text-secondary">
                     Assemble features and a signal, then click Evaluate. Evaluation must precede
                     backtesting.

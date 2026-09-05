@@ -25,6 +25,18 @@ import type { ApiClientError } from '@/api/client'
 import type { components } from '@/api/schema'
 type ColumnarSeries = components['schemas']['ColumnarSeries']
 
+function isPriceOhlcv(series: ColumnarSeries | null | undefined): boolean {
+  if (!series?.index || series.index.length === 0) return false
+  const cols = series.columns as Record<string, unknown> | undefined
+  if (!cols) return false
+  return (
+    Array.isArray(cols.open) &&
+    Array.isArray(cols.high) &&
+    Array.isArray(cols.low) &&
+    Array.isArray(cols.close)
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -59,7 +71,7 @@ function SignalOverlayChartInner({ ohlcv, raw, position, theme }: SignalOverlayC
 
   useEffect(() => {
     if (!divRef.current) return
-    if (!ohlcv?.index || ohlcv.index.length === 0) return
+    if (!isPriceOhlcv(ohlcv)) return
     if (!raw?.index || raw.index.length === 0) return
     if (!position?.index || position.index.length === 0) return
 
@@ -386,6 +398,9 @@ export function SignalOverlayChart({
 }: SignalOverlayChartProps) {
   const theme = useChartTheme()
 
+  const canRender =
+    isPriceOhlcv(ohlcv) && !!raw?.index?.length && !!position?.index?.length
+
   // Inline legend: swatches rendered on the right side of the header row
   // via ChartFrame's `actions` prop (Panel places actions after justify-between)
   const legend = (
@@ -408,9 +423,16 @@ export function SignalOverlayChart({
       height={height}
       loading={loading}
       error={error}
+      empty={
+        !loading && !error && !canRender
+          ? { message: 'No chart data for this window.' }
+          : undefined
+      }
       syncGroup={syncGroup}
     >
-      <SignalOverlayChartInner ohlcv={ohlcv} raw={raw} position={position} theme={theme} />
+      {canRender ? (
+        <SignalOverlayChartInner ohlcv={ohlcv} raw={raw} position={position} theme={theme} />
+      ) : null}
     </ChartFrame>
   )
 }

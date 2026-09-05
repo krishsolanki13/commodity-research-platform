@@ -82,6 +82,15 @@ function specsMatch(a: FeatureSpecRequest, b: FeatureSpecRequest): boolean {
   return a.name === b.name && JSON.stringify(a.params) === JSON.stringify(b.params)
 }
 
+function carryWindowExceedsEvalLimit(strategy: string | undefined, fromIso: string): boolean {
+  if (strategy !== 'carry') return false
+  const fromDate = new Date(fromIso)
+  if (Number.isNaN(fromDate.getTime())) return false
+  const twoYearsAgo = new Date()
+  twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
+  return fromDate < twoYearsAgo
+}
+
 export function WorkbenchConfigRail({
   onEvaluate,
   onCanEvaluateChange,
@@ -217,6 +226,12 @@ export function WorkbenchConfigRail({
             onChange={handleStrategyChange}
             asset={urlState.asset ?? null}
           />
+          {carryWindowExceedsEvalLimit(strategy, fromDate) && (
+            <p className="text-xs text-warn">
+              Carry evaluation uses a 2-year window (backend limit for interactive evaluation).
+              Select 1Y or 2Y for accurate results.
+            </p>
+          )}
           {strategy && (
             <ParamForm
               schema={selectedStrategy?.params_schema ?? []}

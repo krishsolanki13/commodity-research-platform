@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/app/queryClient'
@@ -149,5 +149,6 @@ describe('SignalOverlayChart', () => {
       )
     ).not.toThrow()
     expect(mockChartInstance.setOption).not.toHaveBeenCalled()
+    expect(screen.getByText(/No chart data for this window/i)).toBeInTheDocument()
   })
 })
