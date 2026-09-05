@@ -228,8 +228,8 @@ export function WorkbenchConfigRail({
           />
           {carryWindowExceedsEvalLimit(strategy, fromDate) && (
             <p className="text-xs text-warn">
-              Carry evaluation uses a 2-year window (backend limit for interactive evaluation).
-              Select 1Y or 2Y for accurate results.
+              Carry evaluation is clamped to a 2-year window by the backend.
+              Select 1Y for an unclamped result.
             </p>
           )}
           {strategy && (

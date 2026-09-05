@@ -240,7 +240,7 @@ describe('ResearchWorkbenchScreen', () => {
       <Wrapper initialEntry="/research?asset=gold&strategy=carry&from_date=2015-01-01" />
     )
     await waitFor(
-      () => expect(screen.getByText(/Carry evaluation uses a 2-year window/i)).toBeInTheDocument(),
+      () => expect(screen.getByText(/Carry evaluation is clamped to a 2-year window/i)).toBeInTheDocument(),
       { timeout: 5000 }
     )
   })
@@ -251,6 +251,6 @@ describe('ResearchWorkbenchScreen', () => {
       () => expect(screen.getByRole('button', { name: /Evaluate signal/i })).toBeEnabled(),
       { timeout: 5000 }
     )
-    expect(screen.queryByText(/Carry evaluation uses a 2-year window/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Carry evaluation is clamped to a 2-year window/i)).not.toBeInTheDocument()
   })
 })
