@@ -5,7 +5,8 @@ import datetime
 import logging
 from typing import Any, Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi.encoders import jsonable_encoder
 
 from api.exceptions import ApiError
 from api.models import (
@@ -302,6 +303,13 @@ def _load_strategy_catalog() -> list[StrategyMeta]:
 STRATEGY_CATALOG = _load_strategy_catalog()
 _STRATEGY_MAP: dict[str, StrategyMeta] = {s.name: s for s in STRATEGY_CATALOG}
 
+# Strategies whose generate() calls FuturesCurveBuilder.build_historical_curves()
+# and cannot finish a multi-year window inside the sync 120s timeout.
+# Extensible: add any future curve-builder signal here.
+SLOW_EVALUATE_STRATEGIES = frozenset({"carry"})
+
+_evaluate_tasks: dict[str, dict] = {}
+
 
 def _parse_date(s: str | None) -> datetime.date | None:
     if s is None:
@@ -404,38 +412,6 @@ def _run_signal_pipeline(
     from src.research.pipeline import FeaturePipeline  # noqa: PLC0415
     from src.signal.position import PositionSignalConstructor  # noqa: PLC0415
 
-    # Carry's build_historical_curves is O(bars × contracts). Clamp any
-    # requested window (explicit UI dates included) to 2 years so 1Y/3Y/5Y
-    # and the Workbench default (2015-01-01) cannot run unbounded.
-    if strategy == "carry":
-        max_carry_window_years = 2
-        effective_to = _parse_date(to_date) or datetime.date.today()
-        try:
-            min_allowed_from = datetime.date(
-                effective_to.year - max_carry_window_years,
-                effective_to.month,
-                effective_to.day,
-            )
-        except ValueError:
-            min_allowed_from = datetime.date(
-                effective_to.year - max_carry_window_years, 2, 28
-            )
-        effective_from = _parse_date(from_date) or min_allowed_from
-
-        if effective_from < min_allowed_from:
-            logger.info(
-                "CarrySignal: requested window %s to %s exceeds %d-year cap. "
-                "Clamping to %s to %s for interactive evaluation.",
-                effective_from,
-                effective_to,
-                max_carry_window_years,
-                min_allowed_from,
-                effective_to,
-            )
-            effective_from = min_allowed_from
-
-        from_date, to_date = effective_from.isoformat(), effective_to.isoformat()
-
     cfg = Config.load()
     ohlcv = DataLoader(cfg).load(
         asset,
@@ -509,9 +485,12 @@ def generate_signal(request: SignalGenerateRequest) -> SignalGenerateResponse:
     )
 
 
-@router.post("/signals/evaluate", response_model=SignalEvaluateResponse)
-def evaluate_signal(request: SignalEvaluateRequest) -> SignalEvaluateResponse:
-    """Evaluate signal quality: IC, ICIR, decay. This is the IC Gate data source."""
+def _evaluate_signal_sync(request: SignalEvaluateRequest) -> SignalEvaluateResponse:
+    """Run signal evaluation with the requested window unmodified.
+
+    Shared by the synchronous /evaluate endpoint and the async job runner.
+    Does not apply a window clamp or a wall-clock timeout.
+    """
     if request.strategy not in _STRATEGY_MAP:
         raise ApiError(
             code="UNKNOWN_STRATEGY",
@@ -521,24 +500,14 @@ def evaluate_signal(request: SignalEvaluateRequest) -> SignalEvaluateResponse:
 
     from src.signal.evaluation import SignalEvaluator  # noqa: PLC0415
 
-    def _run_eval():
-        ohlcv, raw_signal, _ = _run_signal_pipeline(
-            request.asset,
-            request.strategy,
-            request.params,
-            request.from_date,
-            request.to_date,
-        )
-        evaluation = SignalEvaluator(asset=request.asset).evaluate(raw_signal, ohlcv)
-        return ohlcv, raw_signal, evaluation
-
-    try:
-        _ohlcv, raw_signal, evaluation = _evaluate_with_timeout(_run_eval)
-    except TimeoutError as exc:
-        raise HTTPException(
-            status_code=408,
-            detail={"code": "EVALUATION_TIMEOUT", "message": str(exc)},
-        ) from exc
+    ohlcv, raw_signal, _ = _run_signal_pipeline(
+        request.asset,
+        request.strategy,
+        request.params,
+        request.from_date,
+        request.to_date,
+    )
+    evaluation = SignalEvaluator(asset=request.asset).evaluate(raw_signal, ohlcv)
 
     decay = [
         DecayEntry(horizon=h, ic=evaluation.ic_decay.get(h))
@@ -564,6 +533,113 @@ def evaluate_signal(request: SignalEvaluateRequest) -> SignalEvaluateResponse:
         params=request.params,
         evaluation=eval_data,
     )
+
+
+def _run_evaluate_task(job_id: str, request: SignalEvaluateRequest) -> None:
+    """Background task: run unclamped evaluation and store the result."""
+    _evaluate_tasks[job_id]["status"] = "running"
+    try:
+        result = _evaluate_signal_sync(request)
+        _evaluate_tasks[job_id].update(
+            {"status": "complete", "result": jsonable_encoder(result)}
+        )
+        logger.info("Evaluate job complete: %s", job_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Evaluate job failed: %s — %s", job_id, exc)
+        _evaluate_tasks[job_id].update({"status": "failed", "error": str(exc)})
+
+
+@router.post("/signals/evaluate", response_model=SignalEvaluateResponse)
+def evaluate_signal(request: SignalEvaluateRequest) -> SignalEvaluateResponse:
+    """Evaluate signal quality: IC, ICIR, decay. This is the IC Gate data source.
+
+    Slow strategies (see SLOW_EVALUATE_STRATEGIES) must use
+    POST /api/signals/evaluate-async — they are rejected here so a
+    multi-year Carry window cannot hang the synchronous request.
+    """
+    if request.strategy in SLOW_EVALUATE_STRATEGIES:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "ASYNC_REQUIRED_STRATEGY",
+                "message": (
+                    f"'{request.strategy}' requires async evaluation — "
+                    "use POST /api/signals/evaluate-async instead."
+                ),
+            },
+        )
+
+    try:
+        return _evaluate_with_timeout(lambda: _evaluate_signal_sync(request))
+    except TimeoutError as exc:
+        raise HTTPException(
+            status_code=408,
+            detail={"code": "EVALUATION_TIMEOUT", "message": str(exc)},
+        ) from exc
+
+
+@router.post("/signals/evaluate-async", status_code=202)
+async def evaluate_signal_async(
+    request: SignalEvaluateRequest,
+    background_tasks: BackgroundTasks,
+) -> dict:
+    """Launch async evaluation for slow (curve-builder) strategies."""
+    if request.strategy not in SLOW_EVALUATE_STRATEGIES:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "SYNC_ONLY_STRATEGY",
+                "message": (
+                    f"'{request.strategy}' does not require async "
+                    "evaluation — use POST /api/signals/evaluate instead."
+                ),
+            },
+        )
+
+    now = datetime.datetime.now(datetime.UTC)
+    job_id = f"{now.strftime('%Y%m%d_%H%M%S')}_eval_{request.strategy}_{request.asset}"
+    _evaluate_tasks[job_id] = {"status": "queued", "result": None, "error": None}
+    background_tasks.add_task(_run_evaluate_task, job_id=job_id, request=request)
+    logger.info("Evaluate job queued: %s", job_id)
+    return {"job_id": job_id, "status": "queued"}
+
+
+@router.get("/signals/evaluate-async/{job_id}/status")
+async def get_evaluate_status(job_id: str) -> dict:
+    """Poll async evaluation job status."""
+    task = _evaluate_tasks.get(job_id)
+    if task is None:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "JOB_NOT_FOUND",
+                "message": f"Evaluate job '{job_id}' not found.",
+            },
+        )
+    return {"job_id": job_id, "status": task["status"]}
+
+
+@router.get("/signals/evaluate-async/{job_id}/result")
+async def get_evaluate_result(job_id: str) -> dict:
+    """Return evaluation result when the async job is complete."""
+    task = _evaluate_tasks.get(job_id)
+    if task is None:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "JOB_NOT_FOUND",
+                "message": f"Evaluate job '{job_id}' not found.",
+            },
+        )
+    if task["status"] != "complete":
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "JOB_NOT_COMPLETE",
+                "message": f"Status: {task['status']}",
+            },
+        )
+    return task["result"]
 
 
 @router.get("/signals/rolling-ic")
