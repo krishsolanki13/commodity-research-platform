@@ -8,6 +8,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 
+from api.curve_coverage import raise_if_insufficient_curve_coverage
 from api.exceptions import ApiError
 from api.models import (
     DecayEntry,
@@ -595,6 +596,14 @@ async def evaluate_signal_async(
                 ),
             },
         )
+
+    n_contracts = int(request.params.get("n_contracts", 4))
+    raise_if_insufficient_curve_coverage(
+        request.strategy,
+        request.asset,
+        request.from_date,
+        n_contracts=n_contracts,
+    )
 
     now = datetime.datetime.now(datetime.UTC)
     job_id = f"{now.strftime('%Y%m%d_%H%M%S')}_eval_{request.strategy}_{request.asset}"

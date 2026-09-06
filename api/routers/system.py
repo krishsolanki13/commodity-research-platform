@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from api.dependencies import KNOWN_ASSETS
 from api.models import (
@@ -93,6 +93,44 @@ def get_data_status(asset: str | None = Query(None)) -> DataStatusResponse:
 
     total_flags = sum(s.flagged_anomalies for s in statuses)
     return DataStatusResponse(assets=statuses, total_flags=total_flags)
+
+
+@router.get("/curve-coverage/{asset}")
+def get_curve_coverage(
+    asset: str,
+    n_contracts: int = Query(default=4, ge=2, le=12),
+) -> dict:
+    """Earliest date this asset's futures curve has genuine 2-point coverage.
+
+    Used by Research Workbench and Strategy Builder date pickers to disable
+    windows that predate usable contract data for Carry.
+    Cached in-process; recomputed after contract-data acquisition (cache
+    invalidation) or process restart.
+    """
+    from api.curve_coverage import get_curve_coverage_start  # noqa: PLC0415
+
+    if asset not in KNOWN_ASSETS:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "ASSET_NOT_FOUND",
+                "message": f"Asset '{asset}' is not in the universe.",
+            },
+        )
+
+    coverage_start = get_curve_coverage_start(asset, n_contracts)
+    return {
+        "asset": asset,
+        "curve_coverage_start": str(coverage_start) if coverage_start else None,
+        "n_contracts": n_contracts,
+        "message": (
+            f"Curve-dependent signals (Carry) are only evaluable from "
+            f"{coverage_start} onward for {asset} — earlier dates lack "
+            f"sufficient contract data to construct a term structure."
+            if coverage_start
+            else f"No usable curve data found for {asset} at any date."
+        ),
+    }
 
 
 @router.get("/data/qc", response_model=QCReportResponse)

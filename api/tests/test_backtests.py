@@ -53,6 +53,27 @@ def test_launch_backtest_returns_202_immediately(client: TestClient) -> None:
     assert data["status"] == "queued"
 
 
+def test_launch_carry_too_early_window_returns_400(client: TestClient) -> None:
+    with patch(
+        "api.curve_coverage.get_curve_coverage_start",
+        return_value=__import__("datetime").date(2024, 9, 27),
+    ):
+        response = client.post(
+            "/api/backtests",
+            json={
+                "asset": "gold",
+                "strategy": "carry",
+                "params": {"threshold": 0.0, "n_contracts": 4},
+                "from_date": "2015-01-01",
+                "to_date": "2026-08-28",
+            },
+        )
+    assert response.status_code == 400
+    detail = response.json()["detail"]
+    assert detail["code"] == "INSUFFICIENT_CURVE_COVERAGE"
+    assert detail["curve_coverage_start"] == "2024-09-27"
+
+
 def test_launch_with_null_signal_evaluation_accepted(client: TestClient) -> None:
     """signal_evaluation: null must return 202, not 400 (IC gate is client-side)."""
     with patch("api.routers.backtests._run_backtest_task"):

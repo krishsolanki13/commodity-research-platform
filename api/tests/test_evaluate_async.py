@@ -81,9 +81,15 @@ def test_evaluate_async_result_not_complete_409(client: TestClient) -> None:
 
 def test_evaluate_async_carry_completes_with_result(client: TestClient) -> None:
     canned = _canned_evaluate_response()
-    with patch(
-        "api.routers.signals._evaluate_signal_sync",
-        return_value=canned,
+    with (
+        patch(
+            "api.curve_coverage.get_curve_coverage_start",
+            return_value=__import__("datetime").date(2024, 9, 27),
+        ),
+        patch(
+            "api.routers.signals._evaluate_signal_sync",
+            return_value=canned,
+        ),
     ):
         response = client.post(
             "/api/signals/evaluate-async",
@@ -91,7 +97,7 @@ def test_evaluate_async_carry_completes_with_result(client: TestClient) -> None:
                 "asset": "gold",
                 "strategy": "carry",
                 "params": {"threshold": 0.0, "n_contracts": 4},
-                "from_date": "2021-08-28",
+                "from_date": "2024-10-01",
                 "to_date": "2026-08-28",
             },
         )
@@ -111,3 +117,24 @@ def test_evaluate_async_carry_completes_with_result(client: TestClient) -> None:
     assert body["strategy"] == "carry"
     assert body["evaluation"]["evaluation_window"] == 1250
     assert body["evaluation"]["ic"] == 0.04
+
+
+def test_evaluate_async_too_early_window_returns_400(client: TestClient) -> None:
+    with patch(
+        "api.curve_coverage.get_curve_coverage_start",
+        return_value=__import__("datetime").date(2024, 9, 27),
+    ):
+        response = client.post(
+            "/api/signals/evaluate-async",
+            json={
+                "asset": "gold",
+                "strategy": "carry",
+                "params": {"threshold": 0.0, "n_contracts": 4},
+                "from_date": "2015-01-01",
+                "to_date": "2026-08-28",
+            },
+        )
+    assert response.status_code == 400
+    detail = response.json()["detail"]
+    assert detail["code"] == "INSUFFICIENT_CURVE_COVERAGE"
+    assert detail["curve_coverage_start"] == "2024-09-27"

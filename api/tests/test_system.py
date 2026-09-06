@@ -50,3 +50,24 @@ def test_config_excludes_secrets(client: TestClient) -> None:
     flat = json.dumps(response.json()).lower()
     for term in ["password", "api_key", "secret"]:
         assert f'"{term}"' not in flat, f"Found sensitive key: {term}"
+
+
+def test_curve_coverage_unknown_asset_404(client: TestClient) -> None:
+    response = client.get("/api/system/curve-coverage/not_an_asset")
+    assert response.status_code == 404
+    assert response.json()["detail"]["code"] == "ASSET_NOT_FOUND"
+
+
+def test_curve_coverage_returns_cached_date(client: TestClient) -> None:
+    from datetime import date  # noqa: PLC0415
+
+    with patch(
+        "api.curve_coverage.get_curve_coverage_start",
+        return_value=date(2024, 9, 27),
+    ):
+        response = client.get("/api/system/curve-coverage/gold")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["asset"] == "gold"
+    assert data["curve_coverage_start"] == "2024-09-27"
+    assert "Carry" in data["message"]

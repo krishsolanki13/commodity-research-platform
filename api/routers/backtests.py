@@ -10,6 +10,7 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks
 
 from api import state
+from api.curve_coverage import raise_if_insufficient_curve_coverage
 from api.exceptions import ApiError
 from api.models import (
     BacktestLaunchRequest,
@@ -285,6 +286,14 @@ def launch_backtest(
     signal_evaluation: null is accepted without error — gate
     enforcement is client-side doctrine only (ADR-007).
     """
+    n_contracts = int(request.params.get("n_contracts", 4))
+    raise_if_insufficient_curve_coverage(
+        request.strategy,
+        request.asset,
+        request.from_date,
+        n_contracts=n_contracts,
+    )
+
     ts = datetime.datetime.now(datetime.UTC).strftime("%Y%m%d_%H%M%S")
     polling_run_id = f"poll_{ts}_{request.strategy}_{request.asset}"
     state.register(polling_run_id)
