@@ -10,6 +10,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
+from api.curve_coverage import get_curve_coverage_start
 from api.models import CurvePCAResponse
 
 logger = logging.getLogger(__name__)
@@ -40,10 +41,14 @@ async def get_curve_pca(
       n_components: Number of PCs to compute (default 3).
       n_contracts:  Number of forward contracts to include (default 4).
       from_date:    Optional start date filter (ISO 8601: YYYY-MM-DD).
+                    Explicit dates before curve coverage return 400
+                    INSUFFICIENT_CURVE_COVERAGE. When omitted, defaults
+                    to the asset's coverage start (else a 3-year window).
       to_date:      Optional end date filter (ISO 8601: YYYY-MM-DD).
     """
     import datetime as _dt  # noqa: PLC0415
 
+    from src.commodity.curve import FuturesCurveBuilder  # noqa: PLC0415
     from src.commodity.pca import CurvePCAEngine  # noqa: PLC0415
     from src.core.config import Config  # noqa: PLC0415
 
@@ -67,16 +72,46 @@ async def get_curve_pca(
                 detail=f"Invalid to_date format: '{to_date}'. Use YYYY-MM-DD.",
             ) from exc
 
-    if parsed_from is None:
-        today = _dt.date.today()
-        parsed_from = _dt.date(today.year - 3, today.month, 1)
-        logger.info(
-            "CurvePCA: no from_date provided — applying 3-year default: %s",
-            parsed_from,
-        )
-
     # DEV-EM10-1: Config.load() — no arguments
     config = Config.load()
+
+    coverage_start: _dt.date | None = None
+    try:
+        if asset in FuturesCurveBuilder(config).available_assets():
+            coverage_start = get_curve_coverage_start(asset, n_contracts)
+    except Exception:  # noqa: BLE001
+        coverage_start = None
+
+    if parsed_from is not None:
+        if coverage_start is not None and parsed_from < coverage_start:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "code": "INSUFFICIENT_CURVE_COVERAGE",
+                    "message": (
+                        f"Requested window starts {from_date}, but curve "
+                        f"data for {asset} is only available from "
+                        f"{coverage_start} onward."
+                    ),
+                    "curve_coverage_start": str(coverage_start),
+                },
+            )
+    else:
+        if coverage_start is not None:
+            parsed_from = coverage_start
+            logger.info(
+                "CurvePCA: no from_date provided — defaulting to curve "
+                "coverage start: %s",
+                parsed_from,
+            )
+        else:
+            today = _dt.date.today()
+            parsed_from = _dt.date(today.year - 3, today.month, 1)
+            logger.info(
+                "CurvePCA: no from_date provided — applying 3-year default: %s",
+                parsed_from,
+            )
+
     engine = CurvePCAEngine(config)
 
     try:
