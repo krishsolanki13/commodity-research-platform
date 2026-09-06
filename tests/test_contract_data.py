@@ -319,6 +319,58 @@ def test_contract_parquet_store_list_tickers(tmp_config: Config) -> None:
     assert tickers == ["GCF25", "GCG25", "GCH25"]
 
 
+def test_contract_parquet_store_write_merges_and_new_value_wins(
+    tmp_config: Config,
+) -> None:
+    """Second write unions dates; overlapping index keeps the new close."""
+    store = ContractParquetStore(tmp_config)
+    meta = ContractMetadata(
+        ticker="GCZ24",
+        asset="gold",
+        contract_root="GC",
+        contract_month=12,
+        contract_year=2024,
+        n_bars=3,
+    )
+    df1 = pd.DataFrame(
+        {
+            "open": [100.0, 101.0, 102.0],
+            "high": [100.0, 101.0, 102.0],
+            "low": [100.0, 101.0, 102.0],
+            "close": [100.0, 101.0, 102.0],
+            "volume": [1.0, 1.0, 1.0],
+            "open_interest": [float("nan")] * 3,
+        },
+        index=pd.DatetimeIndex(pd.date_range("2024-01-01", periods=3), tz="UTC"),
+    )
+    df2 = pd.DataFrame(
+        {
+            "open": [102.5, 103.0, 104.0],
+            "high": [102.5, 103.0, 104.0],
+            "low": [102.5, 103.0, 104.0],
+            "close": [102.5, 103.0, 104.0],
+            "volume": [1.0, 1.0, 1.0],
+            "open_interest": [float("nan")] * 3,
+        },
+        index=pd.DatetimeIndex(pd.date_range("2024-01-03", periods=3), tz="UTC"),
+    )
+    store.write(df1, "gold", "GCZ24", meta)
+    store.write(df2, "gold", "GCZ24", meta)
+    loaded = store.read("gold", "GCZ24")
+    assert len(loaded) == 5
+    assert list(loaded.index.date) == [
+        date(2024, 1, 1),
+        date(2024, 1, 2),
+        date(2024, 1, 3),
+        date(2024, 1, 4),
+        date(2024, 1, 5),
+    ]
+    assert loaded.loc["2024-01-03", "close"] == 102.5
+    sidecar = store.read_metadata("gold", "GCZ24")
+    assert sidecar is not None
+    assert sidecar.n_bars == 5
+
+
 # ---------------------------------------------------------------------------
 # ContractDataLoader tests
 # ---------------------------------------------------------------------------

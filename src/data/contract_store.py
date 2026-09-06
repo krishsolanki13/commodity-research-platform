@@ -64,6 +64,8 @@ class ContractParquetStore(ContractStore):
     as a sidecar JSON file: {ticker}.meta.json
 
     Uses pyarrow engine consistently with Phase 1 ParquetStore.
+    write() merges with any existing Parquet for the same ticker:
+    new rows union in, overlapping dates keep the incoming value.
     """
 
     def __init__(self, config: Config) -> None:
@@ -88,6 +90,13 @@ class ContractParquetStore(ContractStore):
     ) -> Path:
         """Persist normalized contract DataFrame and metadata to disk.
 
+        Merge-on-write: if a Parquet file already exists for this ticker,
+        concatenate it with ``df``, drop duplicate index entries keeping the
+        new value, then sort. First write of a ticker is a plain create.
+
+        Sidecar n_bars / earliest_bar / latest_bar reflect the accumulated
+        range, not only the latest download.
+
         Args:
             df: NormalizedOHLCV DataFrame for this contract.
             asset: Platform asset identifier.
@@ -100,10 +109,25 @@ class ContractParquetStore(ContractStore):
         parquet_path = self._parquet_path(asset, ticker)
         parquet_path.parent.mkdir(parents=True, exist_ok=True)
 
-        df.attrs = {}
-        df.to_parquet(parquet_path, engine="pyarrow")
+        combined = df
+        merged = False
+        if parquet_path.exists():
+            existing = pd.read_parquet(parquet_path, engine="pyarrow")
+            incoming = df.copy()
+            if isinstance(existing.index, pd.DatetimeIndex) and isinstance(
+                incoming.index, pd.DatetimeIndex
+            ):
+                existing, incoming = self._align_index_tz(existing, incoming)
+            combined = pd.concat([existing, incoming])
+            combined = combined[~combined.index.duplicated(keep="last")]
+            combined = combined.sort_index()
+            merged = True
 
-        # Write sidecar metadata JSON
+        combined.attrs = {}
+        combined.to_parquet(parquet_path, engine="pyarrow")
+
+        earliest = combined.index.min()
+        latest = combined.index.max()
         meta_dict: dict[str, Any] = {
             "ticker": metadata.ticker,
             "asset": metadata.asset,
@@ -118,18 +142,22 @@ class ContractParquetStore(ContractStore):
                 if metadata.first_notice_date
                 else None
             ),
-            "n_bars": len(df),
+            "n_bars": len(combined),
+            "earliest_bar": self._index_date_str(earliest),
+            "latest_bar": self._index_date_str(latest),
+            "accumulated": merged,
         }
         meta_path = parquet_path.with_suffix(".meta.json")
         with open(meta_path, "w", encoding="utf-8") as f:
             json.dump(meta_dict, f, indent=2)
 
         self._logger.info(
-            "ContractParquetStore: wrote %d bars for %s/%s to %s",
-            len(df),
+            "ContractParquetStore: wrote %d bars for %s/%s to %s%s",
+            len(combined),
             asset,
             ticker,
             parquet_path,
+            " (merged)" if merged else "",
         )
         return parquet_path
 
@@ -214,3 +242,30 @@ class ContractParquetStore(ContractStore):
     def _parquet_path(self, asset: str, ticker: str) -> Path:
         """Return the Parquet file path for this contract."""
         return self._processed_dir / asset / f"{ticker}.parquet"
+
+    @staticmethod
+    def _align_index_tz(
+        existing: pd.DataFrame, incoming: pd.DataFrame
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Make DatetimeIndexes timezone-compatible before concat."""
+        existing_tz = existing.index.tz
+        incoming_tz = incoming.index.tz
+        if existing_tz is not None and incoming_tz is None:
+            incoming.index = incoming.index.tz_localize(existing_tz)
+        elif existing_tz is None and incoming_tz is not None:
+            existing = existing.copy()
+            existing.index = existing.index.tz_localize(incoming_tz)
+        elif (
+            existing_tz is not None
+            and incoming_tz is not None
+            and existing_tz != incoming_tz
+        ):
+            incoming.index = incoming.index.tz_convert(existing_tz)
+        return existing, incoming
+
+    @staticmethod
+    def _index_date_str(value: object) -> str:
+        """ISO date string from a DatetimeIndex label."""
+        if hasattr(value, "date"):
+            return value.date().isoformat()  # type: ignore[union-attr]
+        return str(value)[:10]
