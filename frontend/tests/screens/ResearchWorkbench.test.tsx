@@ -6,6 +6,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient as qc } from '@/app/queryClient'
 import { goldEmaEvalFixture } from '../mocks/fixtures/signal-eval'
 import { strategyCatalogFixture } from '../mocks/fixtures/strategies'
+import { ApiClientError } from '@/api/client'
 import ResearchWorkbenchScreen from '@/screens/research/ResearchWorkbench'
 
 const { mutateAsync } = vi.hoisted(() => ({
@@ -291,5 +292,56 @@ describe('ResearchWorkbenchScreen', () => {
       screen.queryByText(/Carry evaluation is clamped to a 2-year window/i)
     ).not.toBeInTheDocument()
     expect(screen.queryByText(/Select 1Y for an unclamped result/i)).not.toBeInTheDocument()
+  })
+
+  it('shows curve coverage notice and min= for Carry', async () => {
+    render(<Wrapper initialEntry="/research?asset=gold&strategy=carry" />)
+    await waitFor(
+      () =>
+        expect(
+          screen.getByText(/Carry requires futures curve data available from 2024-09-27/)
+        ).toBeInTheDocument(),
+      { timeout: 5000 }
+    )
+    expect(screen.getByLabelText('From date')).toHaveAttribute('min', '2024-09-27')
+  })
+
+  it('does not show curve coverage notice for ema_crossover', async () => {
+    render(<Wrapper initialEntry={emaUrl} />)
+    await waitFor(
+      () => expect(screen.getByRole('button', { name: /Evaluate signal/i })).toBeEnabled(),
+      { timeout: 5000 }
+    )
+    expect(
+      screen.queryByText(/Carry requires futures curve data available from/)
+    ).not.toBeInTheDocument()
+    expect(screen.getByLabelText('From date')).not.toHaveAttribute('min')
+  })
+
+  it('shows INSUFFICIENT_CURVE_COVERAGE as an inline date-range error', async () => {
+    const user = userEvent.setup()
+    mutateAsync.mockRejectedValueOnce(
+      new ApiClientError({
+        code: 'INSUFFICIENT_CURVE_COVERAGE',
+        message:
+          'Requested window starts 2015-01-01, but curve data for gold is only available from 2024-09-27 onward.',
+        detail: '2024-09-27',
+        status: 400,
+      })
+    )
+    render(<Wrapper initialEntry="/research?asset=gold&strategy=carry" />)
+
+    await waitFor(
+      () => expect(screen.getByRole('button', { name: /Evaluate signal/i })).toBeEnabled(),
+      { timeout: 5000 }
+    )
+    await user.click(screen.getByRole('button', { name: /Evaluate signal/i }))
+
+    await waitFor(() => {
+      const alert = screen.getByRole('alert')
+      expect(alert).toHaveTextContent(
+        'Curve data for gold starts 2024-09-27 — adjust date range'
+      )
+    })
   })
 })

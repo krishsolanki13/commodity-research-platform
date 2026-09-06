@@ -15,6 +15,15 @@ export const systemHandlers = [
     })
   ),
 
+  http.get('http://localhost:8000/api/system/curve-coverage/:asset', ({ params }) =>
+    HttpResponse.json({
+      asset: params.asset,
+      curve_coverage_start: '2024-09-27',
+      n_contracts: 4,
+      message: `Curve-dependent signals (Carry) are only evaluable from 2024-09-27 onward for ${String(params.asset)}`,
+    })
+  ),
+
   http.get('http://localhost:8000/api/system/data/qc', ({ request }) => {
     const asset = new URL(request.url).searchParams.get('asset') ?? 'gold'
     return HttpResponse.json({

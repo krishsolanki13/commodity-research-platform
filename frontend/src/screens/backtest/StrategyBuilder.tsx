@@ -6,12 +6,13 @@
  * PATH A — ?evaluation=<JSON> from Workbench Configure Backtest → show IC context.
  * PATH B — no evaluation param (direct nav or evalOverride=1) → override / empty states.
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { useAssets, useStrategies, useSignalEvaluate } from '@/api/hooks'
+import { useAssets, useStrategies, useSignalEvaluate, useCurveCoverage } from '@/api/hooks'
 import { AssetSelector } from '@/components/inputs/AssetSelector'
 import { StrategyPicker } from '@/components/inputs/StrategyPicker'
 import { ParamForm } from '@/components/inputs/ParamForm'
+import { DateRangePicker } from '@/components/inputs/DateRangePicker'
 import { EvalSummaryCard } from '@/features/backtest/EvalSummaryCard'
 import { BacktestConfigPanel } from '@/features/backtest/BacktestConfigPanel'
 import type { BacktestConfig } from '@/features/backtest/BacktestConfigPanel'
@@ -49,6 +50,8 @@ export default function StrategyBuilder() {
   const evaluationJson = searchParams.get('evaluation')
   const evalOverrideParam = searchParams.get('evalOverride') === '1'
   const parsedParams = safeJsonParse<Record<string, unknown>>(paramsJson, {})
+  const fromDate = searchParams.get('from_date') ?? '2015-01-01'
+  const toDate = searchParams.get('to_date') ?? new Date().toISOString().slice(0, 10)
 
   // PATH A: evaluation in URL wins — show IC context even if evalOverride is also present
   const urlEvaluation = parseUrlEvaluation(evaluationJson)
@@ -58,6 +61,11 @@ export default function StrategyBuilder() {
   const { data: strategiesData } = useStrategies()
   const strategies = strategiesData?.strategies ?? []
   const selectedStrategy = strategies.find((s) => s.name === strategy)
+  const { data: coverage } = useCurveCoverage(asset || null, strategy || null)
+  const coverageStart =
+    strategy === 'carry' && typeof coverage?.curve_coverage_start === 'string'
+      ? coverage.curve_coverage_start
+      : undefined
 
   // Prefer URL-threaded evaluation (Issue T); fall back to F5 evaluate-chain cache
   const cachedEval = useSignalEvaluate(asset, strategy, parsedParams)
@@ -78,6 +86,8 @@ export default function StrategyBuilder() {
     asset,
     strategy,
     params: parsedParams,
+    from_date: fromDate,
+    to_date: toDate,
     initial_capital: config.initial_capital,
     commission_per_trade: config.commission_per_trade,
     slippage_ticks: config.slippage_ticks,
@@ -114,6 +124,15 @@ export default function StrategyBuilder() {
     })
   }
 
+  useEffect(() => {
+    if (!coverageStart) return
+    if (fromDate < coverageStart) {
+      patchParams({ from_date: coverageStart })
+    }
+    // patchParams is stable enough for URL writes; keyed on coverage/from
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coverageStart, fromDate])
+
   function handleLaunched(runId: string) {
     const artifactId = runId.replace(/^poll_/, '')
     void navigate(`/runs/${artifactId}`)
@@ -138,6 +157,16 @@ export default function StrategyBuilder() {
                 assets={assetsData?.assets ?? []}
                 aria-label="Select asset"
               />
+              <DateRangePicker
+                value={{ from: fromDate, to: toDate }}
+                onChange={({ from, to }) => patchParams({ from_date: from, to_date: to })}
+                bounds={coverageStart ? { min: coverageStart } : undefined}
+              />
+              {coverageStart && (
+                <p className="font-mono text-xs text-warn">
+                  Carry requires futures curve data available from {coverageStart}
+                </p>
+              )}
               <StrategyPicker
                 strategies={strategies}
                 value={strategy || null}

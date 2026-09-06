@@ -90,6 +90,7 @@ export const qk = {
       ['sweeps', id, 'results', sortBy, sortDir] as const,
   },
   dataQc: (asset: string) => ['data-qc', asset] as const,
+  curveCoverage: (asset: string) => ['curve-coverage', asset] as const,
   curvePca: (asset: string, nComponents: number, nContracts: number, from?: string, to?: string) =>
     ['curve-pca', asset, nComponents, nContracts, from, to] as const,
   cotData: (asset: string) => ['cot-data', asset] as const,

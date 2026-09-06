@@ -5,6 +5,7 @@ import { safeJsonParse } from '@/lib/json'
 import { useAssets } from '@/api/hooks/useAssets'
 import { useIndicators } from '@/api/hooks/useIndicators'
 import { useStrategies } from '@/api/hooks/useStrategies'
+import { useCurveCoverage } from '@/api/hooks/useCurveCoverage'
 import { AssetSelector } from '@/components/inputs/AssetSelector'
 import { DateRangePicker } from '@/components/inputs/DateRangePicker'
 import { StrategyPicker } from '@/components/inputs/StrategyPicker'
@@ -189,6 +190,19 @@ export function WorkbenchConfigRail({
   const fromDate = urlState.from_date ?? defaults.from_date
   const toDate = urlState.to_date ?? defaults.to_date
 
+  const { data: coverage } = useCurveCoverage(urlState.asset ?? null, strategy ?? null)
+  const coverageStart =
+    strategy === 'carry' && typeof coverage?.curve_coverage_start === 'string'
+      ? coverage.curve_coverage_start
+      : undefined
+
+  useEffect(() => {
+    if (!coverageStart) return
+    if (fromDate < coverageStart) {
+      setUrlState({ from_date: coverageStart })
+    }
+  }, [coverageStart, fromDate, setUrlState])
+
   return (
     <div className="flex flex-col gap-4">
       {evalError && (
@@ -210,7 +224,13 @@ export function WorkbenchConfigRail({
           <DateRangePicker
             value={{ from: fromDate, to: toDate }}
             onChange={({ from, to }) => setUrlState({ from_date: from, to_date: to })}
+            bounds={coverageStart ? { min: coverageStart } : undefined}
           />
+          {coverageStart && (
+            <p className="font-mono text-xs text-warn">
+              Carry requires futures curve data available from {coverageStart}
+            </p>
+          )}
           <StrategyPicker
             strategies={strategies ?? []}
             value={strategy ?? null}

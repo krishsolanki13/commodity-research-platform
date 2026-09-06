@@ -38,7 +38,24 @@ interface PendingAsyncChain {
   params: Record<string, unknown>
 }
 
-function formatEvalError(e: unknown, failedStep: EvaluateProgress['step'] | null): string {
+function coverageBoundaryDate(e: ApiClientError): string | null {
+  if (e.apiError.detail && /^\d{4}-\d{2}-\d{2}$/.test(e.apiError.detail)) {
+    return e.apiError.detail
+  }
+  const dates = `${e.apiError.message} ${e.apiError.detail ?? ''}`.match(/\d{4}-\d{2}-\d{2}/g)
+  return dates?.[dates.length - 1] ?? null
+}
+
+function formatEvalError(
+  e: unknown,
+  failedStep: EvaluateProgress['step'] | null,
+  asset?: string,
+): string {
+  if (e instanceof ApiClientError && e.apiError.code === 'INSUFFICIENT_CURVE_COVERAGE') {
+    const boundary = coverageBoundaryDate(e) ?? 'the coverage start'
+    return `Curve data for ${asset || 'this asset'} starts ${boundary} — adjust date range`
+  }
+
   const detail =
     e instanceof ApiClientError
       ? e.apiError.detail
@@ -143,19 +160,19 @@ export default function ResearchWorkbenchScreen() {
       asyncStatusIsError && asyncStatusError
         ? asyncStatusError
         : new Error(asyncStatus?.error ?? 'Async evaluation failed')
-    setEvalError(formatEvalError(err, 'evaluation'))
+    setEvalError(formatEvalError(err, 'evaluation', asset))
     setEvaluationResult(null)
     setHasEvaluated(false)
     setEvaluating(false)
     setEvaluateProgress(null)
     setAsyncJobId(null)
     pendingAsyncRef.current = null
-  }, [asyncJobId, asyncStatus, asyncStatusIsError, asyncStatusError])
+  }, [asyncJobId, asyncStatus, asyncStatusIsError, asyncStatusError, asset])
 
   useEffect(() => {
     if (!asyncJobId || asyncStatus?.status !== 'complete') return
     if (asyncResultIsError) {
-      setEvalError(formatEvalError(asyncResultError, 'evaluation'))
+      setEvalError(formatEvalError(asyncResultError, 'evaluation', asset))
       setEvaluationResult(null)
       setHasEvaluated(false)
       setEvaluating(false)
@@ -189,6 +206,7 @@ export default function ResearchWorkbenchScreen() {
     asyncResultIsError,
     asyncResultError,
     queryClient,
+    asset,
   ])
 
   const progressLabel =
@@ -249,7 +267,7 @@ export default function ResearchWorkbenchScreen() {
       setHasEvaluated(true)
     } catch (e) {
       console.error('Evaluate chain failed:', e)
-      setEvalError(formatEvalError(e, (progressRef.current as EvaluateProgress | null)?.step ?? null))
+      setEvalError(formatEvalError(e, (progressRef.current as EvaluateProgress | null)?.step ?? null, asset))
       setEvaluationResult(null)
       setHasEvaluated(false)
     } finally {

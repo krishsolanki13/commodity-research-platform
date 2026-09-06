@@ -83,4 +83,30 @@ describe('client', () => {
       expect((e as ApiClientError).apiError.code).toBe('NETWORK_ERROR')
     }
   })
+
+  it('parses FastAPI HTTPException detail.code (INSUFFICIENT_CURVE_COVERAGE)', async () => {
+    server.use(
+      http.post('http://localhost:8000/api/signals/evaluate-async', () =>
+        HttpResponse.json(
+          {
+            detail: {
+              code: 'INSUFFICIENT_CURVE_COVERAGE',
+              message:
+                'Requested window starts 2015-01-01, but curve data for gold is only available from 2024-09-27 onward.',
+              curve_coverage_start: '2024-09-27',
+            },
+          },
+          { status: 400 }
+        )
+      )
+    )
+    try {
+      await client.post('/api/signals/evaluate-async', {})
+      expect.fail('expected throw')
+    } catch (e) {
+      expect(e).toBeInstanceOf(ApiClientError)
+      expect((e as ApiClientError).apiError.code).toBe('INSUFFICIENT_CURVE_COVERAGE')
+      expect((e as ApiClientError).apiError.detail).toBe('2024-09-27')
+    }
+  })
 })

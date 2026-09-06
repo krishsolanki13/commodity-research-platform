@@ -152,4 +152,25 @@ describe('StrategyBuilder', () => {
       timeout: 3000,
     })
   })
+
+  it('shows curve coverage restriction for Carry and hides it for EMA', async () => {
+    renderStrategyBuilder('/backtest/new?asset=gold&strategy=carry')
+    await waitFor(
+      () =>
+        expect(
+          screen.getByText(/Carry requires futures curve data available from 2024-09-27/)
+        ).toBeInTheDocument(),
+      { timeout: 5000 }
+    )
+    expect(screen.getByLabelText('From date')).toHaveAttribute('min', '2024-09-27')
+  })
+
+  it('does not show curve coverage restriction for ema_crossover', async () => {
+    renderStrategyBuilder(BASE_URL)
+    await waitFor(() => expect(screen.getByRole('heading', { name: /strategy builder/i })).toBeInTheDocument())
+    expect(
+      screen.queryByText(/Carry requires futures curve data available from/)
+    ).not.toBeInTheDocument()
+    expect(screen.getByLabelText('From date')).not.toHaveAttribute('min')
+  })
 })

@@ -22,7 +22,10 @@ export function DateRangePicker({
 }: DateRangePickerProps) {
   function handlePresetClick(preset: string) {
     const { from_date, to_date } = rangeToDateParams(preset as RangePreset)
-    onChange({ from: from_date, to: to_date })
+    const from = clampDate(from_date, bounds?.min, bounds?.max)
+    let to = clampDate(to_date, bounds?.min, bounds?.max)
+    if (from > to) to = from
+    onChange({ from, to })
   }
 
   function clampDate(date: string, min?: string, max?: string): string {
@@ -76,6 +79,7 @@ export function DateRangePicker({
           type="text"
           aria-label="From date"
           value={value.from}
+          min={bounds?.min}
           disabled={disabled}
           onChange={(e) => onChange({ ...value, from: e.target.value })}
           onBlur={(e) => handleFromBlur(e.target.value)}

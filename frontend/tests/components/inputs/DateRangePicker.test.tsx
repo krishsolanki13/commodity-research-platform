@@ -33,4 +33,30 @@ describe('DateRangePicker', () => {
     expect(screen.getByRole('button', { name: '3Y' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '5Y' })).toBeInTheDocument()
   })
+
+  test('from input has min= when bounds.min is set', () => {
+    render(
+      <DateRangePicker
+        value={{ from: '2024-09-27', to: '2026-07-15' }}
+        onChange={vi.fn()}
+        bounds={{ min: '2024-09-27' }}
+      />
+    )
+    expect(screen.getByLabelText('From date')).toHaveAttribute('min', '2024-09-27')
+  })
+
+  test('MAX preset is clamped to bounds.min', async () => {
+    const onChange = vi.fn()
+    render(
+      <DateRangePicker
+        value={{ from: '2024-09-27', to: '2026-07-15' }}
+        onChange={onChange}
+        bounds={{ min: '2024-09-27' }}
+      />
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'MAX' }))
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ from: '2024-09-27' })
+    )
+  })
 })

@@ -46,6 +46,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
         detail?: string
         field_errors?: Record<string, string>
       }
+      detail?: unknown
     }
     try {
       envelope = (await response.json()) as typeof envelope
@@ -53,10 +54,26 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
       envelope = {}
     }
 
+    const fastapiDetail =
+      envelope.detail && typeof envelope.detail === 'object' && !Array.isArray(envelope.detail)
+        ? (envelope.detail as {
+            code?: string
+            message?: string
+            curve_coverage_start?: string
+          })
+        : undefined
+
     throw new ApiClientError({
-      code: envelope.error?.code ?? 'UNKNOWN',
-      message: envelope.error?.message ?? `HTTP ${response.status}`,
-      detail: envelope.error?.detail,
+      code: envelope.error?.code ?? fastapiDetail?.code ?? 'UNKNOWN',
+      message:
+        envelope.error?.message ??
+        fastapiDetail?.message ??
+        (typeof envelope.detail === 'string' ? envelope.detail : `HTTP ${response.status}`),
+      detail:
+        envelope.error?.detail ??
+        (typeof envelope.detail === 'string'
+          ? envelope.detail
+          : fastapiDetail?.curve_coverage_start),
       fieldErrors: envelope.error?.field_errors,
       status: response.status,
     })
