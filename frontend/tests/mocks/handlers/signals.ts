@@ -27,4 +27,13 @@ export const signalHandlers = [
   http.post('http://localhost:8000/api/signals/evaluate', () =>
     HttpResponse.json(goldEmaEvalFixture)
   ),
+  http.post('http://localhost:8000/api/signals/evaluate-async', () =>
+    HttpResponse.json({ job_id: 'eval-async-test-job', status: 'queued' }, { status: 202 })
+  ),
+  http.get('http://localhost:8000/api/signals/evaluate-async/:jobId/status', ({ params }) =>
+    HttpResponse.json({ job_id: params.jobId, status: 'complete' })
+  ),
+  http.get('http://localhost:8000/api/signals/evaluate-async/:jobId/result', () =>
+    HttpResponse.json(goldEmaEvalFixture)
+  ),
 ]

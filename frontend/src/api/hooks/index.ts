@@ -11,7 +11,16 @@ export { useStrategies } from './useStrategies'
 export { useSignalGenerate } from './useSignalGenerate'
 export { useSignalEvaluate } from './useSignalEvaluate'
 export { useEvaluateChainMutation } from './useEvaluateChainMutation'
-export type { EvaluateChainParams, EvaluateChainResult } from './useEvaluateChainMutation'
+export type {
+  EvaluateChainParams,
+  EvaluateChainResult,
+  EvaluateChainAsyncLaunch,
+  EvaluateChainOutcome,
+} from './useEvaluateChainMutation'
+export { isEvaluateChainAsyncLaunch } from './useEvaluateChainMutation'
+export { useEvaluateAsyncLaunch } from './useEvaluateAsync'
+export { useEvaluateAsyncStatus } from './useEvaluateAsync'
+export { useEvaluateAsyncResult } from './useEvaluateAsync'
 export type { AssetName } from './useUniverseOhlcv'
 export { useBacktestLaunch } from './useBacktestLaunch'
 export { useBacktestStatus } from './useBacktestStatus'

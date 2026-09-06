@@ -22,6 +22,7 @@ vi.mock('@/api/hooks/useEvaluateChainMutation', () => ({
     },
     isPending: false,
   }),
+  isEvaluateChainAsyncLaunch: (result: object) => 'job_id' in result,
 }))
 
 function buildMockEvalResult() {
@@ -232,25 +233,63 @@ describe('ResearchWorkbenchScreen', () => {
     await waitFor(() => expect(screen.getByText(/Evaluating\.\.\. \d+s/)).toBeInTheDocument(), {
       timeout: 5000,
     })
+    expect(screen.queryByText('Queued...')).not.toBeInTheDocument()
     expect(screen.queryByText('IC Decay')).not.toBeInTheDocument()
   })
 
-  it('shows carry window notice when strategy is carry and from_date is older than 2 years', async () => {
-    render(
-      <Wrapper initialEntry="/research?asset=gold&strategy=carry&from_date=2015-01-01" />
-    )
-    await waitFor(
-      () => expect(screen.getByText(/Carry evaluation is clamped to a 2-year window/i)).toBeInTheDocument(),
-      { timeout: 5000 }
-    )
-  })
+  it('shows Queued... for carry while the async launch mutation is in flight', async () => {
+    const user = userEvent.setup()
+    mutateAsync.mockImplementation(() => new Promise(() => {}))
+    render(<Wrapper initialEntry="/research?asset=gold&strategy=carry" />)
 
-  it('does not show carry window notice for ema_crossover', async () => {
-    render(<Wrapper initialEntry={emaUrl} />)
     await waitFor(
       () => expect(screen.getByRole('button', { name: /Evaluate signal/i })).toBeEnabled(),
       { timeout: 5000 }
     )
-    expect(screen.queryByText(/Carry evaluation is clamped to a 2-year window/i)).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Evaluate signal/i }))
+
+    await waitFor(() => expect(screen.getByText('Queued...')).toBeInTheDocument(), {
+      timeout: 5000,
+    })
+    expect(screen.queryByText(/Evaluating\.\.\. \d+s/)).not.toBeInTheDocument()
+  })
+
+  it('shows results after carry async job completes', async () => {
+    const user = userEvent.setup()
+    const mock = buildMockEvalResult()
+    mutateAsync.mockResolvedValue({
+      job_id: 'job-carry-1',
+      features: mock.features,
+      signal: mock.signal,
+    })
+    render(<Wrapper initialEntry="/research?asset=gold&strategy=carry" />)
+
+    await waitFor(
+      () => expect(screen.getByRole('button', { name: /Evaluate signal/i })).toBeEnabled(),
+      { timeout: 5000 }
+    )
+    await user.click(screen.getByRole('button', { name: /Evaluate signal/i }))
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('IC Decay')).toBeInTheDocument()
+        expect(screen.getAllByText('0.012').length).toBeGreaterThan(0)
+      },
+      { timeout: 5000 }
+    )
+  })
+
+  it('does not show obsolete carry window clamp notice', async () => {
+    render(
+      <Wrapper initialEntry="/research?asset=gold&strategy=carry&from_date=2015-01-01" />
+    )
+    await waitFor(
+      () => expect(screen.getByRole('button', { name: /Evaluate signal/i })).toBeEnabled(),
+      { timeout: 5000 }
+    )
+    expect(
+      screen.queryByText(/Carry evaluation is clamped to a 2-year window/i)
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText(/Select 1Y for an unclamped result/i)).not.toBeInTheDocument()
   })
 })

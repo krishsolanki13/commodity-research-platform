@@ -5,7 +5,10 @@ import type { ReactNode } from 'react'
 import { http, HttpResponse } from 'msw'
 import { queryClient as qc } from '@/app/queryClient'
 import { qk } from '@/api/queryKeys'
-import { useEvaluateChainMutation } from '@/api/hooks/useEvaluateChainMutation'
+import {
+  useEvaluateChainMutation,
+  isEvaluateChainAsyncLaunch,
+} from '@/api/hooks/useEvaluateChainMutation'
 import { server } from '../../setup'
 import type { components } from '@/api/schema'
 
@@ -33,6 +36,8 @@ describe('useEvaluateChainMutation', () => {
   it('mutateAsync resolves with EvaluateChainResult containing features, signal, evaluation', async () => {
     const { result } = renderHook(() => useEvaluateChainMutation(), { wrapper })
     const chain = await result.current.mutateAsync(validParams)
+    expect(isEvaluateChainAsyncLaunch(chain)).toBe(false)
+    if (isEvaluateChainAsyncLaunch(chain)) return
     expect(chain.features).toBeDefined()
     expect(chain.signal).toBeDefined()
     expect(chain.evaluation).toBeDefined()
@@ -113,8 +118,62 @@ describe('useEvaluateChainMutation', () => {
     })
     expect(featuresCalled).toBe(false)
     expect(steps).toEqual(['signal', 'evaluation'])
+    expect(isEvaluateChainAsyncLaunch(chain)).toBe(false)
+    if (isEvaluateChainAsyncLaunch(chain)) return
     expect(chain.features.specs).toEqual([])
     expect(chain.signal).toBeDefined()
     expect(chain.evaluation).toBeDefined()
+  })
+
+  it('routes carry to evaluate-async and returns job_id without hitting sync evaluate', async () => {
+    let asyncCalled = false
+    let syncCalled = false
+    server.use(
+      http.post('http://localhost:8000/api/signals/evaluate-async', () => {
+        asyncCalled = true
+        return HttpResponse.json({ job_id: 'job-carry-1', status: 'queued' }, { status: 202 })
+      }),
+      http.post('http://localhost:8000/api/signals/evaluate', () => {
+        syncCalled = true
+        return HttpResponse.json({}, { status: 400 })
+      })
+    )
+    const { result } = renderHook(() => useEvaluateChainMutation(), { wrapper })
+    const chain = await result.current.mutateAsync({
+      asset: 'gold',
+      strategy: 'carry',
+      params: { threshold: 0.0, n_contracts: 4 },
+      featureSpecs: [],
+      fromDate: '2015-01-01',
+      toDate: '2026-07-15',
+    })
+    expect(asyncCalled).toBe(true)
+    expect(syncCalled).toBe(false)
+    expect(isEvaluateChainAsyncLaunch(chain)).toBe(true)
+    if (!isEvaluateChainAsyncLaunch(chain)) return
+    expect(chain.job_id).toBe('job-carry-1')
+    expect(chain.signal).toBeDefined()
+  })
+
+  it('falls back to evaluate-async when sync evaluate returns ASYNC_REQUIRED_STRATEGY', async () => {
+    let asyncCalled = false
+    server.use(
+      http.post('http://localhost:8000/api/signals/evaluate', () =>
+        HttpResponse.json(
+          { error: { code: 'ASYNC_REQUIRED_STRATEGY', message: 'requires async evaluation' } },
+          { status: 400 }
+        )
+      ),
+      http.post('http://localhost:8000/api/signals/evaluate-async', () => {
+        asyncCalled = true
+        return HttpResponse.json({ job_id: 'job-fallback-1', status: 'queued' }, { status: 202 })
+      })
+    )
+    const { result } = renderHook(() => useEvaluateChainMutation(), { wrapper })
+    const chain = await result.current.mutateAsync(validParams)
+    expect(asyncCalled).toBe(true)
+    expect(isEvaluateChainAsyncLaunch(chain)).toBe(true)
+    if (!isEvaluateChainAsyncLaunch(chain)) return
+    expect(chain.job_id).toBe('job-fallback-1')
   })
 })

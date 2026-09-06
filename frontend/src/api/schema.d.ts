@@ -117,6 +117,9 @@ export interface paths {
         /**
          * Get Backtest Status
          * @description Poll task status. Returns queued|running|persisting|complete|failed.
+         *
+         *     Once artifacts are written, run_id is the on-disk artifact id (not the
+         *     poll_ launch id) so the client can navigate to GET /api/runs/{id}.
          */
         get: operations["get_backtest_status_api_backtests__run_id__status_get"];
         put?: never;
@@ -540,8 +543,72 @@ export interface paths {
         /**
          * Evaluate Signal
          * @description Evaluate signal quality: IC, ICIR, decay. This is the IC Gate data source.
+         *
+         *     Slow strategies (see SLOW_EVALUATE_STRATEGIES) must use
+         *     POST /api/signals/evaluate-async — they are rejected here so a
+         *     multi-year Carry window cannot hang the synchronous request.
          */
         post: operations["evaluate_signal_api_signals_evaluate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/signals/evaluate-async": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Evaluate Signal Async
+         * @description Launch async evaluation for slow (curve-builder) strategies.
+         */
+        post: operations["evaluate_signal_async_api_signals_evaluate_async_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/signals/evaluate-async/{job_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Evaluate Status
+         * @description Poll async evaluation job status.
+         */
+        get: operations["get_evaluate_status_api_signals_evaluate_async__job_id__status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/signals/evaluate-async/{job_id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Evaluate Result
+         * @description Return evaluation result when the async job is complete.
+         */
+        get: operations["get_evaluate_result_api_signals_evaluate_async__job_id__result_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -590,6 +657,31 @@ export interface paths {
          * @description Per-asset ingestion status: bar count, date range, health.
          */
         get: operations["get_data_status_api_system_data_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/curve-coverage/{asset}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Curve Coverage
+         * @description Earliest date this asset's futures curve has genuine 2-point coverage.
+         *
+         *     Used by Research Workbench and Strategy Builder date pickers to disable
+         *     windows that predate usable contract data for Carry.
+         *     Cached in-process; recomputed after contract-data acquisition (cache
+         *     invalidation) or process restart.
+         */
+        get: operations["get_curve_coverage_api_system_curve_coverage__asset__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3192,6 +3284,7 @@ export interface operations {
                 strategy?: string | null;
                 asset?: string | null;
                 sort?: string | null;
+                order?: string | null;
                 q?: string | null;
                 page?: number;
                 page_size?: number;
@@ -3504,6 +3597,107 @@ export interface operations {
             };
         };
     };
+    evaluate_signal_async_api_signals_evaluate_async_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignalEvaluateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_evaluate_status_api_signals_evaluate_async__job_id__status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_evaluate_result_api_signals_evaluate_async__job_id__result_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_rolling_ic_api_signals_rolling_ic_get: {
         parameters: {
             query: {
@@ -3556,6 +3750,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DataStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_curve_coverage_api_system_curve_coverage__asset__get: {
+        parameters: {
+            query?: {
+                n_contracts?: number;
+            };
+            header?: never;
+            path: {
+                asset: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */

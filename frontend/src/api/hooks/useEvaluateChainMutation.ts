@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { client } from '@/api/client'
+import { ApiClientError, client } from '@/api/client'
 import { qk } from '@/api/queryKeys'
 import type { components } from '@/api/schema'
 
@@ -25,9 +25,31 @@ export interface EvaluateChainResult {
   evaluatedAt: string
 }
 
+export interface EvaluateChainAsyncLaunch {
+  features: FeatureComputeResponse
+  signal: SignalGenerateResponse
+  job_id: string
+}
+
+export type EvaluateChainOutcome = EvaluateChainResult | EvaluateChainAsyncLaunch
+
+export function isEvaluateChainAsyncLaunch(
+  result: EvaluateChainOutcome,
+): result is EvaluateChainAsyncLaunch {
+  return 'job_id' in result
+}
+
 type ProgressStep = {
   step: 'features' | 'signal' | 'evaluation'
   stepIndex: 1 | 2 | 3
+}
+
+function isAsyncEvaluateStrategy(strategy: string): boolean {
+  return strategy === 'carry'
+}
+
+function isAsyncRequiredError(error: unknown): boolean {
+  return error instanceof ApiClientError && error.apiError.code === 'ASYNC_REQUIRED_STRATEGY'
 }
 
 // Q7 ruling: onProgress passed as hook param, held in ref — keeps mutateAsync params serializable
@@ -40,7 +62,7 @@ export function useEvaluateChainMutation(onProgress?: (step: ProgressStep) => vo
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (p: EvaluateChainParams): Promise<EvaluateChainResult> => {
+    mutationFn: async (p: EvaluateChainParams): Promise<EvaluateChainOutcome> => {
       // Step 1: Compute features (skip when strategy needs no indicator columns —
       // empty specs → API 400 NO_INDICATORS, which previously aborted the chain silently)
       let features: FeatureComputeResponse
@@ -75,22 +97,52 @@ export function useEvaluateChainMutation(onProgress?: (step: ProgressStep) => vo
       })
       queryClient.setQueryData(qk.signalGenerate(p.asset, p.strategy, p.params), signal)
 
-      // Step 3: Evaluate signal
+      // Step 3: Evaluate signal — Carry (and ASYNC_REQUIRED fallback) use the async job path
       onProgressRef.current?.({ step: 'evaluation', stepIndex: 3 })
-      const evaluation = await client.post<SignalEvaluateResponse>('/api/signals/evaluate', {
+      const evalPayload = {
         asset: p.asset,
         strategy: p.strategy,
         params: p.params,
         from_date: p.fromDate,
         to_date: p.toDate,
-      })
-      queryClient.setQueryData(qk.signalEvaluate(p.asset, p.strategy, p.params), evaluation)
+      }
 
-      return {
-        features,
-        signal,
-        evaluation,
-        evaluatedAt: new Date().toISOString(),
+      if (isAsyncEvaluateStrategy(p.strategy)) {
+        const launched = await client.post<{ job_id: string; status: string }>(
+          '/api/signals/evaluate-async',
+          evalPayload,
+        )
+        return {
+          features,
+          signal,
+          job_id: launched.job_id,
+        }
+      }
+
+      try {
+        const evaluation = await client.post<SignalEvaluateResponse>(
+          '/api/signals/evaluate',
+          evalPayload,
+        )
+        queryClient.setQueryData(qk.signalEvaluate(p.asset, p.strategy, p.params), evaluation)
+
+        return {
+          features,
+          signal,
+          evaluation,
+          evaluatedAt: new Date().toISOString(),
+        }
+      } catch (error) {
+        if (!isAsyncRequiredError(error)) throw error
+        const launched = await client.post<{ job_id: string; status: string }>(
+          '/api/signals/evaluate-async',
+          evalPayload,
+        )
+        return {
+          features,
+          signal,
+          job_id: launched.job_id,
+        }
       }
     },
   })

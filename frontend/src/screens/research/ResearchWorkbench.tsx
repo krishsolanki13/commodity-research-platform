@@ -1,9 +1,15 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { safeJsonParse } from '@/lib/json'
 import { ApiClientError } from '@/api/client'
+import { qk } from '@/api/queryKeys'
 import { useAssetOhlcv } from '@/api/hooks/useAssetOhlcv'
-import { useEvaluateChainMutation } from '@/api/hooks/useEvaluateChainMutation'
+import {
+  useEvaluateChainMutation,
+  isEvaluateChainAsyncLaunch,
+} from '@/api/hooks/useEvaluateChainMutation'
+import { useEvaluateAsyncStatus, useEvaluateAsyncResult } from '@/api/hooks/useEvaluateAsync'
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton'
 import {
   WorkbenchConfigRail,
@@ -20,6 +26,17 @@ import { Button } from '@/ui/button'
 import type { components } from '@/api/schema'
 
 type FeatureSpecRequest = components['schemas']['FeatureSpecRequest']
+type FeatureComputeResponse = components['schemas']['FeatureComputeResponse']
+type SignalGenerateResponse = components['schemas']['SignalGenerateResponse']
+
+interface PendingAsyncChain {
+  features: FeatureComputeResponse
+  signal: SignalGenerateResponse
+  configHash: string
+  asset: string
+  strategy: string
+  params: Record<string, unknown>
+}
 
 function formatEvalError(e: unknown, failedStep: EvaluateProgress['step'] | null): string {
   const detail =
@@ -44,6 +61,7 @@ function formatEvalError(e: unknown, failedStep: EvaluateProgress['step'] | null
 }
 
 export default function ResearchWorkbenchScreen() {
+  const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const [evaluationResult, setEvaluationResult] = useState<WorkbenchEvaluationResult | null>(null)
   const [evaluating, setEvaluating] = useState(false)
@@ -54,11 +72,13 @@ export default function ResearchWorkbenchScreen() {
   const [evaluateReason, setEvaluateReason] = useState<string | null>(null)
   const [hasEvaluated, setHasEvaluated] = useState(false)
   const [elapsed, setElapsed] = useState(0)
+  const [asyncJobId, setAsyncJobId] = useState<string | null>(null)
 
   // Ref to trigger evaluate from the button in the right half, while all param
   // building logic stays inside WorkbenchConfigRail.
   const evaluateTriggerRef = useRef<(() => void) | null>(null)
   const progressRef = useRef<EvaluateProgress | null>(null)
+  const pendingAsyncRef = useRef<PendingAsyncChain | null>(null)
 
   // R-Q7: onProgress is a hook parameter — mutateAsync receives only serializable params
   const evaluateChain = useEvaluateChainMutation((progress) => {
@@ -76,6 +96,15 @@ export default function ResearchWorkbenchScreen() {
   // R-Q8: safeJsonParse from '@/lib/json'
   const parsedParams = safeJsonParse<Record<string, unknown>>(paramsJson, {})
   const parsedFeatures = safeJsonParse<FeatureSpecRequest[]>(featuresJson, [])
+
+  const { data: asyncStatus, isError: asyncStatusIsError, error: asyncStatusError } =
+    useEvaluateAsyncStatus(asyncJobId)
+  const asyncComplete = asyncStatus?.status === 'complete'
+  const {
+    data: asyncEvalResult,
+    isError: asyncResultIsError,
+    error: asyncResultError,
+  } = useEvaluateAsyncResult(asyncJobId, asyncComplete)
 
   const { data: ohlcvData, isLoading: ohlcvLoading } = useAssetOhlcv(asset, {
     from_date: fromDate,
@@ -102,7 +131,65 @@ export default function ResearchWorkbenchScreen() {
     setEvaluationResult(null)
     setLastEvaluatedConfigHash(null)
     setEvalError(null)
+    setEvaluating(false)
+    setAsyncJobId(null)
+    pendingAsyncRef.current = null
   }, [asset, strategy])
+
+  useEffect(() => {
+    if (!asyncJobId) return
+    if (asyncStatus?.status !== 'failed' && !asyncStatusIsError) return
+    const err =
+      asyncStatusIsError && asyncStatusError
+        ? asyncStatusError
+        : new Error(asyncStatus?.error ?? 'Async evaluation failed')
+    setEvalError(formatEvalError(err, 'evaluation'))
+    setEvaluationResult(null)
+    setHasEvaluated(false)
+    setEvaluating(false)
+    setEvaluateProgress(null)
+    setAsyncJobId(null)
+    pendingAsyncRef.current = null
+  }, [asyncJobId, asyncStatus, asyncStatusIsError, asyncStatusError])
+
+  useEffect(() => {
+    if (!asyncJobId || asyncStatus?.status !== 'complete') return
+    if (asyncResultIsError) {
+      setEvalError(formatEvalError(asyncResultError, 'evaluation'))
+      setEvaluationResult(null)
+      setHasEvaluated(false)
+      setEvaluating(false)
+      setEvaluateProgress(null)
+      setAsyncJobId(null)
+      pendingAsyncRef.current = null
+      return
+    }
+    if (!asyncEvalResult || !pendingAsyncRef.current) return
+    const pending = pendingAsyncRef.current
+    queryClient.setQueryData(
+      qk.signalEvaluate(pending.asset, pending.strategy, pending.params),
+      asyncEvalResult,
+    )
+    setEvaluationResult({
+      features: pending.features,
+      signal: pending.signal,
+      evaluation: asyncEvalResult,
+      evaluatedAt: new Date().toISOString(),
+    })
+    setLastEvaluatedConfigHash(pending.configHash)
+    setHasEvaluated(true)
+    setEvaluating(false)
+    setEvaluateProgress(null)
+    setAsyncJobId(null)
+    pendingAsyncRef.current = null
+  }, [
+    asyncJobId,
+    asyncStatus?.status,
+    asyncEvalResult,
+    asyncResultIsError,
+    asyncResultError,
+    queryClient,
+  ])
 
   const progressLabel =
     evaluateProgress?.stepIndex === 1
@@ -112,6 +199,12 @@ export default function ResearchWorkbenchScreen() {
         : evaluateProgress?.stepIndex === 3
           ? 'Evaluating signal...'
           : 'Evaluating...'
+
+  const showQueued =
+    evaluating &&
+    strategy === 'carry' &&
+    asyncStatus?.status !== 'running' &&
+    asyncStatus?.status !== 'complete'
 
   async function handleEvaluate(p: EvaluateParams) {
     const configHash = JSON.stringify({
@@ -126,6 +219,9 @@ export default function ResearchWorkbenchScreen() {
     setEvaluateProgress(null)
     progressRef.current = null
     setEvalError(null)
+    setAsyncJobId(null)
+    pendingAsyncRef.current = null
+    let launchedAsync = false
     try {
       const result = await evaluateChain.mutateAsync({
         asset: p.asset,
@@ -135,6 +231,19 @@ export default function ResearchWorkbenchScreen() {
         fromDate: p.fromDate,
         toDate: p.toDate,
       })
+      if (isEvaluateChainAsyncLaunch(result)) {
+        pendingAsyncRef.current = {
+          features: result.features,
+          signal: result.signal,
+          configHash,
+          asset: p.asset,
+          strategy: p.strategy,
+          params: p.params,
+        }
+        setAsyncJobId(result.job_id)
+        launchedAsync = true
+        return
+      }
       setEvaluationResult(result)
       setLastEvaluatedConfigHash(configHash)
       setHasEvaluated(true)
@@ -144,8 +253,10 @@ export default function ResearchWorkbenchScreen() {
       setEvaluationResult(null)
       setHasEvaluated(false)
     } finally {
-      setEvaluating(false)
-      setEvaluateProgress(null)
+      if (!launchedAsync) {
+        setEvaluating(false)
+        setEvaluateProgress(null)
+      }
     }
   }
 
@@ -187,7 +298,7 @@ export default function ResearchWorkbenchScreen() {
                 </Button>
                 {evaluating && (
                   <div className="font-mono text-sm text-text-secondary">
-                    Evaluating... {elapsed}s
+                    {showQueued ? 'Queued...' : `Evaluating... ${elapsed}s`}
                   </div>
                 )}
                 {hasEvaluated && !evaluating && !ohlcvLoaded && ohlcvLoading && (

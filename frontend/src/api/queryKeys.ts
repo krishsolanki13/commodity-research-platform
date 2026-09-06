@@ -33,6 +33,10 @@ export const qk = {
     ['signals', 'generate', asset, strategy, params] as const,
   signalEvaluate: (asset: string, strategy: string, params: unknown) =>
     ['signals', 'evaluate', asset, strategy, params] as const,
+  evaluateAsync: {
+    status: (jobId: string) => ['evaluate-async', jobId, 'status'] as const,
+    result: (jobId: string) => ['evaluate-async', jobId, 'result'] as const,
+  },
 
   backtestStatus: (runId: string) => ['backtests', runId, 'status'] as const,
 
