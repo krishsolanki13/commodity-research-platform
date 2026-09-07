@@ -3,7 +3,8 @@ import { z } from 'zod'
 import { displayName } from '@/lib/commodity'
 import { useUrlState } from '@/lib/useUrlState'
 import { useCurveAvailableAssets } from '@/api/hooks/useCurveAvailableAssets'
-import { useAssets, useCurvePCA } from '@/api/hooks'
+import { useAssets, useCurvePCA, useCurveCoverage } from '@/api/hooks'
+import { ApiClientError } from '@/api/client'
 import { AssetSelector } from '@/components/inputs/AssetSelector'
 import { ScreePlot } from '@/components/charts/ScreePlot'
 import { PCLoadingsChart } from '@/components/charts/PCLoadingsChart'
@@ -14,6 +15,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { components } from '@/api/schema'
 
 type AssetMetadata = components['schemas']['AssetMetadata']
+
+function coverageBoundaryDate(e: ApiClientError): string | null {
+  if (e.apiError.detail && /^\d{4}-\d{2}-\d{2}$/.test(e.apiError.detail)) {
+    return e.apiError.detail
+  }
+  const dates = `${e.apiError.message} ${e.apiError.detail ?? ''}`.match(/\d{4}-\d{2}-\d{2}/g)
+  return dates?.[dates.length - 1] ?? null
+}
 
 const pcaSchema = z.object({
   asset: z.string().optional(),
@@ -41,13 +50,31 @@ export function CurvePCA() {
   const { data: available, isLoading: availableLoading } = useCurveAvailableAssets()
   const { data: assetsData } = useAssets()
 
-  const { data: pca, isLoading } = useCurvePCA(
+  const { data: pca, isLoading, error: pcaError, isError: pcaIsError } = useCurvePCA(
     submitted ? asset : null,
     nComponents,
     nContracts,
     fromDate,
     toDate
   )
+
+  const { data: coverage } = useCurveCoverage(asset, 'carry')
+  const coverageStart =
+    typeof coverage?.curve_coverage_start === 'string'
+      ? coverage.curve_coverage_start
+      : undefined
+
+  useEffect(() => {
+    if (!coverageStart) return
+    if (fromDate && fromDate < coverageStart) {
+      setUrlState({ from_date: coverageStart })
+    }
+  }, [coverageStart, fromDate, setUrlState])
+
+  const coverageError =
+    pcaIsError && pcaError instanceof ApiClientError && pcaError.apiError.code === 'INSUFFICIENT_CURVE_COVERAGE'
+      ? `Curve data for ${asset || 'this asset'} starts ${coverageBoundaryDate(pcaError) ?? 'the coverage start'} — adjust date range`
+      : null
 
   const assetMetaMap = useMemo(() => {
     const map = new Map<string, AssetMetadata>()
@@ -199,6 +226,7 @@ export function CurvePCA() {
                   <input
                     type="date"
                     value={fromDate ?? ''}
+                    min={coverageStart}
                     onChange={(e) => setUrlState({ from_date: e.target.value || null })}
                     className="py-1.5 rounded border border-border-strong bg-bg-raised px-2 font-mono text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring"
                     aria-label="From date"
@@ -212,6 +240,11 @@ export function CurvePCA() {
                     aria-label="To date"
                   />
                 </div>
+                {coverageStart && (
+                  <p className="font-mono text-xs text-warn">
+                    Curve data for {asset} available from {coverageStart}
+                  </p>
+                )}
                 <p className="text-xs text-text-disabled">Optional</p>
               </div>
             </div>
@@ -234,7 +267,16 @@ export function CurvePCA() {
                 <p className="text-xs text-text-secondary">Select an asset to run curve PCA</p>
               )}
 
-              {submitted && (
+              {coverageError && (
+                <div
+                  role="alert"
+                  className="rounded border border-loss bg-loss-fill px-3 py-2 text-sm text-loss"
+                >
+                  {coverageError}
+                </div>
+              )}
+
+              {submitted && !coverageError && (
                 <p className="mt-4 text-center text-sm text-text-secondary">
                   Computing PCA — this may take a moment…
                 </p>
