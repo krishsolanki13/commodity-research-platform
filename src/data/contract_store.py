@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import logging
 from abc import ABC, abstractmethod
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -266,6 +266,8 @@ class ContractParquetStore(ContractStore):
     @staticmethod
     def _index_date_str(value: object) -> str:
         """ISO date string from a DatetimeIndex label."""
-        if hasattr(value, "date"):
-            return value.date().isoformat()  # type: ignore[union-attr]
+        if isinstance(value, datetime):
+            return value.date().isoformat()
+        if isinstance(value, date):
+            return value.isoformat()
         return str(value)[:10]
