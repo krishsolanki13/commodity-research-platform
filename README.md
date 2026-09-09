@@ -4,7 +4,7 @@ An institutional-style quantitative research platform for systematic commodity f
 
 ![CI](https://github.com/krishsolanki13/commodity-research-platform/actions/workflows/ci.yml/badge.svg) ![Python](https://img.shields.io/badge/Python-3.11-blue) ![mypy](https://img.shields.io/badge/mypy-strict-blue) ![License: MIT](https://img.shields.io/badge/License-MIT-yellow)
 
-**6 commodity markets · 16 years of daily data · 9 architectural layers · 949 tests (429 backend · 406 frontend · 114 E2E) · 14 ADRs**
+**6 commodity markets · 16 years of daily data · 9 architectural layers · 987 tests (443 backend · 427 frontend · 117 E2E) · 14 ADRs**
 
 ## What This Is
 
@@ -13,14 +13,13 @@ A complete systematic research environment covering the full institutional resea
 ```
 data → features → signals → IC evaluation → backtesting → performance
      → term structure → portfolio risk → cross-asset analytics → validation
-
 ```
 
 A **research tool, not a trading system** — no live orders, no execution. The output is research: signal quality scores, backtest reports, term-structure analytics, portfolio risk metrics, and out-of-sample validation results. Every result is reproducible from immutable run artifacts.
 
-**Core design principle:** signal evaluation precedes backtesting. Every signal is scored on *information coefficient (IC)*, *ICIR*, *IC decay* across 5 horizons, and *turnover* before any P&L is simulated. The platform separates "does this signal contain information?" from "did the backtest go up?" — the distinction that defines institutional research discipline.
+**Core design principle:** signal evaluation precedes backtesting. Every signal is scored on information coefficient (IC), ICIR, IC decay across 5 horizons, and turnover before any P&L is simulated. The platform separates "does this signal contain information?" from "did the backtest go up?" — the distinction that defines institutional research discipline.
 
-**Honest finding:** after walk-forward validation and Deflated Sharpe Ratio correction against the platform's own logged trial count, most simple technical signals on this universe do not survive. The carry signal is the most interesting exception.
+**Honest finding:** after walk-forward validation and Deflated Sharpe Ratio correction against the platform's own logged trial count, none of the eight signals in this platform's library — tested individually and as a diversified six-asset portfolio — clears statistical significance. See Findings below.
 
 ## What's Inside
 
@@ -34,7 +33,7 @@ A **research tool, not a trading system** — no live orders, no execution. The 
 | **Run Detail**                     | Five-tab record per run — performance, signal quality, walk-forward validation, trades, and full reproducibility artifacts (git SHA, dirty-tree flag, package versions). |
 | **Run Comparison**                 | Up to 8 runs overlaid — equity curves, a metric-delta table, parameter diffs.                                                                                            |
 | **Sweep Explorer**                 | Parameter-grid search with a parallel-coordinates view of the performance landscape across all parameter combinations. Results stored as immutable sweep artifacts.      |
-| **Curve PCA**                      | Level/Slope/Curvature factor decomposition — Gold's curve is genuinely one-dimensional (PC1 ≈ 100%); WTI and Natural Gas aren't.                                         |
+| **Curve PCA**                      | Level/Slope/Curvature factor decomposition — Gold: PC1 ≈ 100% on its genuinely computable window (398 dates, ~19 months — no earlier 4-contract Gold curve exists); not a multi-year finding as originally framed. WTI and Natural Gas are two-factor, not three (PC3 is negligible in both, ~1% and ~0.2% respectively) — neither curve is one-dimensional, and the slope factor (PC2) is economically meaningful (11–28% of variance). |
 | **Term Structure / Futures Curve** | Regime classification, roll yield, multi-contract curve comparison (up to 4 assets side by side).                                                                        |
 | **Portfolio Analytics**            | 6-asset book performance, 2.23× diversification benefit, Kupiec-calibrated VaR, and regime-conditional attribution computed per-asset and portfolio-wide.                |
 | **Data Manager**                   | Per-asset data-quality report, CFTC/EIA data where it exists, honest empty states where it doesn't.                                                                      |
@@ -47,15 +46,15 @@ A **research tool, not a trading system** — no live orders, no execution. The 
 
 | Asset           | Exchange | Symbol | Coverage                   |
 | --------------- | -------- | ------ | -------------------------- |
-| **Gold**        | COMEX    | `GC=F` | 2010–present (~4,150 bars) |
-| **Silver**      | COMEX    | `SI=F` | 2010–present (~4,150 bars) |
-| **Copper**      | COMEX    | `HG=F` | 2010–present (~4,150 bars) |
-| **WTI Crude**   | NYMEX    | `CL=F` | 2010–present (~4,150 bars) |
-| **Brent Crude** | ICE      | `BZ=F` | 2010–present (~4,150 bars) |
-| **Natural Gas** | NYMEX    | `NG=F` | 2010–present (~4,150 bars) |
+| **Gold**        | COMEX    | `GC=F` | 2010–present (~4,150–4,190 bars) |
+| **Silver**      | COMEX    | `SI=F` | 2010–present (~4,150–4,190 bars) |
+| **Copper**      | COMEX    | `HG=F` | 2010–present (~4,150–4,190 bars) |
+| **WTI Crude**   | NYMEX    | `CL=F` | 2010–present (~4,150–4,190 bars) |
+| **Brent Crude** | ICE      | `BZ=F` | 2010–present (~4,150–4,190 bars) |
+| **Natural Gas** | NYMEX    | `NG=F` | 2010–present (~4,150–4,190 bars) |
 
 
-Daily bars, continuous and individual contract series. Includes the *April 2020 WTI negative-price event* (−$37.63) — handled, not filtered.
+Daily bars, continuous and individual contract series. Includes the April 2020 WTI negative-price event (−$37.63) — handled, not filtered.
 
 ## Architecture
 
@@ -83,9 +82,11 @@ Every headline result passes through `src/validation/` before it is reported:
 
 - **Walk-forward out-of-sample testing** — expanding windows with embargo periods between train and test; no future data leaks into the training window
 - **Newey-West Sharpe standard errors** — autocorrelation-corrected inference, not IID-assumed p-values
-- **Deflated Sharpe Ratio** — computed against the platform's own MLflow trial count; selection bias is priced into every reported number (*Bailey & López de Prado*)
+- **Deflated Sharpe Ratio** — computed against the platform's own MLflow trial count; selection bias is priced into every reported number (Bailey & López de Prado)
 - **Kupiec calibration backtesting** — the risk model proves its exception rate matches its stated confidence level (p = 0.7680 on a live 2-asset portfolio — well-calibrated)
 - **Point-in-time correctness** — position-sizing volatility estimates are strictly rolling; a look-ahead bias was found and fixed in the rolling estimator, then locked with golden-master regression tests
+
+
 
 ## Signal Library
 
@@ -97,12 +98,20 @@ Every headline result passes through `src/validation/` before it is reported:
 | **RSI Reversion**     | Mean-reversion   | Price features                   |
 | **Donchian Breakout** | Breakout         | Price features                   |
 | **Carry**             | Risk premium     | FuturesCurve roll yield          |
-| **WTI-Brent Spread**  | Statistical arb  | Cointegration (ADF p = 0.003)    |
+| **WTI–Brent Spread**  | Statistical arb  | Cointegration (ADF p≈0.0025 on full-sample re-verification, 2010–2026) |
 | **COT Positioning**   | Alternative data | CFTC Managed Money positions     |
 | **EIA Inventory**     | Alternative data | EIA petroleum inventory surprise |
 
 
-All eight signals evaluated under identical cost and validation assumptions. The carry and alternative data signals require multi-year windows for non-noise IC — *the platform measures and documents this, not hides it.*
+All eight signals were evaluated under identical cost and validation assumptions, individually and as a diversified portfolio.
+
+## Findings
+
+Every signal in the platform — four technical baselines and four commodity-specific and alternative-data signals — was tested individually through a parameter sweep corrected for selection bias via the Deflated Sharpe Ratio (Bailey & López de Prado, 2014; significance cutoff DSR ≥ 0.95), and then tested again as a diversified six-asset portfolio under both fixed-notional and volatility-scaled position sizing. Nothing survived at statistical significance under any of the tests.
+
+Only after reaching that conclusion did I check the literature to understand why — and found the answer had been documented for years. Koijen, Moskowitz, Pedersen & Vrugt's *Carry* (2018) and Moskowitz, Ooi & Pedersen's *Time Series Momentum* (2012) both find real, well-documented premia — but only when tested cross-sectionally across dozens of instruments over decades, not on six correlated commodities over a handful of years. The risk engine still measured genuine diversification benefit (up to 2.23× on VaR) — the tools work; the honest conclusion is that this universe is too narrow for a statistically significant edge.
+
+Finding a strategy that looks good in a single backtest is cheap — almost any sufficiently-searched parameter space produces something before correction. What's rare is building the infrastructure to catch that in your own results, not just describe it in someone else's — and then actually using it, including on the finding I most wanted to keep.
 
 ## Commodity-Native Analytics
 
@@ -111,22 +120,24 @@ Forward curves are built from individual contract data — a separate dataset th
 - **Forward curve construction** — up to 12 contracts per asset per observation date
 - **Term-structure regime classification** — contango / backwardation / flat via annualized slope
 - **Roll yield and basis** — annualized, with the continuous-contract basis correctly labelled as pseudo-basis
-- **Curve PCA** — Level / Slope / Curvature factor decomposition; Gold: PC1 ≈ 100% (structural contango); WTI and Natural Gas: meaningful three-factor decompositions
+- **Curve PCA** — Level / Slope / Curvature factor decomposition; Gold: PC1 ≈ 100% on its genuinely computable window (398 dates, ~19 months — no earlier 4-contract Gold curve exists); not a multi-year finding as originally framed. WTI and Natural Gas are two-factor, not three (PC3 is negligible in both, ~1% and ~0.2% respectively) — neither curve is one-dimensional, and the slope factor (PC2) is economically meaningful (11–28% of variance).
+
+
 
 ## Selected Results
 
 
-| Metric                         | Value                                                        |
-| ------------------------------ | ------------------------------------------------------------ |
-| **Portfolio 99% daily VaR**    | $44,490 (0.74% of capital)                                   |
-| **Portfolio 99% ES**           | $99,095                                                      |
-| **Diversification benefit**    | 2.23× (Σ per-asset VaR₉₉ / portfolio VaR₉₉)                  |
-| **Kupiec calibration p-value** | 0.7680 (well-calibrated)                                     |
-| **Gold–Silver strategy corr**  | 0.65                                                         |
-| **WTI–Brent strategy corr**    | 0.62                                                         |
-| **COT positioning / Gold**     | IC −0.065, ICIR −0.521 (meaningful, inverse)                 |
-| **EIA inventory / WTI**        | IC −0.093, ICIR −0.462 (meaningful, inverse)                 |
-| **Carry / Gold**               | IC null (structural contango → near-flat signal — *correct*) |
+| Metric                         | Value                                                   |
+| ------------------------------ | ------------------------------------------------------- |
+| **Portfolio 99% daily VaR**    | $44,490 (0.74% of capital)                              |
+| **Portfolio 99% ES**           | $99,095                                                 |
+| **Diversification benefit**    | 2.23× (Σ per-asset VaR₉₉ / portfolio VaR₉₉)             |
+| **Kupiec calibration p-value** | 0.7680 (well-calibrated)                                |
+| **Gold–Silver strategy corr**  | 0.65                                                    |
+| **WTI–Brent strategy corr**    | 0.62                                                    |
+| **All 8 signals**              | No signal clears DSR ≥ 0.95 significance — see Findings |
+
+
 
 
 ## Portfolio Risk Analytics
@@ -139,11 +150,13 @@ Across the 6-asset universe:
 - **Rolling cross-asset correlations** — 63-day and 126-day windows
 - **Regime-conditional attribution** — Sharpe, return, and drawdown conditioned on term-structure regime (contango / backwardation / flat), per-asset and portfolio-level
 
+
+
 ## The Research Workstation
 
-The engine is exposed through a typed full-stack layer, validated end-to-end by 114 Playwright tests:
+The engine is exposed through a typed full-stack layer, validated end-to-end by 117 Playwright tests:
 
-- **IC Gate** — the interface enforces the research doctrine. Backtest launch is gated on signal evaluation; overrides are permanently recorded in run metadata (`signal_evaluation: null`). *Not a hard block* — doctrine-with-override, logged either way.
+- **IC Gate** — the interface enforces the research doctrine. Backtest launch is gated on signal evaluation; overrides are permanently recorded in run metadata (`signal_evaluation: null`). Not a hard block — doctrine-with-override, logged either way.
 - **One contract chain** — `src/core/types.py` → Pydantic → OpenAPI → generated TypeScript. Cross-language type drift is a compile error; CI fails on schema diff.
 - **Async job architecture** — every long-running computation follows the same pattern: `POST → {job_id, status: "queued"} → poll /status at 2s → GET /result`. Applied uniformly across backtest, portfolio, walk-forward validation, parameter sweep, and regime attribution (per-asset + Portfolio Combined).
 
@@ -180,14 +193,13 @@ equity_curve.parquet cumulative PnL series
 pnl_series.parquet   daily PnL
 positions.parquet    position size series
 metrics.json         all scalar metrics (upserted into SQLite run index)
-
 ```
 
 Portfolio runs additionally write `portfolio_summary.json` containing `asset_run_ids` and `has_regime_attribution`.
 
 Every run also records **provenance**: `git_sha`, a `dirty_flag` (uncommitted-changes warning), and full `package_versions` for every dependency — captured automatically at execution time, visible on each run's Artifacts tab.
 
-`scripts/reproduce_run.py` re-executes any completed run by ID, hashes the resulting equity curve, and compares against the original artifact — exit 0 = match, 1 = mismatch, 2 = error. *A closed reproducibility loop, not a documentation promise.*
+`scripts/reproduce_run.py` re-executes any completed run by ID, hashes the resulting equity curve, and compares against the original artifact — exit 0 = match, 1 = mismatch, 2 = error. A closed reproducibility loop, not a documentation promise.
 
 All experiments additionally tracked in MLflow (`data/mlruns/`) with programmatic trial-count queries feeding the Deflated Sharpe correction.
 
@@ -199,10 +211,9 @@ All experiments additionally tracked in MLflow (`data/mlruns/`) with programmati
 storage:
   backend: "parquet"      # default
   # backend: "clickhouse" # opt-in after: docker compose up -d
-
 ```
 
-24,862 OHLCV rows migrated; Parquet vs ClickHouse numerical equivalence confirmed at rtol 1e-6. At this data volume, ClickHouse is a *migration-path demonstration* — the abstraction is the point, not the necessity.
+24,862 rows at time of ClickHouse verification (current total is closer to ~25,100 across all six assets after subsequent data refreshes); Parquet vs ClickHouse numerical equivalence confirmed at rtol 1e-6. At this data volume, ClickHouse is a migration-path demonstration — the abstraction is the point, not the necessity.
 
 A SQLite run index (`data/runs/index.db`, WAL mode) keeps `GET /api/runs` under **0.5 seconds** at 900+ accumulated runs. The index is built from `metrics.json` on startup and upserted on every new run — regenerated automatically, gitignored.
 
@@ -224,22 +235,21 @@ python scripts/acquire_cot_data.py
 python scripts/acquire_eia_data.py
 
 # Run tests
-pytest -m "not slow"                    # 409 passed (fast suite, ~6-7 min)
-pytest                                  # 429 passed (full suite, ~30 min)
+pytest -m "not slow"                    # 423 passed (fast suite, ~6-7 min)
+pytest                                  # 443 passed (full suite, ~40 min)
 
 # Streamlit reference dashboard
 streamlit run dashboard/app.py          # localhost:8501
 
 # React research workstation
 make dev                                # FastAPI :8000 + Vite :5173
-cd frontend && npm test -- --run        # 406 passed
-npx playwright test                     # 114 passed
+cd frontend && npm test -- --run        # 427 passed
+npx playwright test                     # 117 passed
 
 # Optional ClickHouse backend
 docker compose up -d
 python scripts/setup_clickhouse_schema.py
 python scripts/migrate_to_clickhouse.py
-
 ```
 
 EIA API key (optional, for inventory signals): register free at eia.gov/opendata, then add to `config/local.yaml`:
@@ -247,22 +257,23 @@ EIA API key (optional, for inventory signals): register free at eia.gov/opendata
 ```yaml
 eia:
   api_key: your_key_here
-
 ```
+
+
 
 ## Testing
 
 
 | Suite            | Command                 | Tests | Notes                                            |
 | ---------------- | ----------------------- | ----- | ------------------------------------------------ |
-| **Backend fast** | `pytest -m "not slow"`  | 409   | Excludes Hypothesis property tests               |
-| **Backend full** | `pytest`                | 429   | Includes property-based invariants               |
-| **Frontend**     | `npm test -- --run`     | 406   | Vitest, runs in ~3 min                           |
-| **E2E standard** | `npm run test:e2e`      | 111   | Excludes @slow (validation, portfolio regime)    |
-| **E2E full**     | `npm run test:e2e:full` | 114   | All tests including ~8 min portfolio computation |
+| **Backend fast** | `pytest -m "not slow"`  | 423   | Excludes Hypothesis property tests               |
+| **Backend full** | `pytest`                | 443   | Includes property-based invariants               |
+| **Frontend**     | `npm test -- --run`     | 427   | Vitest, runs in ~3 min                           |
+| **E2E standard** | `npm run test:e2e`      | 110   | Excludes @slow (validation, portfolio regime)    |
+| **E2E full**     | `npm run test:e2e:full` | 117   | All tests including ~8 min portfolio computation |
 
 
-CI enforces **mypy strict** (0 errors, 67 source files) and **ruff** on every push.
+CI enforces **mypy strict** (0 errors, 68 source files) and **ruff** on every push.
 
 ## Documentation
 
@@ -272,11 +283,13 @@ CI enforces **mypy strict** (0 errors, 67 source files) and **ruff** on every pu
 | **Architecture**                    | `ARCHITECTURE.md`                                  | System design, layer contracts, 9-layer diagram, known limitations |
 | **ADRs**                            | `docs/adr/ADRs.md`                                 | 14 Architecture Decision Records (ADR-001 through ADR-014)         |
 | **Implementation Roadmap**          | `IMPLEMENTATION_ROADMAP.md`                        | Full module build log — Phase 1–3 + EM1–14 + F-Track               |
-| **Frontend Implementation Roadmap** | `docs/frontend/FRONTEND_IMPLEMENTATION_ROADMAP.md` | Frontend build log — F-track, FEP, EM14, E2E                       |
+| **Frontend Implementation Roadmap** | `docs/frontend/FRONTEND_IMPLEMENTATION_ROADMAP.md` | Frontend build log — F-Track, FEP, EM14, E2E                       |
 | **Frontend Architecture**           | `docs/frontend/FRONTEND_ARCHITECTURE.md`           | React/FastAPI design, state partitioning, TDR index                |
 | **Frontend TDRs**                   | `docs/frontend/FRONTEND_TDRs.md`                   | 25 technical design records                                        |
 | **Screen Specifications**           | `docs/frontend/SCREEN_SPECIFICATIONS.md`           | All 13 screens with component and data contracts                   |
 | **Design System**                   | `docs/frontend/DESIGN_SYSTEM.md`                   | Tokens, typography, chart patterns                                 |
+
+
 
 
 ## Project Structure
@@ -289,35 +302,36 @@ commodity-research-platform/
 │   ├── signal/                  8 signal generators + SignalEvaluator
 │   ├── backtesting/             Engine, sizing, pipeline builder, sweep runner
 │   ├── performance/             PerformanceEngine, PortfolioPerformanceEngine
-│   ├── analytics/                RegimeAttributionEngine
-│   ├── commodity/                FuturesCurveBuilder, TermStructureAnalyzer, CurvePCAEngine
+│   ├── analytics/               RegimeAttributionEngine
+│   ├── commodity/               FuturesCurveBuilder, TermStructureAnalyzer, CurvePCAEngine
 │   ├── risk/                    RiskEngine (VaR, ES, Kupiec, contribution-to-risk)
 │   └── validation/              WalkForwardValidator, PSR, DSR (scipy-free)
 ├── api/
 │   ├── main.py                  FastAPI app — startup, CORS, route registration
 │   ├── models.py                All Pydantic models (30+ request/response types)
 │   └── routers/                 One router per domain — backtests, runs, portfolio,
-│                                 signals, sweeps, validation, intelligence, regime,
-│                                 system
+│                                signals, sweeps, validation, intelligence, regime,
+│                                system
 ├── frontend/
 │   ├── src/
-│   │   ├── api/                  Generated schema.d.ts, queryKeys, client, hooks
-│   │   ├── features/              Screen-scoped React components
-│   │   └── lib/                  fmt.ts, chart-theme.ts, shared utilities
-│   └── tests/e2e/                15 Playwright spec files + helpers.ts
-├── dashboard/                    Streamlit reference dashboard (7 pages)
-├── scripts/                      Data acquisition + reproduce_run.py
-├── tests/                        429 backend tests + golden master fixture
-├── config/                       config.yaml, assets.yaml, strategies.yaml
+│   │   ├── api/                 Generated schema.d.ts, queryKeys, client, hooks
+│   │   ├── features/            Screen-scoped React components
+│   │   └── lib/                 fmt.ts, chart-theme.ts, shared utilities
+│   └── tests/e2e/               15 Playwright spec files + helpers.ts
+├── dashboard/                   Streamlit reference dashboard (7 pages)
+├── scripts/                     Data acquisition + reproduce_run.py
+├── tests/                       443 backend tests + golden master fixture
+├── config/                      config.yaml, assets.yaml, strategies.yaml
 ├── docs/
-│   ├── adr/                      ADRs.md (14 records)
-│   ├── clickhouse/                SETUP.md
-│   ├── frontend/                  5 frontend architecture documents
-│   └── implementation_notes/      M01–M19 module implementation notes
+│   ├── adr/                     ADRs.md (14 records)
+│   ├── clickhouse/              SETUP.md
+│   ├── frontend/                5 frontend architecture documents
+│   └── implementation_notes/    M01–M19 module implementation notes
 ├── ARCHITECTURE.md
 └── IMPLEMENTATION_ROADMAP.md
-
 ```
+
+
 
 ## What's Next
 
@@ -326,13 +340,18 @@ The platform is **feature-complete**. What remains is external verification, not
 1. A written research note replicating a published commodity carry finding using the platform's walk-forward + DSR machinery — the infrastructure exists, only the write-up is missing
 2. One third-party-verified result — competition placement or an accepted open-source contribution
 
+
+
 ## Limitations
 
 - **Continuous series not back-adjusted** — Yahoo Finance roll methodology is undocumented; price discontinuities occur at roll dates
 - **No margin modeling** — the backtester is not an execution simulator
 - **No risk limits** — Layer 6 computes and calibrates VaR; nothing enforces a constraint from it
 - **No dependency pinning** — `pyproject.toml` uses version ranges, not a lockfile
-- **Alternative data signals require multi-year windows** — COT and EIA produce noise-band IC on 1-year windows by design (insufficient weekly history for stable percentile ranks and seasonal averages)
+- **No signal in the current library clears statistical significance after correction for selection bias** — see Findings for the full DSR-corrected result across individual and portfolio-level testing
+- **Contract-level curve data (used by Carry) is retention-limited to a rolling window per asset, not the full 2010+ history** — an industry-standard limitation also present in professional platforms, not specific to this project's data source
+
+
 
 ## Disclaimer
 
