@@ -29,6 +29,7 @@ from api.models import (
 from src.analytics.regime_attribution import (
     _make_run_proxy,
 )
+from src.core.provenance import as_json_fields
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/regime-attribution", tags=["regime-attribution"])
@@ -125,6 +126,7 @@ def _save_regime_result(job_id: str, report: object) -> None:
         "dominant_regime": report.dominant_regime,
         "total_days_with_regime": report.total_days_with_regime,
         "total_days_in_run": report.total_days_in_run,
+        **as_json_fields(report),
     }
     (job_dir / "result.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
 
@@ -165,6 +167,7 @@ def _save_portfolio_regime_result(job_id: str, report: object) -> None:
         },
         "dominant_regime": report.dominant_regime,
         "asset_weights": report.asset_weights,
+        **as_json_fields(report),
     }
     (job_dir / "result.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
     _mark_regime_attribution_complete(report.portfolio_run_id)
@@ -196,6 +199,9 @@ def _report_to_response(data: dict) -> RegimeAttributionResponse:
         dominant_regime=data.get("dominant_regime", ""),
         total_days_with_regime=data.get("total_days_with_regime", 0),
         total_days_in_run=data.get("total_days_in_run", 0),
+        git_sha=data.get("git_sha", "unknown"),
+        dirty_flag=bool(data.get("dirty_flag", False)),
+        package_versions=data.get("package_versions") or {},
     )
 
 
@@ -411,6 +417,9 @@ async def get_portfolio_regime_result(
             portfolio_regime_metrics=regime_metrics,
             dominant_regime=data.get("dominant_regime", ""),
             asset_weights=data.get("asset_weights", {}),
+            git_sha=data.get("git_sha", "unknown"),
+            dirty_flag=bool(data.get("dirty_flag", False)),
+            package_versions=data.get("package_versions") or {},
         )
 
     raise HTTPException(

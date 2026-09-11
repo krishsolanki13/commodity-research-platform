@@ -1,12 +1,17 @@
 """Run provenance utilities — git SHA, dirty flag, package versions.
 
-Called once per backtest run to capture the exact code and environment
+Called once per completed run to capture the exact code and environment
 state. All functions are non-fatal: they return safe defaults when git
 is unavailable or a package is not installed.
 
-The captured provenance is stored in BacktestMetadata and serialized
-to params.json by RunManager.save(). The frontend Artifacts tab reads
-and displays these fields without any additional endpoint work.
+``capture()`` is the single source of truth. It is used by all five
+write paths:
+
+- single-asset backtests → ``params.json`` (via BacktestMetadata)
+- parameter sweeps → ``sweep_result.json``
+- walk-forward validation → ``validation_report.json``
+- regime attribution (per-asset and portfolio) → ``result.json``
+- portfolio runs → ``portfolio_summary.json``
 
 See Known Limitation #13 in ARCHITECTURE.md (data manifests and
 run provenance).
@@ -122,17 +127,44 @@ def get_package_versions(packages: list[str] | None = None) -> dict[str, str]:
 
 
 def capture() -> ProvenanceSnapshot:
-    """Capture all provenance in one call.
+    """Capture git_sha, dirty_flag, and package_versions at this moment.
+
+    Reusable across all run types (single-asset, sweep, validation,
+    regime-attribution, portfolio). Call once per completed artifact,
+    not once per inner combination.
 
     Returns:
         Dict with keys: git_sha (str), dirty_flag (bool),
         package_versions (dict[str, str]).
-
-    This is the single function called by VectorizedBacktester
-    when constructing BacktestMetadata.
     """
     return {
         "git_sha": get_git_sha(short=True),
         "dirty_flag": get_git_dirty(),
         "package_versions": get_package_versions(),
+    }
+
+
+def as_json_fields(obj: object | None = None) -> dict[str, object]:
+    """Return the three provenance keys for JSON persistence.
+
+    If *obj* already carries a non-empty ``package_versions`` dict,
+    reuse those in-memory values so disk matches the result object.
+    Otherwise capture now — write paths always persist real provenance
+    even when a caller constructed the dataclass with defaults.
+    """
+    if obj is not None:
+        sha = getattr(obj, "git_sha", None)
+        versions = getattr(obj, "package_versions", None)
+        dirty = getattr(obj, "dirty_flag", None)
+        if isinstance(sha, str) and isinstance(versions, dict) and versions:
+            return {
+                "git_sha": sha,
+                "dirty_flag": bool(dirty) if isinstance(dirty, bool) else False,
+                "package_versions": {str(k): str(v) for k, v in versions.items()},
+            }
+    snap = capture()
+    return {
+        "git_sha": snap["git_sha"],
+        "dirty_flag": snap["dirty_flag"],
+        "package_versions": snap["package_versions"],
     }

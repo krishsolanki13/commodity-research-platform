@@ -78,6 +78,7 @@ class SweepRunner:
         Returns:
             SweepResult with one SweepRunSummary per parameter combination.
         """
+        from src.core.provenance import capture  # noqa: PLC0415
         from src.core.types import SweepResult  # noqa: PLC0415
         from src.data.loader import DataLoader  # noqa: PLC0415
 
@@ -123,6 +124,7 @@ class SweepRunner:
             n,
         )
 
+        _prov = capture()
         return SweepResult(
             sweep_id=sweep_id,
             asset=asset,
@@ -133,6 +135,9 @@ class SweepRunner:
             n_failed=n_failed,
             computation_date=datetime.date.today(),
             runs=runs,
+            git_sha=_prov["git_sha"],
+            dirty_flag=_prov["dirty_flag"],
+            package_versions=_prov["package_versions"],
         )
 
     def _run_single(

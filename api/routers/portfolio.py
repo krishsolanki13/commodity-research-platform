@@ -26,6 +26,7 @@ from api.models import (
     TaskStatusResponse,
     series_to_columnar,
 )
+from src.core.provenance import as_json_fields
 
 router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
 
@@ -443,6 +444,9 @@ def _summary_from_disk(run_id: str) -> PortfolioSummaryResponse | None:
             else None
         ),
         per_asset_headlines=headlines,
+        git_sha=summary.get("git_sha", "unknown"),
+        dirty_flag=bool(summary.get("dirty_flag", False)),
+        package_versions=summary.get("package_versions") or {},
     )
 
 
@@ -513,6 +517,7 @@ def get_portfolio_summary(run_id: str) -> PortfolioSummaryResponse:
         absolute_pnl_by_asset=port_report.absolute_pnl_by_asset,
         asset_contributions=asset_contributions,
         per_asset_headlines=headlines,
+        **as_json_fields(port_report),
     )
 
 

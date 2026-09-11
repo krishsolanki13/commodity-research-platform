@@ -121,11 +121,13 @@ class RegimeAttributionEngine:
         """
         from src.commodity.curve import FuturesCurveBuilder  # noqa: PLC0415
         from src.commodity.term_structure import TermStructureAnalyzer  # noqa: PLC0415
+        from src.core.provenance import capture  # noqa: PLC0415
         from src.core.types import (  # noqa: PLC0415
             RegimeAttributionReport,
             RegimeMetrics,
         )
 
+        _prov = capture()
         run_id = getattr(backtest_result, "run_id", "unknown")
         strategy_name = getattr(backtest_result, "strategy_name", "unknown")
 
@@ -149,6 +151,9 @@ class RegimeAttributionEngine:
                 strategy_name=strategy_name,
                 n_contracts=n_contracts,
                 computation_date=datetime.date.today(),
+                git_sha=_prov["git_sha"],
+                dirty_flag=_prov["dirty_flag"],
+                package_versions=_prov["package_versions"],
             )
 
         dates = [d.date() for d in pnl_series.index]
@@ -166,6 +171,9 @@ class RegimeAttributionEngine:
                 n_contracts=n_contracts,
                 computation_date=datetime.date.today(),
                 total_days_in_run=len(dates),
+                git_sha=_prov["git_sha"],
+                dirty_flag=_prov["dirty_flag"],
+                package_versions=_prov["package_versions"],
             )
 
         try:
@@ -187,6 +195,9 @@ class RegimeAttributionEngine:
                 n_contracts=n_contracts,
                 computation_date=datetime.date.today(),
                 total_days_in_run=len(dates),
+                git_sha=_prov["git_sha"],
+                dirty_flag=_prov["dirty_flag"],
+                package_versions=_prov["package_versions"],
             )
 
         analyzer = TermStructureAnalyzer()
@@ -293,6 +304,9 @@ class RegimeAttributionEngine:
             dominant_regime=dominant,
             total_days_with_regime=int(n_with_regime),
             total_days_in_run=total_days,
+            git_sha=_prov["git_sha"],
+            dirty_flag=_prov["dirty_flag"],
+            package_versions=_prov["package_versions"],
         )
 
     def _get_regime_values(self) -> list[str]:
@@ -378,11 +392,13 @@ class RegimeAttributionEngine:
         from pathlib import Path as _Path  # noqa: PLC0415
 
         from src.backtesting.run_manager import RunManager  # noqa: PLC0415
+        from src.core.provenance import capture  # noqa: PLC0415
         from src.core.types import (  # noqa: PLC0415
             PortfolioRegimeAttributionReport,
             RegimeMetrics,
         )
 
+        _prov = capture()
         summary_path = _Path("data/runs") / portfolio_run_id / "portfolio_summary.json"
         if not summary_path.exists():
             raise ValueError(
@@ -443,6 +459,9 @@ class RegimeAttributionEngine:
             return PortfolioRegimeAttributionReport(
                 portfolio_run_id=portfolio_run_id,
                 n_assets_computed=0,
+                git_sha=_prov["git_sha"],
+                dirty_flag=_prov["dirty_flag"],
+                package_versions=_prov["package_versions"],
             )
 
         total_pnl = sum(abs(v) for v in per_asset_pnl.values()) or 1.0
@@ -513,4 +532,7 @@ class RegimeAttributionEngine:
             per_asset_metrics=dict(per_asset),
             dominant_regime=dominant,
             asset_weights=weights,
+            git_sha=_prov["git_sha"],
+            dirty_flag=_prov["dirty_flag"],
+            package_versions=_prov["package_versions"],
         )

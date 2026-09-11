@@ -485,6 +485,9 @@ def test_save_portfolio_summary_json_contains_required_keys(
         "portfolio_metrics",
         "asset_contributions",
         "absolute_pnl_by_asset",
+        "git_sha",
+        "dirty_flag",
+        "package_versions",
     }
     assert required_keys.issubset(
         set(data.keys())
@@ -494,3 +497,7 @@ def test_save_portfolio_summary_json_contains_required_keys(
     assert isinstance(data["portfolio_metrics"], dict)
     assert "sharpe" in data["portfolio_metrics"]
     assert "absolute_pnl_by_asset" in data
+    assert isinstance(data["git_sha"], str) and data["git_sha"]
+    assert isinstance(data["dirty_flag"], bool)
+    assert isinstance(data["package_versions"], dict)
+    assert data["package_versions"]

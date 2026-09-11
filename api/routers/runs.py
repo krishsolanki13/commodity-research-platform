@@ -463,6 +463,7 @@ async def get_regime_attribution(
     )
     from src.backtesting.run_manager import RunManager  # noqa: PLC0415
     from src.core.config import Config  # noqa: PLC0415
+    from src.core.provenance import as_json_fields  # noqa: PLC0415
 
     config = Config.load("config/")
     manager = RunManager(config)
@@ -550,6 +551,7 @@ async def get_regime_attribution(
         dominant_regime=report.dominant_regime,
         total_days_with_regime=report.total_days_with_regime,
         total_days_in_run=report.total_days_in_run,
+        **as_json_fields(report),
     )
 
 

@@ -22,6 +22,7 @@ from api.models import (
     ValidationStatusResponse,
     WalkForwardFoldResponse,
 )
+from src.core.provenance import as_json_fields
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/validation", tags=["validation"])
@@ -166,6 +167,7 @@ def _save_validation_report(report: object, run_dir: Path) -> None:
         "dsr": _safe(report.dsr),
         "is_significant": report.is_significant,
         "dsr_threshold": report.dsr_threshold,
+        **as_json_fields(report),
     }
     (run_dir / "validation_report.json").write_text(
         json.dumps(data, indent=2), encoding="utf-8"
@@ -222,6 +224,9 @@ def _report_to_response(data: dict) -> ValidationReportResponse:
         dsr=data.get("dsr"),
         is_significant=data.get("is_significant", False),
         dsr_threshold=data.get("dsr_threshold", 0.95),
+        git_sha=data.get("git_sha", "unknown"),
+        dirty_flag=bool(data.get("dirty_flag", False)),
+        package_versions=data.get("package_versions") or {},
     )
 
 

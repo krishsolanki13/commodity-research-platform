@@ -24,6 +24,7 @@ from api.models import (
     SweepRunSummaryResponse,
     SweepStatusResponse,
 )
+from src.core.provenance import as_json_fields
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sweeps", tags=["sweeps"])
@@ -78,6 +79,7 @@ def _save_sweep_result(sweep_id: str, result: object) -> None:
         "n_failed": result.n_failed,
         "computation_date": str(result.computation_date),
         "runs": runs_data,
+        **as_json_fields(result),
     }
     (run_dir / "sweep_result.json").write_text(
         json.dumps(data, indent=2), encoding="utf-8"
@@ -190,6 +192,9 @@ def _result_to_response(
         n_failed=data.get("n_failed", 0),
         computation_date=data.get("computation_date", ""),
         runs=runs,
+        git_sha=data.get("git_sha", "unknown"),
+        dirty_flag=bool(data.get("dirty_flag", False)),
+        package_versions=data.get("package_versions") or {},
     )
 
 

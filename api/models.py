@@ -408,6 +408,9 @@ class PortfolioSummaryResponse(BaseModel):
     absolute_pnl_by_asset: dict[str, float]  # always-stable USD attribution
     asset_contributions: dict[str, float] | None  # None when |total_pnl/capital| < 1%
     per_asset_headlines: list[PortfolioAssetHeadline]
+    git_sha: str = "unknown"
+    dirty_flag: bool = False
+    package_versions: dict[str, str] = Field(default_factory=dict)
 
 
 class RiskReportResponse(BaseModel):
@@ -698,6 +701,9 @@ class ValidationReportResponse(BaseModel):
     dsr: float | None
     is_significant: bool
     dsr_threshold: float
+    git_sha: str = "unknown"
+    dirty_flag: bool = False
+    package_versions: dict[str, str] = Field(default_factory=dict)
 
 
 class RollingICResponse(BaseModel):
@@ -772,6 +778,9 @@ class RegimeAttributionResponse(BaseModel):
     dominant_regime: str = ""
     total_days_with_regime: int = 0
     total_days_in_run: int = 0
+    git_sha: str = "unknown"
+    dirty_flag: bool = False
+    package_versions: dict[str, str] = Field(default_factory=dict)
 
 
 class RegimeAttributionJobRequest(BaseModel):
@@ -803,6 +812,9 @@ class PortfolioRegimeAttributionResponse(BaseModel):
     portfolio_regime_metrics: dict[str, RegimeMetricsResponse] = {}
     dominant_regime: str = ""
     asset_weights: dict[str, float] = {}
+    git_sha: str = "unknown"
+    dirty_flag: bool = False
+    package_versions: dict[str, str] = Field(default_factory=dict)
 
 
 class SweepLaunchRequest(BaseModel):
@@ -842,6 +854,9 @@ class SweepResultResponse(BaseModel):
     n_failed: int
     computation_date: str
     runs: list[SweepRunSummaryResponse]
+    git_sha: str = "unknown"
+    dirty_flag: bool = False
+    package_versions: dict[str, str] = Field(default_factory=dict)
 
 
 class SweepListItem(BaseModel):

@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
+from src.core.provenance import as_json_fields, capture
 from src.core.types import (
     BacktestResult,
     MultiAssetBacktestResult,
@@ -161,6 +162,7 @@ class PortfolioPerformanceEngine:
             portfolio_metrics.get("total_return", float("nan")) * 100,
         )
 
+        _prov = capture()
         return PortfolioPerformanceReport(
             strategy_name=multi_result.strategy_name,
             run_id=multi_result.run_id,
@@ -177,6 +179,9 @@ class PortfolioPerformanceEngine:
                 asset: result.run_id
                 for asset, result in multi_result.asset_results.items()
             },
+            git_sha=_prov["git_sha"],
+            dirty_flag=_prov["dirty_flag"],
+            package_versions=_prov["package_versions"],
         )
 
     def _compute_portfolio_metrics(
@@ -366,6 +371,7 @@ def save_portfolio_summary(
         },
         "asset_run_ids": report.asset_run_ids,
         "has_regime_attribution": False,
+        **as_json_fields(report),
     }
 
     run_dir.mkdir(parents=True, exist_ok=True)

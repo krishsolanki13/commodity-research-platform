@@ -573,6 +573,10 @@ class PortfolioPerformanceReport:
     asset rows to individual /runs/{id} detail pages.
     Empty dict for portfolio runs created before this fix was shipped."""
 
+    git_sha: str = "unknown"
+    dirty_flag: bool = False
+    package_versions: dict[str, str] = field(default_factory=dict)
+
     @property
     def n_assets(self) -> int:
         """Number of successfully backtested assets."""
@@ -955,6 +959,10 @@ class ValidationReport:
     is_significant: bool  # DSR > 0.95 (adjustable threshold)
     dsr_threshold: float  # Threshold used (default 0.95)
 
+    git_sha: str = "unknown"
+    dirty_flag: bool = False
+    package_versions: dict[str, str] = field(default_factory=dict)
+
 
 @dataclass
 class RegimeMetrics:
@@ -995,6 +1003,9 @@ class RegimeAttributionReport:
     dominant_regime: str = ""
     total_days_with_regime: int = 0
     total_days_in_run: int = 0
+    git_sha: str = "unknown"
+    dirty_flag: bool = False
+    package_versions: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -1007,6 +1018,9 @@ class PortfolioRegimeAttributionReport:
     per_asset_metrics: dict[str, RegimeAttributionReport] = field(default_factory=dict)
     dominant_regime: str = ""
     asset_weights: dict[str, float] = field(default_factory=dict)
+    git_sha: str = "unknown"
+    dirty_flag: bool = False
+    package_versions: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -1053,6 +1067,9 @@ class SweepResult:
     n_failed: int
     computation_date: datetime.date
     runs: list[SweepRunSummary] = field(default_factory=list)
+    git_sha: str = "unknown"
+    dirty_flag: bool = False
+    package_versions: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass

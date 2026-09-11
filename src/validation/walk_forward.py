@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
+from src.core.provenance import capture
 from src.core.types import (
     TrainTestSplit,
     ValidationReport,
@@ -254,6 +255,7 @@ class WalkForwardValidator:
             f"{now.strftime('%Y%m%d_%H%M%S')}_validation_{asset}_{strategy_name}"
         )
 
+        _prov = capture()
         return ValidationReport(
             validation_run_id=validation_run_id,
             asset=asset,
@@ -279,6 +281,9 @@ class WalkForwardValidator:
             dsr=dsr,
             is_significant=dsr >= 0.95,
             dsr_threshold=0.95,
+            git_sha=_prov["git_sha"],
+            dirty_flag=_prov["dirty_flag"],
+            package_versions=_prov["package_versions"],
         )
 
     def _run_fold(
