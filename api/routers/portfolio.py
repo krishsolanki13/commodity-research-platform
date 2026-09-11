@@ -132,7 +132,9 @@ def _run_portfolio_task(
     try:
         state.update(polling_run_id, "running")
 
-        from src.analytics.correlation import CorrelationEngine  # noqa: PLC0415
+        from src.analytics.correlation import (  # noqa: PLC0415
+            compute_correlation_and_risk,
+        )
         from src.backtesting.multi_asset import MultiAssetRunner  # noqa: PLC0415
         from src.backtesting.sizing import (  # noqa: PLC0415
             FixedNotionalSizer,
@@ -144,7 +146,6 @@ def _run_portfolio_task(
             PortfolioPerformanceEngine,
             save_portfolio_summary,
         )
-        from src.risk.risk_engine import RiskEngine  # noqa: PLC0415
 
         cfg = Config.load()
         assets = request.assets or _DEFAULT_ASSETS
@@ -221,11 +222,8 @@ def _run_portfolio_task(
         state.update(polling_run_id, "persisting")
         save_portfolio_summary(port_report, run_dir)
 
-        corr_report = CorrelationEngine().compute(multi_result)
-        risk_report = RiskEngine().compute(
-            multi_result,
-            lookback_days=252,
-            corr_report=corr_report,
+        corr_report, risk_report = compute_correlation_and_risk(
+            multi_result, lookback_days=252
         )
 
         # EM3: persist equity, risk, and correlation to disk for post-restart access

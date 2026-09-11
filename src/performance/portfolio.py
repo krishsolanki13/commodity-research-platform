@@ -473,6 +473,14 @@ def save_risk_report(
         },
     }
 
+    if not risk_report.asset_contribution_to_vol_pct:
+        logging.getLogger(__name__).warning(
+            "save_risk_report: empty asset_contribution_to_vol_pct for run %s. "
+            "RiskEngine.compute() was likely called without corr_report. "
+            "Use src.analytics.correlation.compute_correlation_and_risk().",
+            risk_report.run_id,
+        )
+
     out_path = run_dir / "portfolio_risk.json"
     out_path.write_text(_json.dumps(data, indent=2), encoding="utf-8")
     return out_path

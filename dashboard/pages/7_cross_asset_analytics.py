@@ -42,12 +42,11 @@ from dashboard.components.correlation_heatmap import (
     render_rolling_correlation_chart,
 )
 from dashboard.components.equity_curve_chart import render_equity_curve_chart
-from src.analytics.correlation import CorrelationEngine
+from src.analytics.correlation import compute_correlation_and_risk
 from src.backtesting.multi_asset import MultiAssetRunner
 from src.backtesting.sizing import FixedNotionalSizer, VolatilityScaledSizer
 from src.core.config import Config
 from src.performance.portfolio import PortfolioPerformanceEngine, save_portfolio_summary
-from src.risk.risk_engine import RiskEngine
 
 st.set_page_config(page_title="Cross-Asset Analytics", layout="wide")
 inject_global_css()
@@ -182,11 +181,9 @@ if run_analysis:
         perf_engine = PortfolioPerformanceEngine()
         perf_report = perf_engine.compute(multi_result)
 
-        risk_engine = RiskEngine()
-        risk_report = risk_engine.compute(multi_result, lookback_days=252)
-
-        corr_engine = CorrelationEngine()
-        corr_report = corr_engine.compute(multi_result)
+        corr_report, risk_report = compute_correlation_and_risk(
+            multi_result, lookback_days=252
+        )
 
         # Portfolio persistence (ADR-009 Phase 3)
         run_dir = Path(config.paths["runs"]) / multi_result.run_id

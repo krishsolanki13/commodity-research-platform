@@ -59,6 +59,11 @@ class RiskEngine:
                 Requires: asset_results, portfolio_pnl_series.
             lookback_days: Rolling window for historical simulation.
                 Default 252 (~1 trading year). Must be >= 20.
+            corr_report: CorrelationReport from CorrelationEngine.compute().
+                Required to populate contribution-to-vol. If omitted,
+                those fields are empty dicts. Prefer
+                ``compute_correlation_and_risk()`` in
+                ``src.analytics.correlation`` so callers cannot drop it.
 
         Returns:
             RiskReport with portfolio VaR/ES, per-asset VaR, and notional
@@ -134,6 +139,14 @@ class RiskEngine:
         )
 
         # ── EM4: Contribution to Strategy Volatility ──────────────────────────
+        if corr_report is None:
+            self._logger.warning(
+                "RiskEngine: corr_report not passed for run %s — "
+                "asset_contribution_to_vol will be empty. Use "
+                "src.analytics.correlation.compute_correlation_and_risk() "
+                "or pass corr_report=CorrelationEngine().compute(multi_result).",
+                multi_result.run_id,
+            )
         contribution_fields = self._compute_contribution_to_risk(
             assets=multi_result.assets,
             avg_gross_notional_by_asset=avg_gross,

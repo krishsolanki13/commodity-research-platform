@@ -455,6 +455,25 @@ def test_contribution_to_risk_returns_empty_without_corr_report(
     ), "asset_contribution_to_vol_pct must be empty when corr_report=None"
 
 
+def test_compute_correlation_and_risk_populates_contribution_to_vol(
+    config: Config, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Helper wires corr_report so CTR is not silently empty."""
+    from src.analytics.correlation import compute_correlation_and_risk
+
+    multi_result = _make_multi_result(
+        config, monkeypatch, assets=["gold", "silver"], n_bars=400, seeds=[9, 10]
+    )
+    _corr, report = compute_correlation_and_risk(multi_result, lookback_days=252)
+
+    assert report.asset_contribution_to_vol_pct, (
+        "compute_correlation_and_risk must populate contribution-to-vol; "
+        "empty dict means corr_report was not passed through"
+    )
+    total = sum(report.asset_contribution_to_vol_pct.values())
+    assert abs(total - 1.0) < 0.05, f"CTR pct sum {total:.4f} should be ~1.0"
+
+
 def test_contribution_to_risk_pct_sums_to_approximately_one(
     config: Config, monkeypatch: pytest.MonkeyPatch
 ) -> None:

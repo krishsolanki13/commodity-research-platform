@@ -20,10 +20,14 @@ import logging
 import math
 from datetime import date
 from itertools import combinations
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
 from src.core.types import CorrelationReport, MultiAssetBacktestResult
+
+if TYPE_CHECKING:
+    from src.core.types import RiskReport
 
 
 class CorrelationEngine:
@@ -347,3 +351,33 @@ class CorrelationEngine:
                 best_pair = (a, b, val)
 
         return best_pair
+
+
+def compute_correlation_and_risk(
+    multi_result: MultiAssetBacktestResult,
+    lookback_days: int = 252,
+) -> tuple[CorrelationReport, RiskReport]:
+    """Compute correlation, then risk with that report wired in.
+
+    RiskEngine.compute() writes empty contribution-to-vol fields when
+    corr_report is omitted. Every portfolio persistence path — API,
+    dashboard, and ad-hoc canonical/reproduction scripts — must use this
+    helper (or pass corr_report explicitly) so CTR is populated.
+
+    Args:
+        multi_result: MultiAssetBacktestResult from MultiAssetRunner.run().
+        lookback_days: Historical-simulation window for VaR/ES.
+
+    Returns:
+        (CorrelationReport, RiskReport) with contribution-to-vol filled
+        whenever the covariance decomposition is computable.
+    """
+    from src.risk.risk_engine import RiskEngine  # noqa: PLC0415
+
+    corr_report = CorrelationEngine().compute(multi_result)
+    risk_report = RiskEngine().compute(
+        multi_result,
+        lookback_days=lookback_days,
+        corr_report=corr_report,
+    )
+    return corr_report, risk_report
