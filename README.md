@@ -33,7 +33,7 @@ A **research tool, not a trading system** — no live orders, no execution. The 
 | **Run Detail**                     | Five-tab record per run — performance, signal quality, walk-forward validation, trades, and full reproducibility artifacts (git SHA, dirty-tree flag, package versions). |
 | **Run Comparison**                 | Up to 8 runs overlaid — equity curves, a metric-delta table, parameter diffs.                                                                                            |
 | **Sweep Explorer**                 | Parameter-grid search with a parallel-coordinates view of the performance landscape across all parameter combinations. Results stored as immutable sweep artifacts.      |
-| **Curve PCA**                      | Level/Slope/Curvature factor decomposition — Gold: PC1 ≈ 100% on its genuinely computable window (398 dates, ~19 months — no earlier 4-contract Gold curve exists); not a multi-year finding as originally framed. WTI and Natural Gas are two-factor, not three (PC3 is negligible in both, ~1% and ~0.2% respectively) — neither curve is one-dimensional, and the slope factor (PC2) is economically meaningful (11–28% of variance). |
+| **Curve PCA**                      | Level/Slope/Curvature factor decomposition — Gold: PC1 ≈ 100% on the ~19 months of curve history available (398 dates from 2025-02-07); WTI and Natural Gas show a two-factor structure (PC2 11–28%, PC3 ≤ ~1%). |
 | **Term Structure / Futures Curve** | Regime classification, roll yield, multi-contract curve comparison (up to 4 assets side by side).                                                                        |
 | **Portfolio Analytics**            | 6-asset book performance, 2.22× diversification benefit (confirmed via canonical run `20260910_095142_portfolio_ema_crossover`), Kupiec-calibrated VaR, and regime-conditional attribution computed per-asset and portfolio-wide. |
 | **Data Manager**                   | Per-asset data-quality report, CFTC/EIA data where it exists, honest empty states where it doesn't.                                                                      |
@@ -109,7 +109,7 @@ All eight signals were evaluated under identical cost and validation assumptions
 
 Every signal in the platform — four technical baselines and four commodity-specific and alternative-data signals — was tested individually through a parameter sweep corrected for selection bias via the Deflated Sharpe Ratio (Bailey & López de Prado, 2014; significance cutoff DSR ≥ 0.95), and then tested again as a diversified six-asset portfolio under both fixed-notional and volatility-scaled position sizing. Nothing survived at statistical significance under any of the tests.
 
-Only after reaching that conclusion did I check the literature to understand why — and found the answer had been documented for years. Koijen, Moskowitz, Pedersen & Vrugt's *Carry* (2018) and Moskowitz, Ooi & Pedersen's *Time Series Momentum* (2012) both find real, well-documented premia — but only when tested cross-sectionally across dozens of instruments over decades, not on six correlated commodities over a handful of years. The risk engine still measured genuine diversification benefit (up to 2.22× on VaR, confirmed via canonical run `20260910_095142_portfolio_ema_crossover`) — the tools work; the honest conclusion is that this universe is too narrow for a statistically significant edge.
+Only after reaching that conclusion did I check the literature to understand why — and found the answer had been documented for years. Koijen, Moskowitz, Pedersen & Vrugt's *Carry* (2018) and Moskowitz, Ooi & Pedersen's *Time Series Momentum* (2012) both find real, well-documented premia — but only when tested cross-sectionally across dozens of instruments over decades, not on six correlated commodities over sixteen years. The risk engine still measured genuine diversification benefit (2.22× on VaR, confirmed via canonical run `20260910_095142_portfolio_ema_crossover`) — the tools work; the honest conclusion is that this universe is too narrow for a statistically significant edge.
 
 Finding a strategy that looks good in a single backtest is cheap — almost any sufficiently-searched parameter space produces something before correction. What's rare is building the infrastructure to catch that in your own results, not just describe it in someone else's — and then actually using it, including on the finding I most wanted to keep.
 
@@ -120,7 +120,7 @@ Forward curves are built from individual contract data — a separate dataset th
 - **Forward curve construction** — up to 12 contracts per asset per observation date
 - **Term-structure regime classification** — contango / backwardation / flat via annualized slope
 - **Roll yield and basis** — annualized, with the continuous-contract basis correctly labelled as pseudo-basis
-- **Curve PCA** — Level / Slope / Curvature factor decomposition; Gold: PC1 ≈ 100% on its genuinely computable window (398 dates, ~19 months — no earlier 4-contract Gold curve exists); not a multi-year finding as originally framed. WTI and Natural Gas are two-factor, not three (PC3 is negligible in both, ~1% and ~0.2% respectively) — neither curve is one-dimensional, and the slope factor (PC2) is economically meaningful (11–28% of variance).
+- **Curve PCA** — Level / Slope / Curvature factor decomposition; Gold: PC1 ≈ 100% on the ~19 months of curve history available (398 dates from 2025-02-07); WTI and Natural Gas show a two-factor structure (PC2 11–28%, PC3 ≤ ~1%).
 
 
 
@@ -134,7 +134,7 @@ Forward curves are built from individual contract data — a separate dataset th
 | **Diversification benefit**    | 2.22× (Σ per-asset VaR₉₉ / portfolio VaR₉₉; confirmed via canonical run `20260910_095142_portfolio_ema_crossover`) |
 | **Kupiec calibration p-value** | 0.7680 on the platform's canonical 6-asset portfolio run (well-calibrated) |
 | **Gold–Silver strategy corr**  | 0.65                                                    |
-| **WTI–Brent strategy corr**    | 0.63 (0.6294 on the canonical run — rounds to 0.63, not the previously published 0.62) |
+| **WTI–Brent strategy corr**    | 0.63 |
 | **All 8 signals**              | No signal clears DSR ≥ 0.95 significance — see Findings |
 
 *(All portfolio-level figures above from canonical run `20260910_095142_portfolio_ema_crossover`, git_sha `8f1dd26e`.)*
@@ -337,9 +337,9 @@ commodity-research-platform/
 
 ## What's Next
 
-The platform is **feature-complete**. What remains is external verification, not more infrastructure:
+The platform is **feature-complete**. What remains is external verification and broader data, not more infrastructure:
 
-1. A written research note replicating a published commodity carry finding using the platform's walk-forward + DSR machinery — the infrastructure exists, only the write-up is missing
+1. Broaden the universe. The published premia need cross-sectional breadth (dozens of instruments). Extending beyond six markets is the natural test of this platform's finding, constrained by the shallow expired-contract history in free data sources.
 2. One third-party-verified result — competition placement or an accepted open-source contribution
 
 
